@@ -1,0 +1,30 @@
+{
+  "name": "react-rich-text-root",
+  "version": "0.0.0",
+  "description": "A block text editor for React",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dherault/react-rich-text.git"
+  },
+  "keywords": [
+    "React",
+    "rich",
+    "text",
+    "block",
+    "editor"
+  ],
+  "author": "David Hérault <dherault@gmail.com> (https://github.com/dherault)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dherault/react-rich-text/issues"
+  },
+  "homepage": "https://github.com/dherault/react-rich-text#readme",
+  "devDependencies": {
+    "eslint": "^8.44.0",
+    "eslint-config-dherault-typescript": "^1.2.0"
+  }
+}

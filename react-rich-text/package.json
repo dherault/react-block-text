@@ -1,0 +1,43 @@
+{
+  "name": "react-rich-text",
+  "description": "A block text editor for React",
+  "version": "0.0.0",
+  "type": "module",
+  "keywords": [
+    "React",
+    "rich",
+    "text",
+    "block",
+    "editor"
+  ],
+  "author": "David Hérault <dherault@gmail.com> (https://github.com/dherault)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dherault/react-rich-text/issues"
+  },
+  "homepage": "https://github.com/dherault/react-rich-text#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dherault/react-rich-text.git"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.37",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9"
+  }
+}
