@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { nanoid } from 'nanoid'
-import { Editor, EditorState, convertFromRaw, convertToRaw } from 'draft-js'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
+import { Editor, EditorState, SelectionState, convertToRaw } from 'draft-js'
+import 'draft-js/dist/Draft.css'
 
-// import { MergeFunction, ReactRichTextData, ReactRichTextDataItem } from './types'
 import { ReactRichTextData, ReactRichTextDataItem } from './types'
+
+import Block from './Block'
 
 type ReactRichTextProps = {
   value: ReactRichTextData
@@ -15,22 +19,14 @@ const editorRefs: Record<string, Editor | null> = {}
 
 function ReactRichText({ value, onChange }: ReactRichTextProps) {
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
+  const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
-  // const [mergeRegistry, setMergeRegistry] = useState<Record<string, MergeFunction>>({})
-
-  // const createItemData = useCallback(() => ({
-  //   id: nanoid(),
-  //   type: 'paragraph' as const,
-  //   data: JSON.stringify(convertToRaw(EditorState.createEmpty().getCurrentContent())),
-  // }), [])
 
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     editorRefs[id] = ref
   }, [])
 
-  const handleReturn = useCallback((index: number, event: any) => {
-    if (event.shiftKey) return 'not-handled'
-
+  const handleAddItem = useCallback((index: number) => {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
       id: nanoid(),
@@ -43,27 +39,111 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange(nextValue)
     setForceFocusIndex(index + 1)
+  }, [value, onChange])
+
+  const handleReturn = useCallback((index: number, event: any) => {
+    if (event.shiftKey) return 'not-handled'
+
+    handleAddItem(index)
 
     return 'handled'
+  }, [handleAddItem])
+
+  const handleUpArrow = useCallback((index: number, event: any) => {
+    if (index === 0) return
+    if (!editorRefs[value[index - 1]?.id]) return
+
+    const editorState = editorStates[value[index].id]
+    const selection = editorState.getSelection()
+    const firstline = editorState.getCurrentContent().getFirstBlock().getKey() === selection.getFocusKey()
+
+    if (!firstline) return
+
+    const previousEditorState = editorStates[value[index - 1].id]
+    const previousFirstBlock = previousEditorState.getCurrentContent().getLastBlock()
+    const anchorOffset = Math.min(selection.getAnchorOffset(), previousFirstBlock.getLength())
+    const previousSelection = SelectionState.createEmpty(previousFirstBlock.getKey()).merge({
+      anchorOffset,
+      focusOffset: anchorOffset,
+    })
+    const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
+
+    setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
+    setFocusedIndex(index - 1)
+
+    event.preventDefault()
+  }, [value, editorStates])
+
+  const handleDownArrow = useCallback((index: number, event: any) => {
+    if (index === value.length - 1) return
+    if (!editorRefs[value[index + 1]?.id]) return
+
+    const editorState = editorStates[value[index].id]
+    const selection = editorState.getSelection()
+    const lastLine = editorState.getCurrentContent().getLastBlock().getKey() === selection.getFocusKey()
+
+    if (!lastLine) return
+
+    const nextEditorState = editorStates[value[index + 1].id]
+    const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
+    const anchorOffset = Math.min(selection.getAnchorOffset(), nextLastBlock.getLength())
+    const nextSelection = SelectionState.createEmpty(nextLastBlock.getKey()).merge({
+      anchorOffset,
+      focusOffset: anchorOffset,
+    })
+    const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
+
+    setEditorStates(x => ({ ...x, [value[index + 1].id]: updatedNextEditorState }))
+    setFocusedIndex(index + 1)
+
+    event.preventDefault()
+  }, [value, editorStates])
+
+  const handleBlur = useCallback((index: number) => {
+    setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
+  }, [value?.length])
+
+  const handleDnd = useCallback((dragIndex: number, hoverIndex: number) => {
+    const nextValue = [...value]
+    const [dragItem] = nextValue.splice(dragIndex, 1)
+
+    nextValue.splice(hoverIndex, 0, dragItem)
+
+    onChange(nextValue)
   }, [value, onChange])
 
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
     return (
-      <div
-        className="w-full border-b border-blue-400"
+      <Block
         key={item.id}
-      >
-        <Editor
-          ref={ref => registerRef(item.id, ref)}
-          editorState={editorStates[item.id]}
-          onChange={editorState => setEditorStates(x => ({ ...x, [item.id]: editorState }))}
-          handleReturn={event => handleReturn(index, event)}
-        />
-      </div>
+        id={item.id}
+        index={index}
+        editorState={editorStates[item.id]}
+        registerRef={ref => registerRef(item.id, ref)}
+        onAddItem={() => handleAddItem(index)}
+        onChange={editorState => setEditorStates(x => ({ ...x, [item.id]: editorState }))}
+        onReturn={event => handleReturn(index, event)}
+        onUpArrow={event => handleUpArrow(index, event)}
+        onDownArrow={event => handleDownArrow(index, event)}
+        onFocus={() => setFocusedIndex(index)}
+        onBlur={() => handleBlur(index)}
+        onDnd={handleDnd}
+        placeholder={index === focusedIndex ? "Start typing or press '/' for commands" : ''}
+      />
     )
-  }, [editorStates, handleReturn, registerRef])
+  }, [
+    editorStates,
+    focusedIndex,
+    handleAddItem,
+    handleReturn,
+    handleUpArrow,
+    handleDownArrow,
+    handleBlur,
+    handleDnd,
+    registerRef,
+  ])
 
   useEffect(() => {
     if (value.length) return
@@ -81,56 +161,23 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   useEffect(() => {
     if (forceFocusIndex === -1) return
 
+    console.log('forcing focus')
+
     setForceFocusIndex(-1)
 
     if (!editorRefs[value[forceFocusIndex]?.id]) return
 
     editorRefs[value[forceFocusIndex].id]?.focus()
-  }, [value, forceFocusIndex])
-
-  // const handleChange = useCallback((index: number, item: ReactRichTextDataItem) => {
-  //   const nextValue = [...value]
-
-  //   nextValue[index] = item
-
-  //   onChange(nextValue)
-  // }, [value, onChange])
-
-  // const handleCreateBlock = useCallback((index: number) => {
-  //   const nextValue = [...value]
-
-  //   nextValue.splice(index + 1, 0, lastBlockData)
-
-  //   onChange(nextValue)
-  //   setForceFocusIndex(index + 1)
-  // }, [value, lastBlockData, onChange])
-
-  // const handleRegisterMergeFunction = useCallback((id: string, fn: MergeFunction) => {
-  //   setMergeRegistry(x => ({ ...x, [id]: fn }))
-  // }, [])
-
-  // const handleMergeWithPrevious = useCallback((index: number) => {
-  //   if (index === 0) return false
-
-  //   const item = value[index]
-  //   const previousItem = value[index - 1]
-
-  //   if (item.type === 'paragraph' && previousItem.type === 'paragraph') {
-  //     const itemData = convertFromRaw(JSON.parse(item.data)).getBlockMap()
-
-  //     return !!mergeRegistry[previousItem.id]?.(itemData)
-  //   }
-
-  //   // ...
-  //   return false
-  // }, [value, mergeRegistry])
+  }, [value, forceFocusIndex, editorStates])
 
   if (!Array.isArray(value)) throw new Error('ReactRichText value prop must be an array')
 
   return (
-    <div className="w-full border">
-      {value.map(renderEditor)}
-    </div>
+    <DndProvider backend={HTML5Backend}>
+      <div className="w-full">
+        {value.map(renderEditor)}
+      </div>
+    </DndProvider>
   )
 }
 
