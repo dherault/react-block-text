@@ -9,7 +9,8 @@ type BlockProps = {
   id: string
   index: number
   editorState: EditorState
-  placeholder: string
+  hovered: boolean
+  focused: boolean
   registerRef: (ref: any) => void
   onAddItem: () => void
   onChange: (editorState: EditorState) => void
@@ -18,7 +19,11 @@ type BlockProps = {
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
-  onDnd: (dragIndex: number, hoverIndex: number) => void
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+  onDragStart: () => void
+  onDrag: (dragIndex: number, hoverIndex: number) => void
+  onDragEnd: () => void
 }
 
 interface DragItem {
@@ -31,7 +36,8 @@ function Block({
   id,
   index,
   editorState,
-  placeholder,
+  hovered,
+  focused,
   registerRef,
   onAddItem,
   onChange,
@@ -40,7 +46,11 @@ function Block({
   onDownArrow,
   onFocus,
   onBlur,
-  onDnd,
+  onMouseEnter,
+  onMouseLeave,
+  onDragStart,
+  onDrag,
+  onDragEnd,
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -90,7 +100,7 @@ function Block({
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return
 
       // Time to actually perform the action
-      onDnd(dragIndex, hoverIndex)
+      onDrag(dragIndex, hoverIndex)
 
       // Note: we're mutating the monitor item here!
       // Generally it's better to avoid mutations,
@@ -102,10 +112,21 @@ function Block({
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: 'block',
-    item: () => ({ id, index }),
+    item: () => {
+      onDragStart()
+
+      return { id, index }
+    },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
+    end: (_item, monitor) => {
+      onDragEnd()
+
+      if (!monitor.didDrop()) return
+
+      onMouseEnter()
+    },
   })
 
   drag(dragRef)
@@ -116,21 +137,29 @@ function Block({
   return (
     <div
       ref={previewRef}
-      className="my-1 group w-full flex items-center gap-1 relative"
+      className="py-1 w-full flex items-center gap-1 relative"
       data-handler-id={handlerId}
       style={{ opacity }}
+      onMouseMove={onMouseEnter}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div
-        className="p-1 h-full opacity-0 group-hover:opacity-100 text-gray-500 hover:bg-gray-100 rounded cursor-pointer"
-        onClick={onAddItem}
+        className="flex-shrink-0 flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
+        style={{ opacity: hovered ? 1 : 0 }}
       >
-        <AddIcon width={18} />
-      </div>
-      <div
-        ref={dragRef}
-        className="py-1 h-full opacity-0 group-hover:opacity-100 text-gray-500 hover:bg-gray-100 rounded cursor-pointer"
-      >
-        <DragIcon width={18} />
+        <div
+          className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+          onClick={onAddItem}
+        >
+          <AddIcon width={18} />
+        </div>
+        <div
+          ref={dragRef}
+          className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+        >
+          <DragIcon width={18} />
+        </div>
       </div>
       <div className="flex-grow">
         <Editor
@@ -142,7 +171,7 @@ function Block({
           onDownArrow={onDownArrow}
           onFocus={onFocus}
           onBlur={onBlur}
-          placeholder={placeholder}
+          placeholder={focused ? "Start typing or press '/' for commands" : ''}
         />
       </div>
     </div>

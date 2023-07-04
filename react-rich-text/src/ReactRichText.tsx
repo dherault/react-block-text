@@ -21,6 +21,8 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
+  const [hoveredIndex, setHoveredIndex] = useState(-1)
+  const [isDragging, setIsDragging] = useState(false)
 
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     editorRefs[id] = ref
@@ -39,6 +41,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange(nextValue)
     setForceFocusIndex(index + 1)
+    setHoveredIndex(-1)
   }, [value, onChange])
 
   const handleReturn = useCallback((index: number, event: any) => {
@@ -70,6 +73,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
     setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
     setFocusedIndex(index - 1)
+    setHoveredIndex(-1)
 
     event.preventDefault()
   }, [value, editorStates])
@@ -95,6 +99,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
     setEditorStates(x => ({ ...x, [value[index + 1].id]: updatedNextEditorState }))
     setFocusedIndex(index + 1)
+    setHoveredIndex(-1)
 
     event.preventDefault()
   }, [value, editorStates])
@@ -103,13 +108,15 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
   }, [value?.length])
 
-  const handleDnd = useCallback((dragIndex: number, hoverIndex: number) => {
+  const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
     const nextValue = [...value]
     const [dragItem] = nextValue.splice(dragIndex, 1)
 
     nextValue.splice(hoverIndex, 0, dragItem)
 
     onChange(nextValue)
+    setFocusedIndex(-1)
+    setHoveredIndex(-1)
   }, [value, onChange])
 
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
@@ -121,6 +128,8 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
         id={item.id}
         index={index}
         editorState={editorStates[item.id]}
+        hovered={!isDragging && index === hoveredIndex}
+        focused={!isDragging && index === focusedIndex}
         registerRef={ref => registerRef(item.id, ref)}
         onAddItem={() => handleAddItem(index)}
         onChange={editorState => setEditorStates(x => ({ ...x, [item.id]: editorState }))}
@@ -129,19 +138,24 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
         onDownArrow={event => handleDownArrow(index, event)}
         onFocus={() => setFocusedIndex(index)}
         onBlur={() => handleBlur(index)}
-        onDnd={handleDnd}
-        placeholder={index === focusedIndex ? "Start typing or press '/' for commands" : ''}
+        onMouseEnter={() => setHoveredIndex(index)}
+        onMouseLeave={() => setHoveredIndex(previous => previous === index ? -1 : previous)}
+        onDragStart={() => setIsDragging(true)}
+        onDrag={handleDrag}
+        onDragEnd={() => setIsDragging(false)}
       />
     )
   }, [
     editorStates,
+    isDragging,
+    hoveredIndex,
     focusedIndex,
     handleAddItem,
     handleReturn,
     handleUpArrow,
     handleDownArrow,
     handleBlur,
-    handleDnd,
+    handleDrag,
     registerRef,
   ])
 
