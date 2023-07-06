@@ -186,6 +186,9 @@ function Block({
   )
 }
 
+/* ---
+  BIND KEYBOARD SHORTCUTS
+--- */
 function bindKey(event: any): string | null {
   // if (event.keyCode === 191 /* `/` key */ && !KeyBindingUtil.hasCommandModifier(event)) {
   //   return COMMANDS.OPEN_MENU

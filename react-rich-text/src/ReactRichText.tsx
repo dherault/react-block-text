@@ -28,10 +28,16 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
 
+  /* ---
+    REGISTER REF
+  --- */
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     editorRefs[id] = ref
   }, [])
 
+  /* ---
+    ADD ITEM
+  --- */
   const handleAddItem = useCallback((index: number) => {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
@@ -49,6 +55,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setHoveredIndex(-1)
   }, [value, onChange])
 
+  /* ---
+    CHANGE
+  --- */
   const handleChange = useCallback((id: string, editorState: EditorState) => {
     setEditorStates(x => ({ ...x, [id]: editorState }))
 
@@ -79,12 +88,18 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     }
   }, [contextMenuData])
 
+  /* ---
+    BEFORE INPUT
+  --- */
   const handleBeforeInput = useCallback((id: string, chars: string) => {
     console.log()
 
     return 'not-handled'
   }, [])
 
+  /* ---
+    RETURN
+  --- */
   const handleReturn = useCallback((index: number, event: any) => {
     if (contextMenuData) {
       event.preventDefault()
@@ -99,6 +114,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     return 'handled'
   }, [contextMenuData, handleAddItem])
 
+  /* ---
+    UP ARROW
+  --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
     if (!editorRefs[value[index - 1]?.id]) return
@@ -131,6 +149,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     event.preventDefault()
   }, [value, editorStates, contextMenuData])
 
+  /* ---
+    DOWN ARROWW
+  --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
     if (!editorRefs[value[index + 1]?.id]) return
@@ -163,10 +184,16 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     event.preventDefault()
   }, [value, editorStates, contextMenuData])
 
+  /* ---
+    BLUR
+  --- */
   const handleBlur = useCallback((index: number) => {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
   }, [value?.length])
 
+  /* ---
+    DRAG
+  --- */
   const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
     const nextValue = [...value]
     const [dragItem] = nextValue.splice(dragIndex, 1)
@@ -178,6 +205,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setHoveredIndex(-1)
   }, [value, onChange])
 
+  /* ---
+    CONTEXT MENU SELECT
+  --- */
   const handleContextMenuSelect = useCallback((command: ReactRichTextDataItemType) => {
     console.log('command', command)
     setContextMenuData(null)
@@ -229,6 +259,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     onChange(nextValue)
   }, [value, editorStates, contextMenuData, onChange])
 
+  /* ---
+    RENDER EDITOR
+  --- */
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
@@ -279,6 +312,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     registerRef,
   ])
 
+  /* ---
+    NO VALUE LENGTH
+  --- */
   useEffect(() => {
     if (value.length) return
 
@@ -293,6 +329,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     onChange([item])
   }, [value, onChange])
 
+  /* ---
+    FORCE FOCUS
+  --- */
   useEffect(() => {
     if (forceFocusIndex === -1) return
 
@@ -305,6 +344,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     editorRefs[value[forceFocusIndex].id]?.focus()
   }, [value, forceFocusIndex, editorStates])
 
+  /* ---
+    MAIN RETURN STATEMENT
+  --- */
   if (!Array.isArray(value)) throw new Error('ReactRichText value prop must be an array')
 
   return (
@@ -325,6 +367,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   )
 }
 
+/* ---
+  GET CONTEXT MENU DATA
+--- */
 function getContextMenuData(id: string): ContextMenuData | null {
   const range = window.getSelection()?.getRangeAt(0)?.cloneRange()
 
