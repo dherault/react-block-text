@@ -1,37 +1,11 @@
 import { useCallback, useRef } from 'react'
-import { DraftHandleValue, Editor, EditorState, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
+import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import { useDrag, useDrop } from 'react-dnd'
 
 import AddIcon from './icons/Add'
 import DragIcon from './icons/Drag'
 
-type BlockProps = {
-  id: string
-  index: number
-  editorState: EditorState
-  hovered: boolean
-  focused: boolean
-  registerRef: (ref: any) => void
-  onAddItem: () => void
-  onChange: (editorState: EditorState) => void
-  onBeforeInput: (chars: string) => DraftHandleValue
-  onReturn: (event: any) => DraftHandleValue
-  onUpArrow: (event: any) => void
-  onDownArrow: (event: any) => void
-  onFocus: () => void
-  onBlur: () => void
-  onMouseEnter: () => void
-  onMouseLeave: () => void
-  onDragStart: () => void
-  onDrag: (dragIndex: number, hoverIndex: number) => void
-  onDragEnd: () => void
-}
-
-interface DragItem {
-  index: number
-  id: string
-  type: string
-}
+import { BlockProps, DragItem } from './types'
 
 const COMMANDS = {
   OPEN_MENU: 'open-menu',

@@ -5,22 +5,10 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Editor, EditorState, SelectionState, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
-import { ReactRichTextData, ReactRichTextDataItem } from './types'
+import { BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextProps } from './types'
 
 import Block from './Block'
 import ContextMenu from './ContextMenu'
-
-type ReactRichTextProps = {
-  value: ReactRichTextData
-  onChange: (value: ReactRichTextData) => void
-}
-
-type ContextMenuData = {
-  id: string
-  query: string
-  top: number
-  left: number
-}
 
 // Not a state to avoid infinite render loops
 const editorRefs: Record<string, Editor | null> = {}
@@ -41,6 +29,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
       id: nanoid(),
+      type: 'text',
       data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
     }
     const nextValue = [...value]
@@ -81,7 +70,6 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
       setContextMenuData(x => x ? ({ ...x!, query }) : null) // Due to side effects the ternary is mandatory here
     }
-
   }, [contextMenuData])
 
   const handleBeforeInput = useCallback((id: string, chars: string) => {
@@ -185,35 +173,46 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
   const handleContextMenuSelect = useCallback((command: string) => {
     console.log('command', command)
-
     setContextMenuData(null)
-  }, [])
+
+    const { id } = contextMenuData!
+    const item = value.find(x => x.id === id)
+
+    if (!item) return
+    if (item.type === command) return
+
+    console.log('change type', command)
+  }, [value, contextMenuData])
 
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
+    const props: BlockProps = {
+      id: item.id,
+      index,
+      editorState: editorStates[item.id],
+      hovered: !isDragging && index === hoveredIndex,
+      focused: !isDragging && index === focusedIndex,
+      registerRef: ref => registerRef(item.id, ref),
+      onAddItem: () => handleAddItem(index),
+      onChange: editorState => handleChange(item.id, editorState),
+      onBeforeInput: chars => handleBeforeInput(item.id, chars),
+      onReturn: event => handleReturn(index, event),
+      onUpArrow: event => handleUpArrow(index, event),
+      onDownArrow: event => handleDownArrow(index, event),
+      onFocus: () => setFocusedIndex(index),
+      onBlur: () => handleBlur(index),
+      onMouseEnter: () => setHoveredIndex(index),
+      onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
+      onDragStart: () => setIsDragging(true),
+      onDrag: handleDrag,
+      onDragEnd: () => setIsDragging(false),
+    }
+
     return (
       <Block
         key={item.id}
-        id={item.id}
-        index={index}
-        editorState={editorStates[item.id]}
-        hovered={!isDragging && index === hoveredIndex}
-        focused={!isDragging && index === focusedIndex}
-        registerRef={ref => registerRef(item.id, ref)}
-        onAddItem={() => handleAddItem(index)}
-        onChange={editorState => handleChange(item.id, editorState)}
-        onBeforeInput={chars => handleBeforeInput(item.id, chars)}
-        onReturn={event => handleReturn(index, event)}
-        onUpArrow={event => handleUpArrow(index, event)}
-        onDownArrow={event => handleDownArrow(index, event)}
-        onFocus={() => setFocusedIndex(index)}
-        onBlur={() => handleBlur(index)}
-        onMouseEnter={() => setHoveredIndex(index)}
-        onMouseLeave={() => setHoveredIndex(previous => previous === index ? -1 : previous)}
-        onDragStart={() => setIsDragging(true)}
-        onDrag={handleDrag}
-        onDragEnd={() => setIsDragging(false)}
+        {...props}
       />
     )
   }, [
@@ -238,6 +237,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
       id: nanoid(),
+      type: 'text',
       data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
     }
 

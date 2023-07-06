@@ -1,28 +1,8 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import _ from 'clsx'
 
-type ContextMenuProps = {
-  query: string
-  top: number
-  left: number
-  onSelect: (command: string) => void
-  onClose: () => void
-}
-
-type ContextMenuItemProps = {
-  title: string
-  label: string
-  icon: ReactNode
-  active: boolean
-  onClick: () => void
-  onMouseEnter: () => void
-  onMouseLeave: () => void
-}
-
-type ContextMenuIconProps = {
-  children: ReactNode
-}
+import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from './types'
 
 const items = [
   {
