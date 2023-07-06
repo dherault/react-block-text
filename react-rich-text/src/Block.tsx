@@ -138,8 +138,8 @@ function Block({
   return (
     <div
       ref={previewRef}
-      className="w-full flex items-start gap-1 relative"
       data-handler-id={handlerId}
+      className="w-full flex items-start gap-1 relative"
       style={{
         opacity,
         paddingTop: typeToPaddingTop[type as keyof typeof typeToPaddingTop] ?? 4,
@@ -176,7 +176,9 @@ function Block({
           {...menuPosition}
         />
       )}
-      {children}
+      <div className="flex-grow">
+        {children}
+      </div>
     </div>
   )
 }

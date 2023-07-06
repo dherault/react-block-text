@@ -12,7 +12,7 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
 
   return (
     <div
-      className="p-1 bg-white border rounded shadow-xl absolute z-50"
+      className="p-1 bg-white border rounded shadow-xl absolute z-50 select-none"
       style={{
         top,
         left,

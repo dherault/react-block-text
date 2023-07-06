@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { ContentBlock, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import { BlockContentTextProps, BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
@@ -33,6 +33,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
+  const [selectedItems, setSelectedItems] = useState<ReactRichTextDataItem[]>([])
   const [, forceRerender] = useState(false)
 
   /* ---
@@ -323,7 +324,115 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [value, editorStates, contextMenuData, onChange])
 
   const handleMultiBlockSelection = useCallback((blockKey: string, text: string) => {
-    console.log('handleMultiBlockSelection', blockKey, text)
+    // console.log('handleMultiBlockSelection', blockKey, text)
+    let valueIndex = -1
+    let blockIndex = -1
+    let found = false
+
+    value.forEach((item, valueI) => {
+      if (found) return
+
+      const editorState = editorStates[item.id]
+
+      if (!editorState) return
+
+      const contentState = editorState.getCurrentContent()
+
+      contentState.getBlocksAsArray().forEach((block, blockI) => {
+        if (found) return
+        if (block.getKey() === blockKey) {
+          valueIndex = valueI
+          blockIndex = blockI
+          found = true
+        }
+      })
+    })
+
+    const selected: ReactRichTextDataItem[] = []
+    let textToCut = text
+
+    value.forEach((item, valueI) => {
+      if (valueIndex > valueI) return
+
+      const editorState = editorStates[item.id]
+
+      if (!editorState) {
+        selected.push(item)
+
+        return
+      }
+
+      let complete = false
+      let nextEditorState = editorState
+
+      editorState.getCurrentContent().getBlocksAsArray().forEach((block, blockI) => {
+        if (complete) return
+        if (valueIndex === valueI && blockIndex < blockI) return
+
+        const blockText = block.getText()
+        // console.log('blockText', blockText)
+
+        for (let i = 0; i < blockText.length; i++) {
+          const lastBlock = blockText.length >= textToCut.length
+          let selectionStateToRemove = SelectionState.createEmpty(block.getKey())
+
+          if (lastBlock) {
+            for (let j = i; j < blockText.length; j++) {
+              const blockTextSlice = blockText.slice(i, j + 1)
+              // console.log('blockTextSlice', blockTextSlice, 'textToCut', textToCut, lastBlock, i, j)
+
+              if (textToCut === blockTextSlice) {
+                // console.log('cutting')
+                textToCut = textToCut.slice(blockTextSlice.length)
+
+                selectionStateToRemove = selectionStateToRemove.merge({
+                  anchorOffset: j + 1,
+                  focusOffset: blockTextSlice.length + 1,
+                })
+              }
+            }
+          }
+          else {
+            const blockTextSlice = blockText.slice(i)
+            // console.log('blockTextSlice', blockTextSlice, 'textToCut', textToCut, lastBlock, i)
+
+            if (textToCut.startsWith(blockTextSlice)) {
+              // console.log('cutting')
+              textToCut = textToCut.slice(blockTextSlice.length)
+
+              selectionStateToRemove = selectionStateToRemove.merge({
+                anchorOffset: 0,
+                focusOffset: i,
+              })
+            }
+          }
+
+          const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'forward')
+          // console.log('nextContent', nextContent.getBlockForKey(block.getKey()).getText())
+          nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
+
+          if (textToCut.length === 0) {
+            complete = true
+            break
+          }
+        }
+        // console.log('complete', complete)
+      })
+
+      selected.push({ ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) })
+    })
+
+    // console.log('valueIndex, blockIndex', valueIndex, blockIndex)
+    // console.log('selected', selected)
+    setSelectedItems(selected)
+  }, [value, editorStates])
+
+  /* ---
+    PASTE
+  --- */
+  const handlePaste = useCallback((event: ClipboardEvent) => {
+    event.preventDefault()
+    console.log('paste')
   }, [])
 
   /* ---
@@ -462,13 +571,11 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
       isSelecting = false
 
-      forceRerender(x => !x)
+      forceRerender(x => !x) // TODO may be useless
 
       try {
         const range = window.getSelection()?.getRangeAt(0)
         const text = range?.toString()
-
-        console.log('selected:', text)
 
         if (range && text) {
           const blockKey = range.startContainer.parentElement?.parentElement?.getAttribute('data-offset-key')?.split('-')[0]
@@ -502,6 +609,17 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
+
+  /* ---
+    PASTE
+  --- */
+  useEffect(() => {
+    window.addEventListener('paste', handlePaste)
+
+    return () => {
+      window.removeEventListener('paste', handlePaste)
+    }
+  }, [handlePaste])
 
   /* ---
     MAIN RETURN STATEMENT
