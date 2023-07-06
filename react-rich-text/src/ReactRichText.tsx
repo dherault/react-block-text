@@ -91,12 +91,18 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   }, [])
 
   const handleReturn = useCallback((index: number, event: any) => {
+    if (contextMenuData) {
+      event.preventDefault()
+
+      return 'handled'
+    }
+
     if (event.shiftKey) return 'not-handled'
 
     handleAddItem(index)
 
     return 'handled'
-  }, [handleAddItem])
+  }, [contextMenuData, handleAddItem])
 
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
@@ -164,7 +170,6 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
   const handleBlur = useCallback((index: number) => {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
-    setContextMenuData(null)
   }, [value?.length])
 
   const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
@@ -177,6 +182,12 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setFocusedIndex(-1)
     setHoveredIndex(-1)
   }, [value, onChange])
+
+  const handleContextMenuSelect = useCallback((command: string) => {
+    console.log('command', command)
+
+    setContextMenuData(null)
+  }, [])
 
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
@@ -248,8 +259,6 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
   if (!Array.isArray(value)) throw new Error('ReactRichText value prop must be an array')
 
-  console.log('contextMenuData', contextMenuData)
-
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="w-full relative">
@@ -259,6 +268,8 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
             query={contextMenuData.query}
             top={contextMenuData.top}
             left={contextMenuData.left}
+            onClose={() => setContextMenuData(null)}
+            onSelect={handleContextMenuSelect}
           />
         )}
       </div>
