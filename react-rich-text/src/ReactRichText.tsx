@@ -11,7 +11,7 @@ import Block from './Block'
 import BlockContentText from './BlockContentText'
 import ContextMenu from './ContextMenu'
 
-const blockComponents = {
+const blockContentComponents = {
   text: BlockContentText,
   heading1: BlockContentText,
   heading2: BlockContentText,
@@ -282,6 +282,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     const blockProps: Omit<BlockProps, 'children'> = {
       id: item.id,
+      type: item.type,
       index,
       readOnly: !!readOnly,
       hovered: !isDragging && index === hoveredIndex,
@@ -308,17 +309,14 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       onBlur: () => handleBlur(index),
     }
 
-    const BlockComponent = blockComponents[item.type]
+    const BlockContent = blockContentComponents[item.type]
 
     return (
       <Block
         key={item.id}
         {...blockProps}
       >
-        <BlockComponent
-          key={item.id}
-          {...blockContentProps}
-        />
+        <BlockContent {...blockContentProps} />
       </Block>
     )
   }, [

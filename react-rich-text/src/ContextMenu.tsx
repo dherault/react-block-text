@@ -7,6 +7,7 @@ import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from './
 const items = [
   {
     command: 'text',
+    shortcuts: 'txt',
     title: 'Text',
     label: 'Just start writing with plain text',
     icon: (
@@ -16,6 +17,7 @@ const items = [
   {
     command: 'heading1',
     title: 'Heading 1',
+    shortcuts: 'h1',
     label: 'Big section heading',
     icon: (
       <HeadingIcon>
@@ -26,6 +28,7 @@ const items = [
   {
     command: 'heading2',
     title: 'Heading 2',
+    shortcuts: 'h2',
     label: 'Medium section heading',
     icon: (
       <HeadingIcon>
@@ -36,6 +39,7 @@ const items = [
   {
     command: 'heading3',
     title: 'Heading 3',
+    shortcuts: 'h3',
     label: 'Small section heading',
     icon: (
       <HeadingIcon>
@@ -46,13 +50,13 @@ const items = [
 ] as const
 
 const fuseOptions = {
-  keys: ['title', 'label'],
+  keys: ['title', 'label', 'shortcuts'],
   threshold: 0.3,
 }
 
 function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [hoveredIndex, setHoveredIndex] = useState(-1)
+  const [hoveredIndex, setHoveredIndex] = useState(0)
   const fuse = useMemo(() => new Fuse(items, fuseOptions), [])
   const results = useMemo(() => query ? fuse.search(query) : items.map(item => ({ item })), [fuse, query])
 

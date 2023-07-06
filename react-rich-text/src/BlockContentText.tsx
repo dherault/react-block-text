@@ -42,7 +42,7 @@ function BlockContentText({
 
   return (
     <div className={_('flex-grow transition-all duration-75', {
-      'text-5xl font-semibold': type === 'heading1',
+      'text-4xl font-semibold': type === 'heading1',
       'text-3xl font-semibold': type === 'heading2',
       'text-xl font-semibold': type === 'heading3',
     })}

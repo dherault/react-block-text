@@ -1,15 +1,29 @@
-import { useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 
 import AddIcon from './icons/Add'
 import DragIcon from './icons/Drag'
 
-import { BlockProps, DragItem } from './types'
+import { BlockProps, DragItem, TopLeft } from './types'
+import BlockMenu from './BlockMenu'
+
+const typeToPaddingTop = {
+  heading1: 24,
+  heading2: 16,
+  heading3: 12,
+} as const
+
+const typeToPaddingBottom = {
+  heading1: 8,
+  heading2: 8,
+  heading3: 8,
+} as const
 
 function Block({
   children,
   readOnly,
   id,
+  type,
   index,
   hovered,
   onAddItem,
@@ -21,6 +35,7 @@ function Block({
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+  const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
   const [{ handlerId }, drop] = useDrop<
     DragItem,
@@ -101,12 +116,34 @@ function Block({
 
   const opacity = isDragging ? 0.01 : 1
 
+  const handleDragClick = useCallback(() => {
+    if (!previewRef.current) return
+    if (!dragRef.current) return
+
+    const previewRect = previewRef.current.getBoundingClientRect()
+    const dragRect = dragRef.current.getBoundingClientRect()
+
+    console.log({
+      top: dragRect.top - previewRect.top,
+      left: dragRect.left - previewRect.left,
+    })
+
+    setMenuPosition({
+      top: dragRect.top - previewRect.top - 4,
+      left: dragRect.left - previewRect.left,
+    })
+  }, [])
+
   return (
     <div
       ref={previewRef}
-      className="py-1 w-full flex items-start gap-1 relative"
+      className="w-full flex items-start gap-1 relative"
       data-handler-id={handlerId}
-      style={{ opacity }}
+      style={{
+        opacity,
+        paddingTop: typeToPaddingTop[type as keyof typeof typeToPaddingTop] ?? 4,
+        paddingBottom: typeToPaddingBottom[type as keyof typeof typeToPaddingBottom] ?? 4,
+      }}
       onMouseMove={onMouseEnter}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -124,11 +161,15 @@ function Block({
           </div>
           <div
             ref={dragRef}
+            onClick={handleDragClick}
             className="py-1 hover:bg-gray-100 rounded cursor-pointer"
           >
             <DragIcon width={18} />
           </div>
         </div>
+      )}
+      {!!menuPosition && (
+        <BlockMenu {...menuPosition} />
       )}
       {children}
     </div>

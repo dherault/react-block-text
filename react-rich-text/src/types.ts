@@ -27,6 +27,7 @@ export type ContextMenuData = {
 export type BlockProps = {
   children: ReactNode
   id: string
+  type: ReactRichTextDataItemType
   index: number
   readOnly: boolean
   hovered: boolean
@@ -79,4 +80,14 @@ export type ContextMenuItemProps = {
 
 export type ContextMenuIconProps = {
   children: ReactNode
+}
+
+export type BlockMenuProps = {
+  top: number
+  left: number
+}
+
+export type TopLeft = {
+  top: number
+  left: number
 }
