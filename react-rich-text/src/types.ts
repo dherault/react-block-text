@@ -3,9 +3,11 @@ import type { DraftHandleValue, EditorState } from 'draft-js'
 
 export type ReactRichTextData = ReactRichTextDataItem[]
 
+export type ReactRichTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
+
 export type ReactRichTextDataItem = {
   id: string
-  type: 'text' | 'heading1' | 'heading2' | 'heading3'
+  type: ReactRichTextDataItemType
   data: string
 }
 
@@ -23,6 +25,7 @@ export type ContextMenuData = {
 
 export type BlockProps = {
   id: string
+  type: ReactRichTextDataItemType
   index: number
   editorState: EditorState
   hovered: boolean
@@ -53,7 +56,7 @@ export type ContextMenuProps = {
   query: string
   top: number
   left: number
-  onSelect: (command: string) => void
+  onSelect: (command: ReactRichTextDataItemType) => void
   onClose: () => void
 }
 

@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import { useDrag, useDrop } from 'react-dnd'
+import _ from 'clsx'
 
 import AddIcon from './icons/Add'
 import DragIcon from './icons/Drag'
@@ -12,8 +13,16 @@ const COMMANDS = {
   SAVE: 'save',
 }
 
+const typeToPlaceholder = {
+  text: "Start typing or press '/' for commands",
+  heading1: 'Heading 1',
+  heading2: 'Heading 2',
+  heading3: 'Heading 3',
+}
+
 function Block({
   id,
+  type,
   index,
   editorState,
   hovered,
@@ -152,7 +161,12 @@ function Block({
           <DragIcon width={18} />
         </div>
       </div>
-      <div className="flex-grow">
+      <div className={_('flex-grow transition-all duration-75', {
+        'text-5xl font-semibold': type === 'heading1',
+        'text-3xl font-semibold': type === 'heading2',
+        'text-xl font-semibold': type === 'heading3',
+      })}
+      >
         <Editor
           ref={registerRef}
           editorState={editorState}
@@ -163,7 +177,7 @@ function Block({
           onDownArrow={onDownArrow}
           onFocus={onFocus}
           onBlur={onBlur}
-          placeholder={focused ? "Start typing or press '/' for commands" : ''}
+          placeholder={focused ? typeToPlaceholder[type] : ''}
           keyBindingFn={bindKey}
           handleKeyCommand={handleKeyCommand}
         />

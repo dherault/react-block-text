@@ -2,13 +2,20 @@ import { useCallback, useEffect, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Editor, EditorState, SelectionState, convertToRaw } from 'draft-js'
+import { Editor, EditorState, Modifier, SelectionState, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
-import { BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextProps } from './types'
+import { BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
 
 import Block from './Block'
 import ContextMenu from './ContextMenu'
+
+const blockComponents = {
+  text: Block,
+  heading1: Block,
+  heading2: Block,
+  heading3: Block,
+}
 
 // Not a state to avoid infinite render loops
 const editorRefs: Record<string, Editor | null> = {}
@@ -171,7 +178,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setHoveredIndex(-1)
   }, [value, onChange])
 
-  const handleContextMenuSelect = useCallback((command: string) => {
+  const handleContextMenuSelect = useCallback((command: ReactRichTextDataItemType) => {
     console.log('command', command)
     setContextMenuData(null)
 
@@ -182,13 +189,52 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     if (item.type === command) return
 
     console.log('change type', command)
-  }, [value, contextMenuData])
+
+    const editorState = editorStates[id]
+    const currentSelection = editorState.getSelection()
+    const blockKey = currentSelection.getStartKey()
+    const block = editorState.getCurrentContent().getBlockForKey(blockKey)
+    const originalOffset = currentSelection.getFocusOffset()
+    let blockText = block.getText()
+    let offset = originalOffset
+
+    while (blockText[offset - 1] !== '/') {
+      offset--
+      blockText = blockText.slice(0, -1)
+    }
+
+    // Remove '/'
+    blockText = blockText.slice(0, -1)
+    offset--
+
+    const selectionStateToRemove = SelectionState.createEmpty(blockKey).merge({
+      focusOffset: originalOffset,
+      anchorOffset: offset,
+    })
+    const selectionStateToApply = SelectionState.createEmpty(blockKey).merge({
+      focusOffset: offset,
+      anchorOffset: offset,
+    })
+    const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'backward')
+    let nextEditorState = EditorState.push(editorState, nextContent, 'change-block-data')
+
+    nextEditorState = EditorState.forceSelection(nextEditorState, selectionStateToApply)
+
+    setEditorStates(x => ({ ...x, [id]: nextEditorState }))
+
+    const nextValue = [...value]
+
+    nextValue.splice(nextValue.indexOf(item), 1, { ...item, type: command })
+
+    onChange(nextValue)
+  }, [value, editorStates, contextMenuData, onChange])
 
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
     const props: BlockProps = {
       id: item.id,
+      type: item.type,
       index,
       editorState: editorStates[item.id],
       hovered: !isDragging && index === hoveredIndex,
@@ -209,8 +255,10 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
       onDragEnd: () => setIsDragging(false),
     }
 
+    const BlockComponent = blockComponents[item.type]
+
     return (
-      <Block
+      <BlockComponent
         key={item.id}
         {...props}
       />
