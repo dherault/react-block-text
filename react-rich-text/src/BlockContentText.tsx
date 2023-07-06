@@ -24,11 +24,11 @@ function BlockContentText({
   registerRef,
   onChange,
   onReturn,
-  onBeforeInput,
   onUpArrow,
   onDownArrow,
   onFocus,
   onBlur,
+  onCopy,
   onPaste,
 }: BlockContentTextProps) {
   const handleKeyCommand = useCallback((command: string) => {
@@ -49,20 +49,20 @@ function BlockContentText({
     })}
     >
       <Editor
-        readOnly={readOnly}
         ref={registerRef}
+        readOnly={readOnly}
         editorState={editorState}
         onChange={onChange}
         handleReturn={onReturn}
-        handleBeforeInput={onBeforeInput}
         onUpArrow={onUpArrow}
         onDownArrow={onDownArrow}
         onFocus={onFocus}
         onBlur={onBlur}
+        onCopy={onCopy}
+        handlePastedText={onPaste}
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
         handleKeyCommand={handleKeyCommand}
-        handlePastedText={onPaste}
       />
     </div>
   )

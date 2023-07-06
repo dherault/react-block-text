@@ -6,6 +6,7 @@ export type ReactRichTextData = ReactRichTextDataItem[]
 export type ReactRichTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
 
 export type ReactRichTextDataItem = {
+  reactBlockTextVersion: string
   id: string
   type: ReactRichTextDataItemType
   data: string
@@ -47,12 +48,12 @@ export type BlockContentTextProps = {
   focused: boolean
   registerRef: (ref: any) => void
   onChange: (editorState: EditorState) => void
-  onBeforeInput: (chars: string) => DraftHandleValue
   onReturn: (event: any) => DraftHandleValue
   onUpArrow: (event: any) => void
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
+  onCopy: () => void
   onPaste: () => DraftHandleValue
 }
 

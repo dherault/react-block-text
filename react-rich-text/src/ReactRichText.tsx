@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { ContentBlock, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import { BlockContentTextProps, BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
@@ -18,15 +18,15 @@ const blockContentComponents = {
   heading3: BlockContentText,
 }
 
+// TODO rename to react-block-text
+const VERSION = '1.0.0'
+
 // Not a state to avoid infinite render loops
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
 
 // Not a state for performance reasons
 let isMouseDown = false
 let isSelecting = false
-
-// For some reason paste is called twice
-const lastPasteCallTime = 0
 
 function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const instanceId = useMemo(() => nanoid(), [])
@@ -56,6 +56,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const createTextItem = useCallback(() => {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
+      reactBlockTextVersion: VERSION,
       id: nanoid(),
       type: 'text',
       data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
@@ -153,15 +154,6 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       setContextMenuData(x => x ? ({ ...x!, query }) : null) // Due to side effects the ternary is mandatory here
     }
   }, [value, instanceId, contextMenuData, onChange])
-
-  /* ---
-    BEFORE INPUT
-  --- */
-  const handleBeforeInput = useCallback((id: string, chars: string) => {
-    console.log()
-
-    return 'not-handled'
-  }, [])
 
   /* ---
     RETURN
@@ -272,19 +264,42 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [value, onChange])
 
   /* ---
+    COPY
+  --- */
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(JSON.stringify(selectedItems))
+  // For some reason a dummy dependency is needed here, therefore instanceId is added
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instanceId, selectedItems])
+
+  /* ---
     PASTE
   --- */
+  const handleActualPaste = useCallback(async (index: number) => {
+    const data = await window.navigator.clipboard.readText()
+
+    let parsedData = null
+
+    try {
+      parsedData = JSON.parse(data)
+    }
+    catch (error) {
+      //
+    }
+
+    if (Array.isArray(parsedData) && parsedData[0] && parsedData[0].reactBlockTextVersion === VERSION) {
+      console.log('paste xxx', parsedData)
+    }
+    else {
+      console.log('paste', data)
+    }
+  }, [])
+
   const handlePaste = useCallback((index: number) => {
-    // if (lastPasteCallTime + 16 > Date.now()) {
-    //   return 'handled'
-    // }
-
-    // lastPasteCallTime = Date.now()
-
-    console.log('paste', index)
+    handleActualPaste(index)
 
     return 'handled'
-  }, [])
+  }, [handleActualPaste])
 
   /* ---
     CONTEXT MENU SELECT
@@ -473,12 +488,12 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       focused: !isDragging && index === focusedIndex,
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
-      onBeforeInput: chars => handleBeforeInput(item.id, chars),
       onReturn: event => handleReturn(index, event),
       onUpArrow: event => handleUpArrow(index, event),
       onDownArrow: event => handleDownArrow(index, event),
       onFocus: () => setFocusedIndex(index),
       onBlur: () => handleBlur(index),
+      onCopy: handleCopy,
       onPaste: () => handlePaste(index),
     }
 
@@ -500,11 +515,11 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     isDragging,
     handleAddItem,
     handleChange,
-    handleBeforeInput,
     handleReturn,
     handleUpArrow,
     handleDownArrow,
     handleBlur,
+    handleCopy,
     handlePaste,
     handleDrag,
     handleDeleteItem,
@@ -518,16 +533,11 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     if (value.length) return
     if (readOnly) return
 
-    const editorState = EditorState.createEmpty()
-    const item: ReactRichTextDataItem = {
-      id: nanoid(),
-      type: 'text',
-      data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
-    }
+    const { editorState, item } = createTextItem()
 
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange([item])
-  }, [value, readOnly, onChange])
+  }, [value, readOnly, onChange, createTextItem])
 
   /* ---
     READ ONLY UPDATE
