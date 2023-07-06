@@ -25,6 +25,9 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 let isMouseDown = false
 let isSelecting = false
 
+// For some reason paste is called twice
+const lastPasteCallTime = 0
+
 function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const instanceId = useMemo(() => nanoid(), [])
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
@@ -269,6 +272,21 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [value, onChange])
 
   /* ---
+    PASTE
+  --- */
+  const handlePaste = useCallback((index: number) => {
+    // if (lastPasteCallTime + 16 > Date.now()) {
+    //   return 'handled'
+    // }
+
+    // lastPasteCallTime = Date.now()
+
+    console.log('paste', index)
+
+    return 'handled'
+  }, [])
+
+  /* ---
     CONTEXT MENU SELECT
   --- */
   const handleContextMenuSelect = useCallback((command: ReactRichTextDataItemType) => {
@@ -428,14 +446,6 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [value, editorStates])
 
   /* ---
-    PASTE
-  --- */
-  const handlePaste = useCallback((event: ClipboardEvent) => {
-    event.preventDefault()
-    console.log('paste')
-  }, [])
-
-  /* ---
     RENDER EDITOR
   --- */
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
@@ -469,6 +479,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       onDownArrow: event => handleDownArrow(index, event),
       onFocus: () => setFocusedIndex(index),
       onBlur: () => handleBlur(index),
+      onPaste: () => handlePaste(index),
     }
 
     const BlockContent = blockContentComponents[item.type]
@@ -494,6 +505,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     handleUpArrow,
     handleDownArrow,
     handleBlur,
+    handlePaste,
     handleDrag,
     handleDeleteItem,
     registerRef,
@@ -609,17 +621,6 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
-
-  /* ---
-    PASTE
-  --- */
-  useEffect(() => {
-    window.addEventListener('paste', handlePaste)
-
-    return () => {
-      window.removeEventListener('paste', handlePaste)
-    }
-  }, [handlePaste])
 
   /* ---
     MAIN RETURN STATEMENT

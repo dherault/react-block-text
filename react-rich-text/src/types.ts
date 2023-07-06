@@ -53,6 +53,7 @@ export type BlockContentTextProps = {
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
+  onPaste: () => DraftHandleValue
 }
 
 export interface DragItem {

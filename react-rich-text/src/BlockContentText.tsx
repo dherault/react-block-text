@@ -29,6 +29,7 @@ function BlockContentText({
   onDownArrow,
   onFocus,
   onBlur,
+  onPaste,
 }: BlockContentTextProps) {
   const handleKeyCommand = useCallback((command: string) => {
     console.log('command', command)
@@ -61,6 +62,7 @@ function BlockContentText({
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
         handleKeyCommand={handleKeyCommand}
+        handlePastedText={onPaste}
       />
     </div>
   )
