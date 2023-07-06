@@ -1,5 +1,5 @@
-import { useRef } from 'react'
-import { DraftHandleValue, Editor, EditorState } from 'draft-js'
+import { useCallback, useRef } from 'react'
+import { DraftHandleValue, Editor, EditorState, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import { useDrag, useDrop } from 'react-dnd'
 
 import AddIcon from './icons/Add'
@@ -14,6 +14,7 @@ type BlockProps = {
   registerRef: (ref: any) => void
   onAddItem: () => void
   onChange: (editorState: EditorState) => void
+  onBeforeInput: (chars: string) => DraftHandleValue
   onReturn: (event: any) => DraftHandleValue
   onUpArrow: (event: any) => void
   onDownArrow: (event: any) => void
@@ -32,6 +33,11 @@ interface DragItem {
   type: string
 }
 
+const COMMANDS = {
+  OPEN_MENU: 'open-menu',
+  SAVE: 'save',
+}
+
 function Block({
   id,
   index,
@@ -41,6 +47,7 @@ function Block({
   registerRef,
   onAddItem,
   onChange,
+  onBeforeInput,
   onReturn,
   onUpArrow,
   onDownArrow,
@@ -112,7 +119,7 @@ function Block({
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: 'block',
-    item: () => {
+    item() {
       onDragStart()
 
       return { id, index }
@@ -120,7 +127,7 @@ function Block({
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
-    end: (_item, monitor) => {
+    end(_item, monitor) {
       onDragEnd()
 
       if (!monitor.didDrop()) return
@@ -133,6 +140,16 @@ function Block({
   drop(preview(previewRef))
 
   const opacity = isDragging ? 0.01 : 1
+
+  const handleKeyCommand = useCallback((command: string) => {
+    console.log('command', command)
+
+    if (command === COMMANDS.OPEN_MENU) {
+      return 'not-handled'
+    }
+
+    return 'not-handled'
+  }, [])
 
   return (
     <div
@@ -167,15 +184,30 @@ function Block({
           editorState={editorState}
           onChange={onChange}
           handleReturn={onReturn}
+          handleBeforeInput={onBeforeInput}
           onUpArrow={onUpArrow}
           onDownArrow={onDownArrow}
           onFocus={onFocus}
           onBlur={onBlur}
           placeholder={focused ? "Start typing or press '/' for commands" : ''}
+          keyBindingFn={bindKey}
+          handleKeyCommand={handleKeyCommand}
         />
       </div>
     </div>
   )
+}
+
+function bindKey(event: any): string | null {
+  // if (event.keyCode === 191 /* `/` key */ && !KeyBindingUtil.hasCommandModifier(event)) {
+  //   return COMMANDS.OPEN_MENU
+  // }
+
+  if (event.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(event)) {
+    return COMMANDS.SAVE
+  }
+
+  return getDefaultKeyBinding(event)
 }
 
 export default Block

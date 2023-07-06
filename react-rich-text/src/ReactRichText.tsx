@@ -8,10 +8,18 @@ import 'draft-js/dist/Draft.css'
 import { ReactRichTextData, ReactRichTextDataItem } from './types'
 
 import Block from './Block'
+import ContextMenu from './ContextMenu'
 
 type ReactRichTextProps = {
   value: ReactRichTextData
   onChange: (value: ReactRichTextData) => void
+}
+
+type ContextMenuData = {
+  id: string
+  query: string
+  top: number
+  left: number
 }
 
 // Not a state to avoid infinite render loops
@@ -23,6 +31,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
+  const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
 
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     editorRefs[id] = ref
@@ -43,6 +52,57 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setForceFocusIndex(index + 1)
     setHoveredIndex(-1)
   }, [value, onChange])
+
+  const handleBeforeInput = useCallback((id: string, chars: string) => {
+    if (contextMenuData) {
+      if (chars === ' ') {
+        setContextMenuData(null)
+      }
+      else {
+        setContextMenuData(x => ({ ...x!, query: x!.query + chars }))
+      }
+
+      return 'not-handled'
+    }
+
+    if (chars === '/') {
+      const range = window.getSelection()?.getRangeAt(0)?.cloneRange()
+
+      if (!range) return 'not-handled'
+
+      range.collapse(true)
+
+      const rects = range.getClientRects()
+
+      if (rects.length) {
+        setContextMenuData({
+          id,
+          query: '',
+          top: rects[0].bottom + 4,
+          left: rects[0].right,
+        })
+
+        return 'not-handled'
+      }
+
+      const editorRef = editorRefs[id]
+
+      if (!editorRef) return 'not-handled'
+
+      const editorRects = editorRef.editorContainer?.getClientRects()
+
+      if (!editorRects?.length) return 'not-handled'
+
+      setContextMenuData({
+        id,
+        query: '',
+        top: editorRects[0].top + 24,
+        left: editorRects[0].left,
+      })
+    }
+
+    return 'not-handled'
+  }, [contextMenuData])
 
   const handleReturn = useCallback((index: number, event: any) => {
     if (event.shiftKey) return 'not-handled'
@@ -106,6 +166,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
   const handleBlur = useCallback((index: number) => {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
+    setContextMenuData(null)
   }, [value?.length])
 
   const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
@@ -133,6 +194,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
         registerRef={ref => registerRef(item.id, ref)}
         onAddItem={() => handleAddItem(index)}
         onChange={editorState => setEditorStates(x => ({ ...x, [item.id]: editorState }))}
+        onBeforeInput={chars => handleBeforeInput(item.id, chars)}
         onReturn={event => handleReturn(index, event)}
         onUpArrow={event => handleUpArrow(index, event)}
         onDownArrow={event => handleDownArrow(index, event)}
@@ -151,6 +213,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     hoveredIndex,
     focusedIndex,
     handleAddItem,
+    handleBeforeInput,
     handleReturn,
     handleUpArrow,
     handleDownArrow,
@@ -188,8 +251,15 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="w-full">
+      <div className="w-full relative">
         {value.map(renderEditor)}
+        {!!contextMenuData && (
+          <ContextMenu
+            query={contextMenuData.query}
+            top={contextMenuData.top}
+            left={contextMenuData.left}
+          />
+        )}
       </div>
     </DndProvider>
   )
