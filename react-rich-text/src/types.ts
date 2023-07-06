@@ -13,6 +13,7 @@ export type ReactRichTextDataItem = {
 
 export type ReactRichTextProps = {
   value: ReactRichTextData
+  readOnly?: boolean
   onChange: (value: ReactRichTextData) => void
 }
 
@@ -27,6 +28,7 @@ export type BlockProps = {
   id: string
   type: ReactRichTextDataItemType
   index: number
+  readOnly: boolean
   editorState: EditorState
   hovered: boolean
   focused: boolean

@@ -24,6 +24,7 @@ function Block({
   id,
   type,
   index,
+  readOnly,
   editorState,
   hovered,
   focused,
@@ -144,23 +145,25 @@ function Block({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div
-        className="flex-shrink-0 flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
-        style={{ opacity: hovered ? 1 : 0 }}
-      >
+      {!readOnly && (
         <div
-          className="p-1 hover:bg-gray-100 rounded cursor-pointer"
-          onClick={onAddItem}
+          className="flex-shrink-0 flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
+          style={{ opacity: hovered ? 1 : 0 }}
         >
-          <AddIcon width={18} />
+          <div
+            className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+            onClick={onAddItem}
+          >
+            <AddIcon width={18} />
+          </div>
+          <div
+            ref={dragRef}
+            className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+          >
+            <DragIcon width={18} />
+          </div>
         </div>
-        <div
-          ref={dragRef}
-          className="py-1 hover:bg-gray-100 rounded cursor-pointer"
-        >
-          <DragIcon width={18} />
-        </div>
-      </div>
+      )}
       <div className={_('flex-grow transition-all duration-75', {
         'text-5xl font-semibold': type === 'heading1',
         'text-3xl font-semibold': type === 'heading2',
@@ -168,6 +171,7 @@ function Block({
       })}
       >
         <Editor
+          readOnly={readOnly}
           ref={registerRef}
           editorState={editorState}
           onChange={onChange}
@@ -177,7 +181,7 @@ function Block({
           onDownArrow={onDownArrow}
           onFocus={onFocus}
           onBlur={onBlur}
-          placeholder={focused ? typeToPlaceholder[type] : ''}
+          placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
           keyBindingFn={bindKey}
           handleKeyCommand={handleKeyCommand}
         />

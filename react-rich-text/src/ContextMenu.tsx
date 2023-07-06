@@ -113,7 +113,7 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   return (
     <div
       ref={rootRef}
-      className="py-2 px-1 bg-white border shadow-xl rounded fixed"
+      className="py-2 px-1 bg-white border shadow-xl rounded fixed z-50"
       style={{
         top,
         left,

@@ -15,6 +15,16 @@ function App() {
           onChange={setData}
         />
       </div>
+      <div className="mt-8 p-2 bg-white w-full rounded">
+        <ReactRichText
+          readOnly
+          value={data}
+          onChange={setData}
+        />
+      </div>
+      <div className="mt-8 p-2 bg-white w-full rounded">
+        {JSON.stringify(data, null, 2)}
+      </div>
     </div>
   )
 }

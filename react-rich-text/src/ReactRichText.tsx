@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Editor, EditorState, Modifier, SelectionState, convertToRaw } from 'draft-js'
+import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import { BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
@@ -17,10 +17,14 @@ const blockComponents = {
   heading3: Block,
 }
 
-// Not a state to avoid infinite render loops
-const editorRefs: Record<string, Editor | null> = {}
+// TODO fix double rendering
+// TODO then image block
 
-function ReactRichText({ value, onChange }: ReactRichTextProps) {
+// Not a state to avoid infinite render loops
+const editorRefs: Record<string, Record<string, Editor | null>> = {}
+
+function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
+  const instanceId = useMemo(() => nanoid(), [])
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
@@ -32,8 +36,12 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     REGISTER REF
   --- */
   const registerRef = useCallback((id: string, ref: Editor | null) => {
-    editorRefs[id] = ref
-  }, [])
+    if (!editorRefs[instanceId]) {
+      editorRefs[instanceId] = {}
+    }
+
+    editorRefs[instanceId][id] = ref
+  }, [instanceId])
 
   /* ---
     ADD ITEM
@@ -61,6 +69,14 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   const handleChange = useCallback((id: string, editorState: EditorState) => {
     setEditorStates(x => ({ ...x, [id]: editorState }))
 
+    const data = JSON.stringify(convertToRaw(editorState.getCurrentContent()))
+
+    const nextValue = [...value]
+
+    nextValue.find(x => x.id === id)!.data = data
+
+    onChange(nextValue)
+
     const currentSelection = editorState.getSelection()
     const block = editorState.getCurrentContent().getBlockForKey(currentSelection.getStartKey())
     const text = block.getText()
@@ -70,7 +86,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     const lastChar = lastWord.slice(-1)
 
     if (!contextMenuData && lastChar === '/') {
-      setContextMenuData(getContextMenuData(id))
+      setContextMenuData(getContextMenuData(instanceId, id))
 
       return
     }
@@ -86,7 +102,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
       setContextMenuData(x => x ? ({ ...x!, query }) : null) // Due to side effects the ternary is mandatory here
     }
-  }, [contextMenuData])
+  }, [value, instanceId, contextMenuData, onChange])
 
   /* ---
     BEFORE INPUT
@@ -119,7 +135,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
-    if (!editorRefs[value[index - 1]?.id]) return
+    if (!editorRefs[instanceId]?.[value[index - 1]?.id]) return
 
     if (contextMenuData) {
       event.preventDefault()
@@ -147,14 +163,14 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setHoveredIndex(-1)
 
     event.preventDefault()
-  }, [value, editorStates, contextMenuData])
+  }, [value, instanceId, editorStates, contextMenuData])
 
   /* ---
     DOWN ARROWW
   --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
-    if (!editorRefs[value[index + 1]?.id]) return
+    if (!editorRefs[instanceId]?.[value[index + 1]?.id]) return
 
     if (contextMenuData) {
       event.preventDefault()
@@ -182,7 +198,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setHoveredIndex(-1)
 
     event.preventDefault()
-  }, [value, editorStates, contextMenuData])
+  }, [value, instanceId, editorStates, contextMenuData])
 
   /* ---
     BLUR
@@ -253,8 +269,9 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
     setEditorStates(x => ({ ...x, [id]: nextEditorState }))
 
     const nextValue = [...value]
+    const data = JSON.stringify(convertToRaw(nextEditorState.getCurrentContent()))
 
-    nextValue.splice(nextValue.indexOf(item), 1, { ...item, type: command })
+    nextValue.splice(nextValue.indexOf(item), 1, { ...item, type: command, data })
 
     onChange(nextValue)
   }, [value, editorStates, contextMenuData, onChange])
@@ -269,6 +286,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
       id: item.id,
       type: item.type,
       index,
+      readOnly: !!readOnly,
       editorState: editorStates[item.id],
       hovered: !isDragging && index === hoveredIndex,
       focused: !isDragging && index === focusedIndex,
@@ -297,6 +315,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
       />
     )
   }, [
+    readOnly,
     editorStates,
     isDragging,
     hoveredIndex,
@@ -317,6 +336,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
   --- */
   useEffect(() => {
     if (value.length) return
+    if (readOnly) return
 
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
@@ -327,22 +347,39 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange([item])
-  }, [value, onChange])
+  }, [value, readOnly, onChange])
+
+  /* ---
+    READ ONLY UPDATE
+  --- */
+  useEffect(() => {
+    if (!readOnly) return
+
+    const nextEditorStates = value.map(item => ({
+      id: item.id,
+      editorState: EditorState.createWithContent(convertFromRaw(JSON.parse(item.data))),
+    }))
+    .reduce((acc, item) => ({ ...acc, [item.id]: item.editorState }), {})
+
+    console.log('nextEditorStates', nextEditorStates)
+    setEditorStates(nextEditorStates)
+  }, [readOnly, value])
 
   /* ---
     FORCE FOCUS
   --- */
   useEffect(() => {
+    if (readOnly) return
     if (forceFocusIndex === -1) return
 
     console.log('forcing focus')
 
     setForceFocusIndex(-1)
 
-    if (!editorRefs[value[forceFocusIndex]?.id]) return
+    if (!editorRefs[instanceId]?.[value[forceFocusIndex]?.id]) return
 
-    editorRefs[value[forceFocusIndex].id]?.focus()
-  }, [value, forceFocusIndex, editorStates])
+    editorRefs[instanceId][value[forceFocusIndex].id]?.focus()
+  }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
 
   /* ---
     MAIN RETURN STATEMENT
@@ -370,7 +407,7 @@ function ReactRichText({ value, onChange }: ReactRichTextProps) {
 /* ---
   GET CONTEXT MENU DATA
 --- */
-function getContextMenuData(id: string): ContextMenuData | null {
+function getContextMenuData(instanceId: string, id: string): ContextMenuData | null {
   const range = window.getSelection()?.getRangeAt(0)?.cloneRange()
 
   if (!range) return null
@@ -388,7 +425,7 @@ function getContextMenuData(id: string): ContextMenuData | null {
     }
   }
 
-  const editorRef = editorRefs[id]
+  const editorRef = editorRefs[instanceId][id]
 
   if (!editorRef) return null
 
