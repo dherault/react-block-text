@@ -21,6 +21,10 @@ const blockContentComponents = {
 // Not a state to avoid infinite render loops
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
 
+// Not a state for performance reasons
+let isMouseDown = false
+let isSelecting = false
+
 function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const instanceId = useMemo(() => nanoid(), [])
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
@@ -29,6 +33,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
+  const [, forceRerender] = useState(false)
 
   /* ---
     REGISTER REF
@@ -74,6 +79,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     DELETE ITEM
   --- */
   const handleDeleteItem = useCallback((index: number) => {
+    // Delete only item
     if (value.length === 1) {
       const itemId = value[0].id
 
@@ -316,6 +322,10 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     onChange(nextValue)
   }, [value, editorStates, contextMenuData, onChange])
 
+  const handleMultiBlockSelection = useCallback((blockKey: string, text: string) => {
+    console.log('handleMultiBlockSelection', blockKey, text)
+  }, [])
+
   /* ---
     RENDER EDITOR
   --- */
@@ -339,7 +349,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     const blockContentProps: BlockContentTextProps = {
       type: item.type,
-      readOnly: !!readOnly,
+      readOnly: isSelecting || !!readOnly,
       editorState: editorStates[item.id],
       focused: !isDragging && index === focusedIndex,
       registerRef: ref => registerRef(item.id, ref),
@@ -365,9 +375,9 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [
     readOnly,
     editorStates,
-    isDragging,
     hoveredIndex,
     focusedIndex,
+    isDragging,
     handleAddItem,
     handleChange,
     handleBeforeInput,
@@ -428,6 +438,70 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     editorRefs[instanceId][value[forceFocusIndex].id]?.focus()
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
+
+  /* ---
+    MULTI BLOCK SELECTION
+  --- */
+  useEffect(() => {
+    const handleMouseDown = () => {
+      isMouseDown = true
+    }
+
+    window.addEventListener('mousedown', handleMouseDown)
+
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      isMouseDown = false
+
+      if (!isSelecting) return
+
+      isSelecting = false
+
+      forceRerender(x => !x)
+
+      try {
+        const range = window.getSelection()?.getRangeAt(0)
+        const text = range?.toString()
+
+        console.log('selected:', text)
+
+        if (range && text) {
+          const blockKey = range.startContainer.parentElement?.parentElement?.getAttribute('data-offset-key')?.split('-')[0]
+
+          if (blockKey) {
+            handleMultiBlockSelection(blockKey, text)
+          }
+        }
+      }
+      catch (error) {
+        //
+      }
+    }
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [handleMultiBlockSelection])
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      if (!isMouseDown) return
+
+      isSelecting = true
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [])
 
   /* ---
     MAIN RETURN STATEMENT
