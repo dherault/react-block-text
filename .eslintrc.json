@@ -1,5 +1,6 @@
 {
   "extends": "dherault-typescript",
   "rules": {
+    "no-labels": "off"
   }
 }
