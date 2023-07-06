@@ -104,7 +104,7 @@ function Block({
   return (
     <div
       ref={previewRef}
-      className="py-1 w-full flex items-center gap-1 relative"
+      className="py-1 w-full flex items-start gap-1 relative"
       data-handler-id={handlerId}
       style={{ opacity }}
       onMouseMove={onMouseEnter}

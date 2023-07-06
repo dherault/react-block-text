@@ -368,7 +368,6 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     }))
     .reduce((acc, item) => ({ ...acc, [item.id]: item.editorState }), {})
 
-    console.log('nextEditorStates', nextEditorStates)
     setEditorStates(nextEditorStates)
   }, [readOnly, value])
 

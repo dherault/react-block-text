@@ -9,13 +9,13 @@ function App() {
 
   return (
     <div className="p-8 w-full h-full flex flex-col items-center justify-center bg-gray-100">
-      <div className="p-2 bg-white w-full rounded">
+      <div className="px-2 bg-white w-full rounded">
         <ReactRichText
           value={data}
           onChange={setData}
         />
       </div>
-      <div className="mt-8 p-2 bg-white w-full rounded">
+      <div className="mt-8 px-2 bg-white w-full rounded">
         <ReactRichText
           readOnly
           value={data}
