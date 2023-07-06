@@ -42,15 +42,24 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   }, [instanceId])
 
   /* ---
-    ADD ITEM
+    CREATE TEXT ITEM
   --- */
-  const handleAddItem = useCallback((index: number) => {
+  const createTextItem = useCallback(() => {
     const editorState = EditorState.createEmpty()
     const item: ReactRichTextDataItem = {
       id: nanoid(),
       type: 'text',
       data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
     }
+
+    return { editorState, item }
+  }, [])
+
+  /* ---
+    ADD ITEM
+  --- */
+  const handleAddItem = useCallback((index: number) => {
+    const { editorState, item } = createTextItem()
     const nextValue = [...value]
 
     nextValue.splice(index + 1, 0, item)
@@ -59,7 +68,40 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     onChange(nextValue)
     setForceFocusIndex(index + 1)
     setHoveredIndex(-1)
-  }, [value, onChange])
+  }, [value, onChange, createTextItem])
+
+  /* ---
+    DELETE ITEM
+  --- */
+  const handleDeleteItem = useCallback((index: number) => {
+    if (value.length === 1) {
+      const itemId = value[0].id
+
+      const { editorState, item } = createTextItem()
+
+      // Prevent flickering due to key change
+      item.id = itemId
+
+      setEditorStates({ [item.id]: editorState })
+      onChange([item])
+
+      return
+    }
+
+    const nextValue = [...value]
+
+    const [item] = nextValue.splice(index, 1)
+
+    onChange(nextValue)
+    setHoveredIndex(-1)
+    setEditorStates(x => {
+      const nextEditorStates = { ...x }
+
+      delete nextEditorStates[item.id]
+
+      return nextEditorStates
+    })
+  }, [value, onChange, createTextItem])
 
   /* ---
     CHANGE
@@ -292,6 +334,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       onDragStart: () => setIsDragging(true),
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
+      onDelete: () => handleDeleteItem(index),
     }
 
     const blockContentProps: BlockContentTextProps = {
@@ -333,6 +376,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     handleDownArrow,
     handleBlur,
     handleDrag,
+    handleDeleteItem,
     registerRef,
   ])
 

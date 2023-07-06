@@ -32,6 +32,7 @@ function Block({
   onDragStart,
   onDrag,
   onDragEnd,
+  onDelete,
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -169,7 +170,11 @@ function Block({
         </div>
       )}
       {!!menuPosition && (
-        <BlockMenu {...menuPosition} />
+        <BlockMenu
+          onDelete={onDelete}
+          onClose={() => setMenuPosition(null)}
+          {...menuPosition}
+        />
       )}
       {children}
     </div>

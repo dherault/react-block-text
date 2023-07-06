@@ -37,6 +37,7 @@ export type BlockProps = {
   onDragStart: () => void
   onDrag: (dragIndex: number, hoverIndex: number) => void
   onDragEnd: () => void
+  onDelete: () => void
 }
 
 export type BlockContentTextProps = {
@@ -85,9 +86,17 @@ export type ContextMenuIconProps = {
 export type BlockMenuProps = {
   top: number
   left: number
+  onDelete: () => void
+  onClose: () => void
 }
 
 export type TopLeft = {
   top: number
   left: number
+}
+
+export type BlockMenuItemProps = {
+  icon: ReactNode
+  label: string
+  onClick: () => void
 }
