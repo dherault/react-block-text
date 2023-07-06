@@ -25,15 +25,25 @@ export type ContextMenuData = {
 }
 
 export type BlockProps = {
+  children: ReactNode
   id: string
-  type: ReactRichTextDataItemType
   index: number
   readOnly: boolean
-  editorState: EditorState
   hovered: boolean
+  onAddItem: () => void
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+  onDragStart: () => void
+  onDrag: (dragIndex: number, hoverIndex: number) => void
+  onDragEnd: () => void
+}
+
+export type BlockContentTextProps = {
+  type: ReactRichTextDataItemType
+  readOnly: boolean
+  editorState: EditorState
   focused: boolean
   registerRef: (ref: any) => void
-  onAddItem: () => void
   onChange: (editorState: EditorState) => void
   onBeforeInput: (chars: string) => DraftHandleValue
   onReturn: (event: any) => DraftHandleValue
@@ -41,11 +51,6 @@ export type BlockProps = {
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
-  onMouseEnter: () => void
-  onMouseLeave: () => void
-  onDragStart: () => void
-  onDrag: (dragIndex: number, hoverIndex: number) => void
-  onDragEnd: () => void
 }
 
 export interface DragItem {

@@ -5,20 +5,18 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
-import { BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
+import { BlockContentTextProps, BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
 
 import Block from './Block'
+import BlockContentText from './BlockContentText'
 import ContextMenu from './ContextMenu'
 
 const blockComponents = {
-  text: Block,
-  heading1: Block,
-  heading2: Block,
-  heading3: Block,
+  text: BlockContentText,
+  heading1: BlockContentText,
+  heading2: BlockContentText,
+  heading3: BlockContentText,
 }
-
-// TODO fix double rendering
-// TODO then image block
 
 // Not a state to avoid infinite render loops
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
@@ -282,23 +280,12 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
-    const props: BlockProps = {
+    const blockProps: Omit<BlockProps, 'children'> = {
       id: item.id,
-      type: item.type,
       index,
       readOnly: !!readOnly,
-      editorState: editorStates[item.id],
       hovered: !isDragging && index === hoveredIndex,
-      focused: !isDragging && index === focusedIndex,
-      registerRef: ref => registerRef(item.id, ref),
       onAddItem: () => handleAddItem(index),
-      onChange: editorState => handleChange(item.id, editorState),
-      onBeforeInput: chars => handleBeforeInput(item.id, chars),
-      onReturn: event => handleReturn(index, event),
-      onUpArrow: event => handleUpArrow(index, event),
-      onDownArrow: event => handleDownArrow(index, event),
-      onFocus: () => setFocusedIndex(index),
-      onBlur: () => handleBlur(index),
       onMouseEnter: () => setHoveredIndex(index),
       onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
       onDragStart: () => setIsDragging(true),
@@ -306,13 +293,33 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       onDragEnd: () => setIsDragging(false),
     }
 
+    const blockContentProps: BlockContentTextProps = {
+      type: item.type,
+      readOnly: !!readOnly,
+      editorState: editorStates[item.id],
+      focused: !isDragging && index === focusedIndex,
+      registerRef: ref => registerRef(item.id, ref),
+      onChange: editorState => handleChange(item.id, editorState),
+      onBeforeInput: chars => handleBeforeInput(item.id, chars),
+      onReturn: event => handleReturn(index, event),
+      onUpArrow: event => handleUpArrow(index, event),
+      onDownArrow: event => handleDownArrow(index, event),
+      onFocus: () => setFocusedIndex(index),
+      onBlur: () => handleBlur(index),
+    }
+
     const BlockComponent = blockComponents[item.type]
 
     return (
-      <BlockComponent
+      <Block
         key={item.id}
-        {...props}
-      />
+        {...blockProps}
+      >
+        <BlockComponent
+          key={item.id}
+          {...blockContentProps}
+        />
+      </Block>
     )
   }, [
     readOnly,

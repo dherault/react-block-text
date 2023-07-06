@@ -1,42 +1,18 @@
-import { useCallback, useRef } from 'react'
-import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
+import { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import _ from 'clsx'
 
 import AddIcon from './icons/Add'
 import DragIcon from './icons/Drag'
 
 import { BlockProps, DragItem } from './types'
 
-const COMMANDS = {
-  OPEN_MENU: 'open-menu',
-  SAVE: 'save',
-}
-
-const typeToPlaceholder = {
-  text: "Start typing or press '/' for commands",
-  heading1: 'Heading 1',
-  heading2: 'Heading 2',
-  heading3: 'Heading 3',
-}
-
 function Block({
-  id,
-  type,
-  index,
+  children,
   readOnly,
-  editorState,
+  id,
+  index,
   hovered,
-  focused,
-  registerRef,
   onAddItem,
-  onChange,
-  onBeforeInput,
-  onReturn,
-  onUpArrow,
-  onDownArrow,
-  onFocus,
-  onBlur,
   onMouseEnter,
   onMouseLeave,
   onDragStart,
@@ -125,16 +101,6 @@ function Block({
 
   const opacity = isDragging ? 0.01 : 1
 
-  const handleKeyCommand = useCallback((command: string) => {
-    console.log('command', command)
-
-    if (command === COMMANDS.OPEN_MENU) {
-      return 'not-handled'
-    }
-
-    return 'not-handled'
-  }, [])
-
   return (
     <div
       ref={previewRef}
@@ -164,45 +130,9 @@ function Block({
           </div>
         </div>
       )}
-      <div className={_('flex-grow transition-all duration-75', {
-        'text-5xl font-semibold': type === 'heading1',
-        'text-3xl font-semibold': type === 'heading2',
-        'text-xl font-semibold': type === 'heading3',
-      })}
-      >
-        <Editor
-          readOnly={readOnly}
-          ref={registerRef}
-          editorState={editorState}
-          onChange={onChange}
-          handleReturn={onReturn}
-          handleBeforeInput={onBeforeInput}
-          onUpArrow={onUpArrow}
-          onDownArrow={onDownArrow}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
-          keyBindingFn={bindKey}
-          handleKeyCommand={handleKeyCommand}
-        />
-      </div>
+      {children}
     </div>
   )
-}
-
-/* ---
-  BIND KEYBOARD SHORTCUTS
---- */
-function bindKey(event: any): string | null {
-  // if (event.keyCode === 191 /* `/` key */ && !KeyBindingUtil.hasCommandModifier(event)) {
-  //   return COMMANDS.OPEN_MENU
-  // }
-
-  if (event.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(event)) {
-    return COMMANDS.SAVE
-  }
-
-  return getDefaultKeyBinding(event)
 }
 
 export default Block
