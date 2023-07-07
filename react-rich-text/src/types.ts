@@ -55,6 +55,7 @@ export type BlockContentTextProps = {
   onBlur: () => void
   onCopy: () => void
   onPaste: () => DraftHandleValue
+  onBackspace: () => DraftHandleValue
 }
 
 export interface DragItem {

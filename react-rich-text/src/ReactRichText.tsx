@@ -2,10 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
-import { BlockContentTextProps, BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
+import {
+  BlockContentTextProps,
+  BlockProps,
+  ContextMenuData,
+  ReactRichTextDataItem,
+  ReactRichTextDataItemType,
+  ReactRichTextProps,
+} from './types'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
@@ -231,6 +238,67 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     return 'handled'
   }, [value, editorStates, contextMenuData, onChange])
 
+  const handleBackspace = useCallback((index: number) => {
+    console.log('handleBackspace', index)
+
+    const item = value[index]
+
+    if (!item) return 'not-handled'
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return 'not-handled'
+
+    const selection = editorState.getSelection()
+
+    if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0)) return 'not-handled'
+
+    const previousItem = value[index - 1]
+
+    if (!previousItem) return 'not-handled'
+
+    const previousEditorState = editorStates[previousItem.id]
+
+    if (!previousEditorState) return 'not-handled'
+
+    const blockMap = editorState.getCurrentContent().getBlockMap()
+
+    let previousContent = previousEditorState.getCurrentContent()
+    const previousLastBlock = previousContent.getLastBlock()
+    const offset = previousLastBlock.getText().length
+
+    const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+      anchorOffset: offset,
+      focusOffset: offset,
+    })
+
+    console.log('previousContent', previousContent.getBlocksAsArray().length)
+
+    previousContent = Modifier.mergeBlockData(previousContent, previousSelection, blockMap)
+
+    console.log('previousContent x', previousContent.getBlocksAsArray().length)
+
+    const nextPreviousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
+
+    setEditorStates(x => {
+      const nextEditorStates = { ...x }
+
+      delete nextEditorStates[item.id]
+
+      nextEditorStates[previousItem.id] = nextPreviousEditorState
+
+      return nextEditorStates
+    })
+
+    const nextValue = [...value]
+
+    nextValue[index - 1] = { ...previousItem, data: JSON.stringify(convertToRaw(nextPreviousEditorState.getCurrentContent())) }
+    nextValue.splice(index, 1)
+
+    onChange(nextValue)
+
+    return 'handled'
+  }, [value, editorStates, onChange])
   /* ---
     UP ARROW
   --- */
@@ -580,6 +648,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       onBlur: () => handleBlur(index),
       onCopy: handleCopy,
       onPaste: () => handlePaste(index),
+      onBackspace: () => handleBackspace(index),
     }
 
     const BlockContent = blockContentComponents[item.type]
@@ -606,6 +675,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     handleBlur,
     handleCopy,
     handlePaste,
+    handleBackspace,
     handleDrag,
     handleDeleteItem,
     registerRef,

@@ -30,6 +30,7 @@ function BlockContentText({
   onBlur,
   onCopy,
   onPaste,
+  onBackspace,
 }: BlockContentTextProps) {
   const handleKeyCommand = useCallback((command: string) => {
     console.log('command', command)
@@ -38,8 +39,12 @@ function BlockContentText({
       return 'not-handled'
     }
 
+    if (command === 'backspace') {
+      return onBackspace()
+    }
+
     return 'not-handled'
-  }, [])
+  }, [onBackspace])
 
   return (
     <div className={_('w-full transition-all duration-75', {
