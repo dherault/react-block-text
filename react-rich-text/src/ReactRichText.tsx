@@ -176,12 +176,13 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     if (!editorState) return 'not-handled'
 
+    // We want to split the block into two
     const selection = editorState.getSelection()
     let contentState = editorState.getCurrentContent()
     const firstBlock = contentState.getFirstBlock()
     const lastBlock = contentState.getLastBlock()
     const isBackward = selection.getIsBackward()
-    let offset = 0
+    let offset = 0 // How much text we removed before splitting into two blocks
 
     // If the selection is not collapsed, we remove the selected text
     if (!selection.isCollapsed()) {
@@ -189,6 +190,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       contentState = Modifier.removeRange(contentState, selection, isBackward ? 'backward' : 'forward')
     }
 
+    // Now we consider two selections: one to keep (in the second block) and one to remove (in the first block)
     const selectionToKeep = new SelectionState({
       anchorKey: firstBlock.getKey(),
       anchorOffset: 0,
@@ -202,14 +204,13 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       focusOffset: lastBlock.getText().length,
     })
 
-    // Now that selection is collapsed, we create a new block after the current one that splits the data into two
+    // We create a new block after the current one that splits the data into two
     // Then we focus it
     const nextFirstContentState = Modifier.removeRange(contentState, selectionToRemove, 'forward')
     const nextSecondContentState = Modifier.removeRange(contentState, selectionToKeep, 'forward')
     const nextEditorState = EditorState.push(editorState, nextFirstContentState, 'change-block-data')
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
-
     const secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
     const secondItem: ReactRichTextDataItem = {
       reactBlockTextVersion: VERSION,
@@ -222,6 +223,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     const nextValue = [...value]
 
+    nextValue[index] = { ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) }
     nextValue.splice(index + 1, 0, secondItem)
 
     onChange(nextValue)
