@@ -21,6 +21,7 @@ import {
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextProps,
+  ReactBlockTextSelection,
 } from './types'
 
 import Block from './Block'
@@ -52,13 +53,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
-  const [selectedItems, setSelectedItems] = useState<ReactBlockTextDataItem[]>([])
+  const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
   const [, forceRerender] = useState(false)
 
   // A unique instance id for the sake of editorRefs, so multiple instances can be used on the same page
   const instanceId = useMemo(() => nanoid(), [])
 
-  console.log('selectedItems.length', selectedItems.length, selectedItems, instanceId)
   /* ---
     REGISTER REF
     We associate each editor with an id so that we can access it later
@@ -428,16 +428,27 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     const editorState = editorStates[value[index].id]
     const selection = editorState.getSelection()
-    const firstline = editorState.getCurrentContent().getFirstBlock().getKey() === selection.getFocusKey()
+    const firstBlock = editorState.getCurrentContent().getFirstBlock()
+    const isFirstline = firstBlock.getKey() === selection.getFocusKey()
 
-    if (!firstline) return
+    if (!isFirstline) return
+
+    const firstBlockText = firstBlock.getText()
+    const indexOfCarriageReturn = firstBlockText.indexOf('\n')
+    const focusOffset = selection.getFocusOffset()
+
+    if (indexOfCarriageReturn !== -1 && selection.getFocusOffset() > indexOfCarriageReturn) return
 
     const previousEditorState = editorStates[value[index - 1].id]
-    const previousFirstBlock = previousEditorState.getCurrentContent().getLastBlock()
-    const anchorOffset = Math.min(selection.getAnchorOffset(), previousFirstBlock.getLength())
-    const previousSelection = SelectionState.createEmpty(previousFirstBlock.getKey()).merge({
-      anchorOffset,
-      focusOffset: anchorOffset,
+    const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
+    const previousLastBlockText = previousLastBlock.getText()
+    const lines = previousLastBlockText.split('\n')
+    const lastLine = lines.pop() ?? ''
+    const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
+    const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
+    const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+      anchorOffset: offset,
+      focusOffset: offset,
     })
     const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
 
@@ -464,9 +475,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     const editorState = editorStates[value[index].id]
     const selection = editorState.getSelection()
-    const lastLine = editorState.getCurrentContent().getLastBlock().getKey() === selection.getFocusKey()
+    const isLastLine = editorState.getCurrentContent().getLastBlock().getKey() === selection.getFocusKey()
 
-    if (!lastLine) return
+    if (!isLastLine) return
 
     const nextEditorState = editorStates[value[index + 1].id]
     const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
@@ -486,7 +497,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   const handleFocus = useCallback((index: number) => {
     setFocusedIndex(index)
-    setSelectedItems([])
+    setSelection(null)
   }, [])
 
   /* ---
@@ -494,11 +505,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   --- */
   const handleBlur = useCallback((index: number) => {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
-    setSelectedItems([])
+    setSelection(null)
   }, [value?.length])
 
   const handleBlockMouseDown = useCallback(() => {
-    setSelectedItems([])
+    setSelection(null)
   }, [])
 
   /* ---
@@ -520,12 +531,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     COPY
     Write selected items to clipboard
   --- */
-  const handleCopy = useCallback(() => {
-    console.log('handleCopy', selectedItems)
-    if (!selectedItems.length) return
+  const handleWindowCopy = useCallback(() => {
+    if (!(selection && selection.items.length)) return
 
-    navigator.clipboard.writeText(JSON.stringify(selectedItems))
-  }, [selectedItems])
+    navigator.clipboard.writeText(JSON.stringify(selection.items))
+  }, [selection])
 
   /* ---
     PASTE
@@ -742,7 +752,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       selected.push(appendItemData(item, nextEditorState))
     })
 
-    setSelectedItems(selected)
+    setSelection({
+      items: selected,
+      startId: id,
+    })
   }, [value, editorStates])
 
   /* ---
@@ -786,7 +799,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   }, [handleMultiBlockSelection, focusedIndex])
 
   const handleRootBlur = useCallback(() => {
-    setSelectedItems([])
+    setSelection(null)
   }, [])
 
   const handleOutsideClick = useCallback((event: MouseEvent) => {
@@ -830,7 +843,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       onDownArrow: event => handleDownArrow(index, event),
       onFocus: () => handleFocus(index),
       onBlur: () => handleBlur(index),
-      onCopy: handleCopy,
       onPaste: () => handlePaste(index),
       onBackspace: () => handleBackspace(index),
       onDelete: () => handleDelete(index),
@@ -860,7 +872,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     handleDownArrow,
     handleFocus,
     handleBlur,
-    handleCopy,
     handlePaste,
     handleBackspace,
     handleDelete,
@@ -949,6 +960,14 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       window.removeEventListener('click', handleOutsideClick)
     }
   }, [handleOutsideClick])
+
+  useEffect(() => {
+    window.addEventListener('copy', handleWindowCopy)
+
+    return () => {
+      window.removeEventListener('copy', handleWindowCopy)
+    }
+  }, [handleWindowCopy])
 
   /* ---
     MAIN RETURN STATEMENT

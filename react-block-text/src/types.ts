@@ -47,7 +47,6 @@ export type BlockContentTextProps = {
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
-  onCopy: () => void
   onPaste: () => DraftHandleValue
   onBackspace: () => DraftHandleValue
   onDelete: () => DraftHandleValue
@@ -104,4 +103,9 @@ export interface DragItem {
 export type TopLeft = {
   top: number
   left: number
+}
+
+export type ReactBlockTextSelection = {
+  items: ReactBlockTextDataItem[]
+  startId: string
 }

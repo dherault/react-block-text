@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { KeyboardEvent, useCallback } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import _ from 'clsx'
 
@@ -28,7 +28,6 @@ function BlockContentText({
   onDownArrow,
   onFocus,
   onBlur,
-  onCopy,
   onPaste,
   onBackspace,
   onDelete,
@@ -74,7 +73,6 @@ function BlockContentText({
         onDownArrow={onDownArrow}
         onFocus={onFocus}
         onBlur={onBlur}
-        onCopy={onCopy}
         handlePastedText={onPaste}
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
@@ -88,12 +86,8 @@ function BlockContentText({
 /* ---
   BIND KEYBOARD SHORTCUTS
 --- */
-function bindKey(event: any): string | null {
-  // if (event.keyCode === 191 /* `/` key */ && !KeyBindingUtil.hasCommandModifier(event)) {
-  //   return COMMANDS.OPEN_MENU
-  // }
-
-  if (event.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(event)) {
+function bindKey(event: KeyboardEvent): string | null {
+  if (event.key === 's' && KeyBindingUtil.hasCommandModifier(event)) {
     return COMMANDS.SAVE
   }
 
