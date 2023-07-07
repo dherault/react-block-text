@@ -8,11 +8,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dherault/react-rich-text.git"
+    "url": "git+https://github.com/dherault/react-block-text.git"
   },
   "keywords": [
     "React",
-    "rich",
+    "block",
     "text",
     "block",
     "editor"
@@ -20,9 +20,9 @@
   "author": "David Hérault <dherault@gmail.com> (https://github.com/dherault)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dherault/react-rich-text/issues"
+    "url": "https://github.com/dherault/react-block-text/issues"
   },
-  "homepage": "https://github.com/dherault/react-rich-text#readme",
+  "homepage": "https://github.com/dherault/react-block-text#readme",
   "devDependencies": {
     "eslint": "^8.44.0",
     "eslint-config-dherault-typescript": "^1.2.0"
