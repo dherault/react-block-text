@@ -2,7 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { ContentBlock, ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import {
+  ContentBlock,
+  ContentState,
+  Editor,
+  EditorState,
+  Modifier,
+  SelectionState,
+  convertFromRaw,
+  convertToRaw,
+} from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import {
@@ -497,17 +506,15 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     Write selected items to clipboard
   --- */
   const handleCopy = useCallback(() => {
+    console.log('handleCopy', selectedItems)
     if (!selectedItems.length) return
 
     navigator.clipboard.writeText(JSON.stringify(selectedItems))
-  // TODO investigate
-  // For some reason a dummy dependency is needed here, therefore instanceId is added
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [instanceId, selectedItems])
+  }, [selectedItems])
 
   /* ---
     PASTE
-    Handle paste of text, files, images, or blocks
+    Handle paste of text, ~images, files~ or blocks
   --- */
   const handlePasteText = useCallback((index: number, text: string) => {
     console.log('paste text', index, text)
@@ -533,6 +540,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     onChange(nextValue)
   }, [value, editorStates, onChange])
 
+  const handlePasteItems = useCallback((index: number, items: ReactBlockTextDataItem[]) => {
+    console.log('handlePasteItems', index, items)
+  }, [])
+
   const handleActualPaste = useCallback(async (index: number) => {
     const data = await window.navigator.clipboard.readText()
 
@@ -546,12 +557,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
 
     if (Array.isArray(parsedData) && parsedData[0] && typeof parsedData[0].reactBlockTextVersion === 'string') {
-      console.log('paste xxx', parsedData)
+      handlePasteItems(index, parsedData)
     }
     else {
       handlePasteText(index, data)
     }
-  }, [handlePasteText])
+  }, [handlePasteText, handlePasteItems])
 
   // Passed to editor component
   const handlePaste = useCallback((index: number) => {
