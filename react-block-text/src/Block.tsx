@@ -27,12 +27,13 @@ function Block({
   index,
   hovered,
   onAddItem,
+  onDeleteItem,
+  onMouseDown,
   onMouseEnter,
   onMouseLeave,
   onDragStart,
   onDrag,
   onDragEnd,
-  onDelete,
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -148,12 +149,14 @@ function Block({
     <div
       ref={previewRef}
       data-handler-id={handlerId}
+      data-react-block-text-id={id}
       className="w-full flex items-start gap-1 relative"
       style={{
         opacity,
         paddingTop: typeToPaddingTop[type as keyof typeof typeToPaddingTop] ?? 4,
         paddingBottom: typeToPaddingBottom[type as keyof typeof typeToPaddingBottom] ?? 4,
       }}
+      onMouseDown={onMouseDown}
       onMouseMove={onMouseEnter}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -180,7 +183,7 @@ function Block({
       )}
       {!!menuPosition && (
         <BlockMenu
-          onDelete={onDelete}
+          onDelete={onDeleteItem}
           onClose={() => setMenuPosition(null)}
           {...menuPosition}
         />

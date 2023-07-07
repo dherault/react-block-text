@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -44,7 +44,8 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 let isSelecting = false
 
 function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
-  const instanceId = useMemo(() => nanoid(), [])
+  const rootRef = useRef<HTMLDivElement>(null)
+
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
@@ -54,6 +55,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   const [selectedItems, setSelectedItems] = useState<ReactBlockTextDataItem[]>([])
   const [, forceRerender] = useState(false)
 
+  // A unique instance id for the sake of editorRefs, so multiple instances can be used on the same page
+  const instanceId = useMemo(() => nanoid(), [])
+
+  console.log('selectedItems.length', selectedItems.length, selectedItems, instanceId)
   /* ---
     REGISTER REF
     We associate each editor with an id so that we can access it later
@@ -72,7 +77,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   --- */
   const createTextItem = useCallback(() => {
     const editorState = EditorState.createEmpty()
-    const item: ReactBlockTextDataItem = appendItemData(
+    const item = appendItemData(
       {
         reactBlockTextVersion: VERSION,
         id: nanoid(),
@@ -479,12 +484,22 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     event.preventDefault()
   }, [value, instanceId, editorStates, contextMenuData])
 
+  const handleFocus = useCallback((index: number) => {
+    setFocusedIndex(index)
+    setSelectedItems([])
+  }, [])
+
   /* ---
     BLUR
   --- */
   const handleBlur = useCallback((index: number) => {
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
+    setSelectedItems([])
   }, [value?.length])
+
+  const handleBlockMouseDown = useCallback(() => {
+    setSelectedItems([])
+  }, [])
 
   /* ---
     DRAG
@@ -636,37 +651,31 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     When selecting the editor goes into read-only mode, to allow selection between multiple contenteditable divs
     This handler is invoked at mouseup
   --- */
-  const handleMultiBlockSelection = useCallback((blockKey: string, text: string) => {
-    let itemIndex = -1
+  const handleMultiBlockSelection = useCallback((id: string, blockKey: string, text: string) => {
+    const itemIndex = value.findIndex(x => x.id === id)
+
+    if (itemIndex === -1) return
+
+    // Find blockIndex, the index of the start block for the selected text
+    const editorState = editorStates[id]
     let blockIndex = -1
-    let found = false
 
-    // Find valueIndex and blockIndex, the start item and block of the selected text
-    value.forEach((item, itemI) => {
-      if (found) return
+    if (!editorState) return
 
-      const editorState = editorStates[item.id]
-
-      if (!editorState) return
-
-      const contentState = editorState.getCurrentContent()
-
-      contentState.getBlocksAsArray().forEach((block, blockI) => {
-        if (found) return
-        if (block.getKey() === blockKey) {
-          itemIndex = itemI
-          blockIndex = blockI
-          found = true
-        }
-      })
+    editorState.getCurrentContent().getBlocksAsArray().forEach((block, blockI) => {
+      if (block.getKey() === blockKey) {
+        blockIndex = blockI
+      }
     })
 
     // Find selected blocks
     const selected: ReactBlockTextDataItem[] = []
     // The text that has been selected
     let textToCut = text
+    let complete = false
 
     value.forEach((item, valueI) => {
+      if (complete) return
       if (itemIndex > valueI) return
 
       const editorState = editorStates[item.id]
@@ -677,7 +686,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
         return
       }
 
-      let complete = false
       let nextEditorState = editorState
 
       // If a block matches the text to cut, extract it and add it to the selection
@@ -738,6 +746,56 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   }, [value, editorStates])
 
   /* ---
+    MUTLI BLOCK SELECTION MOUSE UP
+    Handle the mouse up event when selecting multiple blocks
+    If the selection is not empty, set the selected items
+  --- */
+  const handleMouseUp = useCallback(() => {
+    if (!isSelecting) return
+
+    isSelecting = false
+
+    forceRerender(x => !x)
+
+    try {
+      const range = window.getSelection()?.getRangeAt(0)
+      const text = range?.toString()
+
+      if (range && text) {
+        const parentElement = range.startContainer.parentElement!
+
+        const dataOffsetKey = findAttributeInParents(parentElement, 'data-offset-key')
+        const dataReactBlockTextId = findAttributeInParents(parentElement, 'data-react-block-text-id')
+
+        if (!(dataOffsetKey && dataReactBlockTextId)) return
+
+        const blockKey = dataOffsetKey.split('-')[0]
+
+        if (blockKey) {
+          handleMultiBlockSelection(dataReactBlockTextId, blockKey, text)
+        }
+      }
+      // Force break a focus bug
+      else {
+        setForceFocusIndex(focusedIndex)
+      }
+    }
+    catch (error) {
+      //
+    }
+  }, [handleMultiBlockSelection, focusedIndex])
+
+  const handleRootBlur = useCallback(() => {
+    setSelectedItems([])
+  }, [])
+
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+    if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+      handleRootBlur()
+    }
+  }, [handleRootBlur])
+
+  /* ---
     RENDER EDITOR
     Render the editor for each item of value
   --- */
@@ -751,12 +809,13 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       readOnly: !!readOnly,
       hovered: !isDragging && index === hoveredIndex,
       onAddItem: () => handleAddItem(index),
+      onDeleteItem: () => handleDeleteItem(index),
+      onMouseDown: handleBlockMouseDown,
       onMouseEnter: () => setHoveredIndex(index),
       onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
       onDragStart: () => setIsDragging(true),
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
-      onDelete: () => handleDeleteItem(index),
     }
 
     const blockContentProps: BlockContentTextProps = {
@@ -769,7 +828,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       onReturn: event => handleReturn(index, event),
       onUpArrow: event => handleUpArrow(index, event),
       onDownArrow: event => handleDownArrow(index, event),
-      onFocus: () => setFocusedIndex(index),
+      onFocus: () => handleFocus(index),
       onBlur: () => handleBlur(index),
       onCopy: handleCopy,
       onPaste: () => handlePaste(index),
@@ -794,17 +853,19 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     focusedIndex,
     isDragging,
     handleAddItem,
+    handleDeleteItem,
     handleChange,
     handleReturn,
     handleUpArrow,
     handleDownArrow,
+    handleFocus,
     handleBlur,
     handleCopy,
     handlePaste,
     handleBackspace,
     handleDelete,
     handleDrag,
-    handleDeleteItem,
+    handleBlockMouseDown,
     registerRef,
   ])
 
@@ -860,39 +921,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     mousemove will trigger the selecting state if the mouse is down
   --- */
   useEffect(() => {
-    const handleMouseUp = () => {
-      if (!isSelecting) return
-
-      isSelecting = false
-
-      forceRerender(x => !x)
-
-      try {
-        const range = window.getSelection()?.getRangeAt(0)
-        const text = range?.toString()
-
-        if (range && text) {
-          const blockKey = range.startContainer.parentElement?.parentElement?.getAttribute('data-offset-key')?.split('-')[0]
-
-          if (blockKey) {
-            handleMultiBlockSelection(blockKey, text)
-          }
-        }
-        // Force break a focus bug
-        else {
-          setForceFocusIndex(focusedIndex)
-        }
-      }
-      catch (error) {
-        //
-      }
-    }
     window.addEventListener('mouseup', handleMouseUp)
 
     return () => {
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [focusedIndex, handleMultiBlockSelection])
+  }, [handleMouseUp])
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -908,6 +942,14 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [])
 
+  useEffect(() => {
+    window.addEventListener('click', handleOutsideClick)
+
+    return () => {
+      window.removeEventListener('click', handleOutsideClick)
+    }
+  }, [handleOutsideClick])
+
   /* ---
     MAIN RETURN STATEMENT
   --- */
@@ -915,7 +957,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="w-full relative">
+      <div
+        ref={rootRef}
+        onBlur={handleRootBlur}
+        className="w-full relative"
+      >
         {value.map(renderEditor)}
         {!!contextMenuData && (
           <ContextMenu
@@ -977,6 +1023,14 @@ function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: Edit
     ...item,
     data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
   } as ReactBlockTextDataItem
+}
+
+function findAttributeInParents(element: HTMLElement, attribute: string) {
+  if (element.hasAttribute(attribute)) return element.getAttribute(attribute)
+
+  if (!element.parentElement) return null
+
+  return findAttributeInParents(element.parentElement, attribute)
 }
 
 export default ReactBlockText

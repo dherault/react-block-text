@@ -37,7 +37,7 @@ function BlockContentText({
     HANDLE KEY COMMANDS
   --- */
   const handleKeyCommand = useCallback((command: string) => {
-    console.log('command', command)
+    // console.log('command', command)
 
     if (command === COMMANDS.OPEN_MENU) {
       return 'not-handled'
@@ -79,6 +79,7 @@ function BlockContentText({
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
         handleKeyCommand={handleKeyCommand}
+        autoCorrect="on"
       />
     </div>
   )

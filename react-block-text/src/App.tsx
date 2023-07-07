@@ -25,6 +25,9 @@ function App() {
       <div className="mt-8 p-2 bg-white w-full rounded">
         {JSON.stringify(data, null, 2)}
       </div>
+      <div className="mt-8 p-2 bg-white w-full rounded">
+        {JSON.stringify(data.map(item => JSON.parse(item.data).blocks.map(x => x.key)), null, 2)}
+      </div>
     </div>
   )
 }
