@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { ContentBlock, ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import {
@@ -252,8 +252,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     Handle backspace input, if necessary merge blocks
   --- */
   const handleBackspace = useCallback((index: number) => {
-    console.log('handleBackspace', index)
-
     const item = value[index]
 
     if (!item) return 'not-handled'
@@ -280,7 +278,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     // The first block text will be merged with the last block of the previous item
     const firstBlock = editorState.getCurrentContent().getFirstBlock()
     // The other block will be added to the previous item
-    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(1)
+    // Modify keys to avoid duplicates
+    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(1).map(block => new ContentBlock(block.set('key', nanoid())))
     const offset = previousLastBlock.getText().length
     // The end result selection will be at the end of the previous item
     const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
@@ -312,6 +311,85 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     // Update the previous item
     nextValue[index - 1] = appendItemData(previousItem, previousEditorState)
+    // Delete the current item
+    nextValue.splice(index, 1)
+
+    onChange(nextValue)
+
+    return 'handled'
+  }, [value, editorStates, onChange])
+
+  /* ---
+    DELETE
+    Handle delete input, if necessary merge blocks
+  --- */
+  const handleDelete = useCallback((index: number) => {
+    const item = value[index]
+
+    if (!item) return 'not-handled'
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return 'not-handled'
+
+    const selection = editorState.getSelection()
+    const lastBlock = editorState.getCurrentContent().getLastBlock()
+    const lastBlockTextLength = lastBlock.getText().length
+
+    if (!(selection.isCollapsed() && selection.getAnchorOffset() === lastBlockTextLength)) return 'not-handled'
+    // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
+
+    const nextItem = value[index + 1]
+
+    if (!nextItem) return 'not-handled'
+
+    let nextEditorState = editorStates[nextItem.id]
+
+    if (!nextEditorState) return 'not-handled'
+
+    let nextContent = nextEditorState.getCurrentContent()
+    const nextFirstBlock = nextContent.getFirstBlock()
+    // The last block text will be merged with the first block of the next item
+    // The other block will be added to the next item
+    // Modify keys to avoid duplicates
+    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(0, -1).map(block => new ContentBlock(block.set('key', nanoid())))
+    // The end result selection will be at the beginning of the next item, at lastBlockTextLength
+    const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
+      anchorOffset: lastBlockTextLength,
+      focusOffset: lastBlockTextLength,
+    })
+    const nextSelectionToInsert = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
+      anchorOffset: 0,
+      focusOffset: 0,
+    })
+
+    nextContent = Modifier.insertText(nextContent, nextSelectionToInsert, lastBlock.getText())
+    nextContent = ContentState.createFromBlockArray([
+      ...otherBlocks,
+      ...nextContent.getBlocksAsArray(),
+    ])
+    nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
+    nextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
+
+    setEditorStates(x => {
+      const nextEditorStates = { ...x }
+
+      // Update the next item's editor state
+      nextEditorStates[nextItem.id] = nextEditorState
+
+      // Delete the current item's editor state
+      delete nextEditorStates[item.id]
+
+      return nextEditorStates
+    })
+
+    const nextValue = [...value]
+
+    // Update the next item
+    nextValue[index + 1] = appendItemData(nextItem, nextEditorState)
+    // Preserve first item type
+    nextValue[index + 1].type = item.type
+
     // Delete the current item
     nextValue.splice(index, 1)
 
@@ -685,6 +763,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       onCopy: handleCopy,
       onPaste: () => handlePaste(index),
       onBackspace: () => handleBackspace(index),
+      onDelete: () => handleDelete(index),
     }
 
     const BlockContent = blockContentComponents[item.type]
@@ -712,6 +791,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     handleCopy,
     handlePaste,
     handleBackspace,
+    handleDelete,
     handleDrag,
     handleDeleteItem,
     registerRef,

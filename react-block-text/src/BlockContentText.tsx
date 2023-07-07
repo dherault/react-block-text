@@ -31,6 +31,7 @@ function BlockContentText({
   onCopy,
   onPaste,
   onBackspace,
+  onDelete,
 }: BlockContentTextProps) {
   /* ---
     HANDLE KEY COMMANDS
@@ -46,14 +47,18 @@ function BlockContentText({
       return onBackspace()
     }
 
+    if (command === 'delete') {
+      return onDelete()
+    }
+
     return 'not-handled'
-  }, [onBackspace])
+  }, [onBackspace, onDelete])
 
   /* ---
     MAIN RETURN STATEMENT
   --- */
   return (
-    <div className={_('w-full transition-all duration-75', {
+    <div className={_('w-full', {
       'text-4xl font-semibold': type === 'heading1',
       'text-3xl font-semibold': type === 'heading2',
       'text-xl font-semibold': type === 'heading3',

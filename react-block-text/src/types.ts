@@ -49,6 +49,7 @@ export type BlockContentTextProps = {
   onCopy: () => void
   onPaste: () => DraftHandleValue
   onBackspace: () => DraftHandleValue
+  onDelete: () => DraftHandleValue
 }
 
 export type ContextMenuProps = {
