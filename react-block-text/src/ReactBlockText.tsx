@@ -47,6 +47,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     REGISTER REF
+    WE associate each editor with an id so that we can access it later
   --- */
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     if (!ref) return
@@ -74,6 +75,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     ADD ITEM
+    Add a simple text item to the editor
   --- */
   const handleAddItem = useCallback((index: number) => {
     const { editorState, item } = createTextItem()
@@ -123,6 +125,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     CHANGE
+    Handle editor value change
   --- */
   const handleChange = useCallback((id: string, editorState: EditorState) => {
     setEditorStates(x => ({ ...x, [id]: editorState }))
@@ -164,6 +167,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     RETURN
+    Handle carriage return
+    If necessary, split block into two
   --- */
   const handleReturn = useCallback((index: number, event: any) => {
     console.log('handleReturn')
@@ -238,6 +243,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     return 'handled'
   }, [value, editorStates, contextMenuData, onChange])
 
+  /* ---
+    BACKSPACE
+    Handle backspace input, if necessary merge blocks
+  --- */
   const handleBackspace = useCallback((index: number) => {
     console.log('handleBackspace', index)
 
@@ -253,6 +262,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0)) return 'not-handled'
 
+    // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
     const previousItem = value[index - 1]
 
     if (!previousItem) return 'not-handled'
@@ -299,8 +309,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     return 'handled'
   }, [value, editorStates, onChange])
+
   /* ---
     UP ARROW
+    Handle up arrow, to move between editor instances
   --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
@@ -335,7 +347,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   }, [value, instanceId, editorStates, contextMenuData])
 
   /* ---
-    DOWN ARROWW
+    DOWN ARROW
+    Handle down arrow, to move between editor instances
   --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
@@ -373,12 +386,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     BLUR
   --- */
   const handleBlur = useCallback((index: number) => {
-    console.log('blur')
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
   }, [value?.length])
 
   /* ---
     DRAG
+    Handle editor move via drag and drop
   --- */
   const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
     const nextValue = [...value]
@@ -393,17 +406,20 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     COPY
+    Write selected items to clipboard
   --- */
   const handleCopy = useCallback(() => {
     if (!selectedItems.length) return
 
     navigator.clipboard.writeText(JSON.stringify(selectedItems))
+  // TODO investigate
   // For some reason a dummy dependency is needed here, therefore instanceId is added
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId, selectedItems])
 
   /* ---
     PASTE
+    Handle paste of text, files, images, or blocks
   --- */
   const handlePasteText = useCallback((index: number, text: string) => {
     console.log('paste text', index, text)
@@ -449,6 +465,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [handlePasteText])
 
+  // Passed to editor component
   const handlePaste = useCallback((index: number) => {
     handleActualPaste(index)
 
@@ -457,6 +474,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     CONTEXT MENU SELECT
+    Handle context menu item selection after `/` then `enter` or click
   --- */
   const handleContextMenuSelect = useCallback((command: ReactBlockTextDataItemType) => {
     console.log('command', command)
@@ -478,6 +496,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     let blockText = block.getText()
     let offset = originalOffset
 
+    // Remove text after `/`
     while (blockText[offset - 1] !== '/') {
       offset--
       blockText = blockText.slice(0, -1)
@@ -487,10 +506,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     blockText = blockText.slice(0, -1)
     offset--
 
+    // The command query to remove
     const selectionStateToRemove = SelectionState.createEmpty(blockKey).merge({
       focusOffset: originalOffset,
       anchorOffset: offset,
     })
+    // The selection after the removal of the command query
     const selectionStateToApply = SelectionState.createEmpty(blockKey).merge({
       focusOffset: offset,
       anchorOffset: offset,
@@ -510,13 +531,20 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     onChange(nextValue)
   }, [value, editorStates, contextMenuData, onChange])
 
+  /* ---
+    MULTI BLOCK SELECTION
+    Set selectedItems with the content of the selected blocks
+    Trimmed at the beginning and end to fit to selection
+    When selecting the editor goes into read-only mode, to allow selection between multiple contenteditable divs
+    This handler is invoked at mouseup
+  --- */
   const handleMultiBlockSelection = useCallback((blockKey: string, text: string) => {
-    // console.log('handleMultiBlockSelection', blockKey, text)
-    let valueIndex = -1
+    let itemIndex = -1
     let blockIndex = -1
     let found = false
 
-    value.forEach((item, valueI) => {
+    // Find valueIndex and blockIndex, the start item and block of the selected text
+    value.forEach((item, itemI) => {
       if (found) return
 
       const editorState = editorStates[item.id]
@@ -528,18 +556,20 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       contentState.getBlocksAsArray().forEach((block, blockI) => {
         if (found) return
         if (block.getKey() === blockKey) {
-          valueIndex = valueI
+          itemIndex = itemI
           blockIndex = blockI
           found = true
         }
       })
     })
 
+    // Find selected blocks
     const selected: ReactBlockTextDataItem[] = []
+    // The text that has been selected
     let textToCut = text
 
     value.forEach((item, valueI) => {
-      if (valueIndex > valueI) return
+      if (itemIndex > valueI) return
 
       const editorState = editorStates[item.id]
 
@@ -552,24 +582,24 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       let complete = false
       let nextEditorState = editorState
 
+      // If a block matches the text to cut, extract it and add it to the selection
       editorState.getCurrentContent().getBlocksAsArray().forEach((block, blockI) => {
         if (complete) return
-        if (valueIndex === valueI && blockIndex < blockI) return
+        if (itemIndex === valueI && blockIndex < blockI) return
 
         const blockText = block.getText()
-        // console.log('blockText', blockText)
 
+        // Slice the block text from the beginning
         for (let i = 0; i < blockText.length; i++) {
           const lastBlock = blockText.length >= textToCut.length
           let selectionStateToRemove = SelectionState.createEmpty(block.getKey())
 
+          // If it is the last block, slice the block text from the end too to take partial block selection into account
           if (lastBlock) {
             for (let j = i; j < blockText.length; j++) {
               const blockTextSlice = blockText.slice(i, j + 1)
-              // console.log('blockTextSlice', blockTextSlice, 'textToCut', textToCut, lastBlock, i, j)
 
               if (textToCut === blockTextSlice) {
-                // console.log('cutting')
                 textToCut = textToCut.slice(blockTextSlice.length)
 
                 selectionStateToRemove = selectionStateToRemove.merge({
@@ -579,12 +609,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
               }
             }
           }
+          // If not the last block, the text to cut must start with the block text slice for the block to be accepted
           else {
             const blockTextSlice = blockText.slice(i)
-            // console.log('blockTextSlice', blockTextSlice, 'textToCut', textToCut, lastBlock, i)
 
             if (textToCut.startsWith(blockTextSlice)) {
-              // console.log('cutting')
               textToCut = textToCut.slice(blockTextSlice.length)
 
               selectionStateToRemove = selectionStateToRemove.merge({
@@ -595,7 +624,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
           }
 
           const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'forward')
-          // console.log('nextContent', nextContent.getBlockForKey(block.getKey()).getText())
           nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
 
           if (textToCut.length === 0) {
@@ -603,18 +631,17 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
             break
           }
         }
-        // console.log('complete', complete)
       })
 
       selected.push({ ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) })
     })
 
-    // console.log('valueIndex, blockIndex', valueIndex, blockIndex)
     setSelectedItems(selected)
   }, [value, editorStates])
 
   /* ---
     RENDER EDITOR
+    Render the editor for each item of value
   --- */
   const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
@@ -683,6 +710,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     NO VALUE LENGTH
+    Create a text item if there is no value
   --- */
   useEffect(() => {
     if (value.length) return
@@ -696,6 +724,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     READ ONLY UPDATE
+    Update the editor states based on value if readOnly
   --- */
   useEffect(() => {
     if (!readOnly) return
@@ -711,12 +740,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     FORCE FOCUS
+    Handle forcing focus on a specific block
   --- */
   useEffect(() => {
     if (readOnly) return
     if (forceFocusIndex === -1) return
-
-    console.log('forcing focus')
 
     setForceFocusIndex(-1)
 
@@ -727,6 +755,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     MULTI BLOCK SELECTION
+    Handle multi block selection by adding two listeners: mouseup and mousemove
+    mouseup will check if the selection is valid and call handleMultiBlockSelection
+    mousemove will trigger the selecting state if the mouse is down
   --- */
   useEffect(() => {
     const handleMouseUp = () => {
@@ -777,15 +808,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [])
 
-  // useEffect(() => {
-  //   const handler = event => console.log('focus', event)
-  //   window.addEventListener('focus', handler)
-
-  //   return () => {
-  //     window.removeEventListener('focus', handler)
-  //   }
-  // }, [])
-
   /* ---
     MAIN RETURN STATEMENT
   --- */
@@ -811,6 +833,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
 /* ---
   GET CONTEXT MENU DATA
+  Get the context menu position based on the current selection
 --- */
 function getContextMenuData(instanceId: string, id: string): ContextMenuData | null {
   const range = window.getSelection()?.getRangeAt(0)?.cloneRange()

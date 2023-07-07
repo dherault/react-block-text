@@ -5,11 +5,17 @@ import { BlockMenuItemProps, BlockMenuProps } from './types'
 import TrashIcon from './icons/Trash'
 
 function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
+  /* ---
+    DELETE
+  --- */
   const handleDelete = useCallback(() => {
     onDelete()
     onClose()
   }, [onDelete, onClose])
 
+  /* ---
+    MAIN RETURN STATEMENT
+  --- */
   return (
     <div
       className="p-1 bg-white border rounded shadow-xl absolute z-50 select-none"
@@ -31,6 +37,9 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
   )
 }
 
+/* ---
+  MENU ITEM COMPONENT
+--- */
 function BlockMenuItem({ icon, label, onClick }: BlockMenuItemProps) {
   return (
     <div

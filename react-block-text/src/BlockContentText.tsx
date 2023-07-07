@@ -32,6 +32,9 @@ function BlockContentText({
   onPaste,
   onBackspace,
 }: BlockContentTextProps) {
+  /* ---
+    HANDLE KEY COMMANDS
+  --- */
   const handleKeyCommand = useCallback((command: string) => {
     console.log('command', command)
 
@@ -46,6 +49,9 @@ function BlockContentText({
     return 'not-handled'
   }, [onBackspace])
 
+  /* ---
+    MAIN RETURN STATEMENT
+  --- */
   return (
     <div className={_('w-full transition-all duration-75', {
       'text-4xl font-semibold': type === 'heading1',

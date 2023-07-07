@@ -4,6 +4,9 @@ import _ from 'clsx'
 
 import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from './types'
 
+/* ---
+  ITEMS OF THE CONTEXT MENU
+--- */
 const items = [
   {
     command: 'text',
@@ -60,6 +63,9 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   const fuse = useMemo(() => new Fuse(items, fuseOptions), [])
   const results = useMemo(() => query ? fuse.search(query) : items.map(item => ({ item })), [fuse, query])
 
+  /* ---
+    ARROW UP, DOWN, ENTER, ESCAPE HANDLERS
+  --- */
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
@@ -92,12 +98,18 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
     }
   }, [results, hoveredIndex, onSelect, onClose])
 
+  /* ---
+    OUTSIDE CLICK
+  --- */
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
       onClose()
     }
   }, [onClose])
 
+  /* ---
+    WINDOW EVENT LISTENERS
+  --- */
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
 
@@ -114,6 +126,9 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
     }
   }, [handleOutsideClick])
 
+  /* ---
+    MAIN RETURN STATEMENT
+  --- */
   return (
     <div
       ref={rootRef}
@@ -142,6 +157,10 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   )
 }
 
+/* ---
+  CONTEXT MENU ITEM
+  And icons
+--- */
 function ContextMenuItem({ title, label, icon, active, onClick, onMouseEnter, onMouseLeave }: ContextMenuItemProps) {
   return (
     <div

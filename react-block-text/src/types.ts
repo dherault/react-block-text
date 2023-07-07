@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react'
 import type { DraftHandleValue, EditorState } from 'draft-js'
 
-export type ReactBlockTextData = ReactBlockTextDataItem[]
-
 export type ReactBlockTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
 
 export type ReactBlockTextDataItem = {
@@ -12,17 +10,12 @@ export type ReactBlockTextDataItem = {
   data: string
 }
 
+export type ReactBlockTextData = ReactBlockTextDataItem[]
+
 export type ReactBlockTextProps = {
   value: ReactBlockTextData
   readOnly?: boolean
   onChange: (value: ReactBlockTextData) => void
-}
-
-export type ContextMenuData = {
-  id: string
-  query: string
-  top: number
-  left: number
 }
 
 export type BlockProps = {
@@ -58,12 +51,6 @@ export type BlockContentTextProps = {
   onBackspace: () => DraftHandleValue
 }
 
-export interface DragItem {
-  index: number
-  id: string
-  type: string
-}
-
 export type ContextMenuProps = {
   query: string
   top: number
@@ -93,13 +80,26 @@ export type BlockMenuProps = {
   onClose: () => void
 }
 
-export type TopLeft = {
-  top: number
-  left: number
-}
-
 export type BlockMenuItemProps = {
   icon: ReactNode
   label: string
   onClick: () => void
+}
+
+export type ContextMenuData = {
+  id: string
+  query: string
+  top: number
+  left: number
+}
+
+export interface DragItem {
+  index: number
+  id: string
+  type: string
+}
+
+export type TopLeft = {
+  top: number
+  left: number
 }

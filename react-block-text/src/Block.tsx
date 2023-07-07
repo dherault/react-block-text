@@ -38,6 +38,9 @@ function Block({
   const previewRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
+  /* ---
+    DRAG AND DROP
+  --- */
   const [{ handlerId }, drop] = useDrop<
     DragItem,
     void,
@@ -117,6 +120,9 @@ function Block({
 
   const opacity = isDragging ? 0.01 : 1
 
+  /* ---
+    BLOCK MENU POSITIONING AND TRIGGER
+  --- */
   const handleDragClick = useCallback(() => {
     if (!previewRef.current) return
     if (!dragRef.current) return
@@ -135,6 +141,9 @@ function Block({
     })
   }, [])
 
+  /* ---
+    MAIN RETURN STATEMENT
+  --- */
   return (
     <div
       ref={previewRef}
