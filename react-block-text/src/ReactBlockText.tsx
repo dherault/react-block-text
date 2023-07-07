@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import {
@@ -47,7 +47,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     REGISTER REF
-    WE associate each editor with an id so that we can access it later
+    We associate each editor with an id so that we can access it later
   --- */
   const registerRef = useCallback((id: string, ref: Editor | null) => {
     if (!ref) return
@@ -63,12 +63,14 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   --- */
   const createTextItem = useCallback(() => {
     const editorState = EditorState.createEmpty()
-    const item: ReactBlockTextDataItem = {
-      reactBlockTextVersion: VERSION,
-      id: nanoid(),
-      type: 'text',
-      data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
-    }
+    const item: ReactBlockTextDataItem = appendItemData(
+      {
+        reactBlockTextVersion: VERSION,
+        id: nanoid(),
+        type: 'text',
+      },
+      editorState
+    )
 
     return { editorState, item }
   }, [])
@@ -224,18 +226,20 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
     const secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
-    const secondItem: ReactBlockTextDataItem = {
-      reactBlockTextVersion: VERSION,
-      id: nanoid(),
-      type: 'text',
-      data: JSON.stringify(convertToRaw(secondEditorState.getCurrentContent())),
-    }
+    const secondItem: ReactBlockTextDataItem = appendItemData(
+      {
+        reactBlockTextVersion: VERSION,
+        id: nanoid(),
+        type: 'text',
+      },
+      secondEditorState
+    )
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
 
     const nextValue = [...value]
 
-    nextValue[index] = { ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) }
+    nextValue[index] = appendItemData(item, nextEditorState)
     nextValue.splice(index + 1, 0, secondItem)
 
     onChange(nextValue)
@@ -261,48 +265,54 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     const selection = editorState.getSelection()
 
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0)) return 'not-handled'
-
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
+
     const previousItem = value[index - 1]
 
     if (!previousItem) return 'not-handled'
 
-    const previousEditorState = editorStates[previousItem.id]
+    let previousEditorState = editorStates[previousItem.id]
 
     if (!previousEditorState) return 'not-handled'
 
-    const blockMap = editorState.getCurrentContent().getBlockMap()
-
     let previousContent = previousEditorState.getCurrentContent()
     const previousLastBlock = previousContent.getLastBlock()
+    // The first block text will be merged with the last block of the previous item
+    const firstBlock = editorState.getCurrentContent().getFirstBlock()
+    // The other block will be added to the previous item
+    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(1)
     const offset = previousLastBlock.getText().length
-
+    // The end result selection will be at the end of the previous item
     const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
       anchorOffset: offset,
       focusOffset: offset,
     })
 
-    console.log('previousContent', previousContent.getBlocksAsArray().length)
-
-    previousContent = Modifier.mergeBlockData(previousContent, previousSelection, blockMap)
-
-    console.log('previousContent x', previousContent.getBlocksAsArray().length)
-
-    const nextPreviousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
+    previousContent = Modifier.insertText(previousContent, previousSelection, firstBlock.getText())
+    previousContent = ContentState.createFromBlockArray([
+      ...previousContent.getBlocksAsArray(),
+      ...otherBlocks,
+    ])
+    previousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
+    previousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
 
     setEditorStates(x => {
       const nextEditorStates = { ...x }
 
-      delete nextEditorStates[item.id]
+      // Update the previous item's editor state
+      nextEditorStates[previousItem.id] = previousEditorState
 
-      nextEditorStates[previousItem.id] = nextPreviousEditorState
+      // Delete the current item's editor state
+      delete nextEditorStates[item.id]
 
       return nextEditorStates
     })
 
     const nextValue = [...value]
 
-    nextValue[index - 1] = { ...previousItem, data: JSON.stringify(convertToRaw(nextPreviousEditorState.getCurrentContent())) }
+    // Update the previous item
+    nextValue[index - 1] = appendItemData(previousItem, previousEditorState)
+    // Delete the current item
     nextValue.splice(index, 1)
 
     onChange(nextValue)
@@ -440,7 +450,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     const nextValue = [...value]
 
-    nextValue.splice(index, 1, { ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) })
+    nextValue.splice(index, 1, appendItemData(item, nextEditorState))
 
     onChange(nextValue)
   }, [value, editorStates, onChange])
@@ -524,9 +534,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setEditorStates(x => ({ ...x, [id]: nextEditorState }))
 
     const nextValue = [...value]
-    const data = JSON.stringify(convertToRaw(nextEditorState.getCurrentContent()))
 
-    nextValue.splice(nextValue.indexOf(item), 1, { ...item, type: command, data })
+    nextValue.splice(nextValue.indexOf(item), 1, appendItemData({ ...item, type: command }, nextEditorState))
 
     onChange(nextValue)
   }, [value, editorStates, contextMenuData, onChange])
@@ -633,7 +642,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
         }
       })
 
-      selected.push({ ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) })
+      selected.push(appendItemData(item, nextEditorState))
     })
 
     setSelectedItems(selected)
@@ -765,7 +774,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
       isSelecting = false
 
-      forceRerender(x => !x) // TODO may be useless
+      forceRerender(x => !x)
 
       try {
         const range = window.getSelection()?.getRangeAt(0)
@@ -867,6 +876,16 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
     top: editorRects[0].top + 24,
     left: editorRects[0].left,
   }
+}
+
+/* ---
+  APPEND ITEM DATA
+--- */
+function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: EditorState) {
+  return {
+    ...item,
+    data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
+  } as ReactBlockTextDataItem
 }
 
 export default ReactBlockText

@@ -11,13 +11,13 @@ const typeToPaddingTop = {
   heading1: 24,
   heading2: 16,
   heading3: 12,
-} as const
+}
 
 const typeToPaddingBottom = {
   heading1: 8,
   heading2: 8,
   heading3: 8,
-} as const
+}
 
 function Block({
   children,
