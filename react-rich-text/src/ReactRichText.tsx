@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
+import { ContentState, Editor, EditorState, Modifier, SelectionState, convertFromRaw, convertToRaw } from 'draft-js'
 import 'draft-js/dist/Draft.css'
 
 import { BlockContentTextProps, BlockProps, ContextMenuData, ReactRichTextDataItem, ReactRichTextDataItemType, ReactRichTextProps } from './types'
@@ -25,7 +25,6 @@ const VERSION = '1.0.0'
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
 
 // Not a state for performance reasons
-let isMouseDown = false
 let isSelecting = false
 
 function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
@@ -43,6 +42,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     REGISTER REF
   --- */
   const registerRef = useCallback((id: string, ref: Editor | null) => {
+    if (!ref) return
     if (!editorRefs[instanceId]) {
       editorRefs[instanceId] = {}
     }
@@ -159,6 +159,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     RETURN
   --- */
   const handleReturn = useCallback((index: number, event: any) => {
+    console.log('handleReturn')
     if (contextMenuData) {
       event.preventDefault()
 
@@ -167,10 +168,66 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     if (event.shiftKey) return 'not-handled'
 
-    handleAddItem(index)
+    const item = value[index]
+
+    if (!item) return 'not-handled'
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return 'not-handled'
+
+    const selection = editorState.getSelection()
+    let contentState = editorState.getCurrentContent()
+    const firstBlock = contentState.getFirstBlock()
+    const lastBlock = contentState.getLastBlock()
+    const isBackward = selection.getIsBackward()
+    let offset = 0
+
+    // If the selection is not collapsed, we remove the selected text
+    if (!selection.isCollapsed()) {
+      offset = Math.abs(selection.getAnchorOffset() - selection.getFocusOffset())
+      contentState = Modifier.removeRange(contentState, selection, isBackward ? 'backward' : 'forward')
+    }
+
+    const selectionToKeep = new SelectionState({
+      anchorKey: firstBlock.getKey(),
+      anchorOffset: 0,
+      focusKey: isBackward ? selection.getFocusKey() : selection.getAnchorKey(),
+      focusOffset: isBackward ? selection.getFocusOffset() : selection.getAnchorOffset(),
+    })
+    const selectionToRemove = new SelectionState({
+      anchorKey: isBackward ? selection.getAnchorKey() : selection.getFocusKey(),
+      anchorOffset: (isBackward ? selection.getAnchorOffset() : selection.getFocusOffset()) - offset,
+      focusKey: lastBlock.getKey(),
+      focusOffset: lastBlock.getText().length,
+    })
+
+    // Now that selection is collapsed, we create a new block after the current one that splits the data into two
+    // Then we focus it
+    const nextFirstContentState = Modifier.removeRange(contentState, selectionToRemove, 'forward')
+    const nextSecondContentState = Modifier.removeRange(contentState, selectionToKeep, 'forward')
+    const nextEditorState = EditorState.push(editorState, nextFirstContentState, 'change-block-data')
+
+    const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
+
+    const secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
+    const secondItem: ReactRichTextDataItem = {
+      reactBlockTextVersion: VERSION,
+      id: nanoid(),
+      type: 'text',
+      data: JSON.stringify(convertToRaw(secondEditorState.getCurrentContent())),
+    }
+
+    setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
+
+    const nextValue = [...value]
+
+    nextValue.splice(index + 1, 0, secondItem)
+
+    onChange(nextValue)
 
     return 'handled'
-  }, [contextMenuData, handleAddItem])
+  }, [value, editorStates, contextMenuData, onChange])
 
   /* ---
     UP ARROW
@@ -246,6 +303,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     BLUR
   --- */
   const handleBlur = useCallback((index: number) => {
+    console.log('blur')
     setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
   }, [value?.length])
 
@@ -267,6 +325,8 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     COPY
   --- */
   const handleCopy = useCallback(() => {
+    if (!selectedItems.length) return
+
     navigator.clipboard.writeText(JSON.stringify(selectedItems))
   // For some reason a dummy dependency is needed here, therefore instanceId is added
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -275,6 +335,30 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   /* ---
     PASTE
   --- */
+  const handlePasteText = useCallback((index: number, text: string) => {
+    console.log('paste text', index, text)
+
+    const item = value[index]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const contentState = Modifier.insertText(editorState.getCurrentContent(), editorState.getSelection(), text)
+
+    const nextEditorState = EditorState.push(editorState, contentState, 'insert-characters')
+
+    setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
+
+    const nextValue = [...value]
+
+    nextValue.splice(index, 1, { ...item, data: JSON.stringify(convertToRaw(nextEditorState.getCurrentContent())) })
+
+    onChange(nextValue)
+  }, [value, editorStates, onChange])
+
   const handleActualPaste = useCallback(async (index: number) => {
     const data = await window.navigator.clipboard.readText()
 
@@ -287,13 +371,13 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       //
     }
 
-    if (Array.isArray(parsedData) && parsedData[0] && parsedData[0].reactBlockTextVersion === VERSION) {
+    if (Array.isArray(parsedData) && parsedData[0] && typeof parsedData[0].reactBlockTextVersion === 'string') {
       console.log('paste xxx', parsedData)
     }
     else {
-      console.log('paste', data)
+      handlePasteText(index, data)
     }
-  }, [])
+  }, [handlePasteText])
 
   const handlePaste = useCallback((index: number) => {
     handleActualPaste(index)
@@ -341,7 +425,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       focusOffset: offset,
       anchorOffset: offset,
     })
-    const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'backward')
+    const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'forward')
     let nextEditorState = EditorState.push(editorState, nextContent, 'change-block-data')
 
     nextEditorState = EditorState.forceSelection(nextEditorState, selectionStateToApply)
@@ -456,7 +540,6 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     })
 
     // console.log('valueIndex, blockIndex', valueIndex, blockIndex)
-    // console.log('selected', selected)
     setSelectedItems(selected)
   }, [value, editorStates])
 
@@ -574,21 +657,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     MULTI BLOCK SELECTION
   --- */
   useEffect(() => {
-    const handleMouseDown = () => {
-      isMouseDown = true
-    }
-
-    window.addEventListener('mousedown', handleMouseDown)
-
-    return () => {
-      window.removeEventListener('mousedown', handleMouseDown)
-    }
-  }, [])
-
-  useEffect(() => {
     const handleMouseUp = () => {
-      isMouseDown = false
-
       if (!isSelecting) return
 
       isSelecting = false
@@ -606,6 +675,10 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
             handleMultiBlockSelection(blockKey, text)
           }
         }
+        // Force break a focus bug
+        else {
+          setForceFocusIndex(focusedIndex)
+        }
       }
       catch (error) {
         //
@@ -616,11 +689,11 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
     return () => {
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [handleMultiBlockSelection])
+  }, [focusedIndex, handleMultiBlockSelection])
 
   useEffect(() => {
-    const handleMouseMove = () => {
-      if (!isMouseDown) return
+    const handleMouseMove = (event: MouseEvent) => {
+      if (event.buttons !== 1) return
 
       isSelecting = true
     }
@@ -631,6 +704,15 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
+
+  // useEffect(() => {
+  //   const handler = event => console.log('focus', event)
+  //   window.addEventListener('focus', handler)
+
+  //   return () => {
+  //     window.removeEventListener('focus', handler)
+  //   }
+  // }, [])
 
   /* ---
     MAIN RETURN STATEMENT
