@@ -1,5 +1,5 @@
 {
-  "name": "react-rich-text",
+  "name": "react-block-text",
   "description": "A block text editor for React",
   "version": "0.0.0",
   "type": "module",

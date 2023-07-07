@@ -1,21 +1,21 @@
 import type { ReactNode } from 'react'
 import type { DraftHandleValue, EditorState } from 'draft-js'
 
-export type ReactRichTextData = ReactRichTextDataItem[]
+export type ReactBlockTextData = ReactBlockTextDataItem[]
 
-export type ReactRichTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
+export type ReactBlockTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
 
-export type ReactRichTextDataItem = {
+export type ReactBlockTextDataItem = {
   reactBlockTextVersion: string
   id: string
-  type: ReactRichTextDataItemType
+  type: ReactBlockTextDataItemType
   data: string
 }
 
-export type ReactRichTextProps = {
-  value: ReactRichTextData
+export type ReactBlockTextProps = {
+  value: ReactBlockTextData
   readOnly?: boolean
-  onChange: (value: ReactRichTextData) => void
+  onChange: (value: ReactBlockTextData) => void
 }
 
 export type ContextMenuData = {
@@ -28,7 +28,7 @@ export type ContextMenuData = {
 export type BlockProps = {
   children: ReactNode
   id: string
-  type: ReactRichTextDataItemType
+  type: ReactBlockTextDataItemType
   index: number
   readOnly: boolean
   hovered: boolean
@@ -42,7 +42,7 @@ export type BlockProps = {
 }
 
 export type BlockContentTextProps = {
-  type: ReactRichTextDataItemType
+  type: ReactBlockTextDataItemType
   readOnly: boolean
   editorState: EditorState
   focused: boolean
@@ -68,7 +68,7 @@ export type ContextMenuProps = {
   query: string
   top: number
   left: number
-  onSelect: (command: ReactRichTextDataItemType) => void
+  onSelect: (command: ReactBlockTextDataItemType) => void
   onClose: () => void
 }
 

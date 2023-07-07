@@ -9,9 +9,9 @@ import {
   BlockContentTextProps,
   BlockProps,
   ContextMenuData,
-  ReactRichTextDataItem,
-  ReactRichTextDataItemType,
-  ReactRichTextProps,
+  ReactBlockTextDataItem,
+  ReactBlockTextDataItemType,
+  ReactBlockTextProps,
 } from './types'
 
 import Block from './Block'
@@ -34,7 +34,7 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 // Not a state for performance reasons
 let isSelecting = false
 
-function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
+function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   const instanceId = useMemo(() => nanoid(), [])
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
@@ -42,7 +42,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
-  const [selectedItems, setSelectedItems] = useState<ReactRichTextDataItem[]>([])
+  const [selectedItems, setSelectedItems] = useState<ReactBlockTextDataItem[]>([])
   const [, forceRerender] = useState(false)
 
   /* ---
@@ -62,7 +62,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   --- */
   const createTextItem = useCallback(() => {
     const editorState = EditorState.createEmpty()
-    const item: ReactRichTextDataItem = {
+    const item: ReactBlockTextDataItem = {
       reactBlockTextVersion: VERSION,
       id: nanoid(),
       type: 'text',
@@ -219,7 +219,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
     const secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
-    const secondItem: ReactRichTextDataItem = {
+    const secondItem: ReactBlockTextDataItem = {
       reactBlockTextVersion: VERSION,
       id: nanoid(),
       type: 'text',
@@ -458,7 +458,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   /* ---
     CONTEXT MENU SELECT
   --- */
-  const handleContextMenuSelect = useCallback((command: ReactRichTextDataItemType) => {
+  const handleContextMenuSelect = useCallback((command: ReactBlockTextDataItemType) => {
     console.log('command', command)
     setContextMenuData(null)
 
@@ -535,7 +535,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
       })
     })
 
-    const selected: ReactRichTextDataItem[] = []
+    const selected: ReactBlockTextDataItem[] = []
     let textToCut = text
 
     value.forEach((item, valueI) => {
@@ -616,7 +616,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   /* ---
     RENDER EDITOR
   --- */
-  const renderEditor = useCallback((item: ReactRichTextDataItem, index: number) => {
+  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number) => {
     if (!editorStates[item.id]) return null
 
     const blockProps: Omit<BlockProps, 'children'> = {
@@ -789,7 +789,7 @@ function ReactRichText({ value, readOnly, onChange }: ReactRichTextProps) {
   /* ---
     MAIN RETURN STATEMENT
   --- */
-  if (!Array.isArray(value)) throw new Error('ReactRichText value prop must be an array')
+  if (!Array.isArray(value)) throw new Error('ReactBlockText value prop must be an array')
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -846,4 +846,4 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
   }
 }
 
-export default ReactRichText
+export default ReactBlockText

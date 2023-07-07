@@ -1,5 +1,5 @@
 {
-  "name": "react-rich-text-root",
+  "name": "react-block-text-root",
   "version": "0.0.0",
   "description": "A block text editor for React",
   "main": "index.js",
