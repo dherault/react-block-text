@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "react-block-text-root",
   "version": "0.0.0",
   "description": "A block text editor for React",

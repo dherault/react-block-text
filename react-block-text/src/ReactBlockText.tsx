@@ -25,10 +25,10 @@ const blockContentComponents = {
   heading3: BlockContentText,
 }
 
-// TODO rename to react-block-text
 const VERSION = '1.0.0'
 
 // Not a state to avoid infinite render loops
+// instanceId -> itemId -> editorRef
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
 
 // Not a state for performance reasons
