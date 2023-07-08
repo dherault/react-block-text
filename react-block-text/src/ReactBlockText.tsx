@@ -124,6 +124,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       return
     }
 
+    // Delete any item
     const nextValue = [...value]
 
     const [item] = nextValue.splice(index, 1)
@@ -147,17 +148,18 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setEditorStates(x => ({ ...x, [id]: editorState }))
 
     const data = JSON.stringify(convertToRaw(editorState.getCurrentContent()))
-
     const nextValue = [...value]
+    const index = nextValue.findIndex(x => x.id === id)
 
-    nextValue.find(x => x.id === id)!.data = data
+    if (index === -1) return
+
+    nextValue[index] = { ...nextValue[index], data }
 
     onChange(nextValue)
 
     const currentSelection = editorState.getSelection()
     const block = editorState.getCurrentContent().getBlockForKey(currentSelection.getStartKey())
     const text = block.getText()
-
     const lastWord = text.split(' ').pop() || ''
     const lastWordIncludesCommand = lastWord.includes('/')
     const lastChar = lastWord.slice(-1)
@@ -187,13 +189,13 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     If necessary, split block into two
   --- */
   const handleReturn = useCallback((index: number, event: any) => {
-    console.log('handleReturn')
     if (contextMenuData) {
       event.preventDefault()
 
       return 'handled'
     }
 
+    // On shift key we let the block break line normally
     if (event.shiftKey) return 'not-handled'
 
     const item = value[index]
@@ -293,7 +295,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     const firstBlock = editorState.getCurrentContent().getFirstBlock()
     // The other block will be added to the previous item
     // Modify keys to avoid duplicates
-    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(1).map(block => new ContentBlock(block.set('key', nanoid())))
+    const otherBlocks = editorState.getCurrentContent()
+      .getBlocksAsArray()
+      .slice(1)
+      .map(block => new ContentBlock(block.set('key', nanoid())))
     const offset = previousLastBlock.getText().length
     // The end result selection will be at the end of the previous item
     const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
@@ -366,7 +371,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     // The last block text will be merged with the first block of the next item
     // The other block will be added to the next item
     // Modify keys to avoid duplicates
-    const otherBlocks = editorState.getCurrentContent().getBlocksAsArray().slice(0, -1).map(block => new ContentBlock(block.set('key', nanoid())))
+    const otherBlocks = editorState.getCurrentContent()
+      .getBlocksAsArray()
+      .slice(0, -1)
+      .map(block => new ContentBlock(block.set('key', nanoid())))
     // The end result selection will be at the beginning of the next item, at lastBlockTextLength
     const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
       anchorOffset: lastBlockTextLength,
@@ -418,7 +426,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
-    if (!editorRefs[instanceId]?.[value[index - 1]?.id]) return
 
     if (contextMenuData) {
       event.preventDefault()
@@ -426,7 +433,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       return
     }
 
-    const editorState = editorStates[value[index].id]
+    const editorState = editorStates[value[index]?.id]
+    const previousEditorState = editorStates[value[index - 1]?.id]
+
+    if (!(editorState && previousEditorState)) return
+
     const selection = editorState.getSelection()
     const firstBlock = editorState.getCurrentContent().getFirstBlock()
     const isFirstline = firstBlock.getKey() === selection.getFocusKey()
@@ -439,7 +450,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     if (indexOfCarriageReturn !== -1 && selection.getFocusOffset() > indexOfCarriageReturn) return
 
-    const previousEditorState = editorStates[value[index - 1].id]
     const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
     const previousLastBlockText = previousLastBlock.getText()
     const lines = previousLastBlockText.split('\n')
@@ -457,7 +467,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setHoveredIndex(-1)
 
     event.preventDefault()
-  }, [value, instanceId, editorStates, contextMenuData])
+  }, [value, editorStates, contextMenuData])
 
   /* ---
     DOWN ARROW
@@ -465,7 +475,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
-    if (!editorRefs[instanceId]?.[value[index + 1]?.id]) return
 
     if (contextMenuData) {
       event.preventDefault()
@@ -473,13 +482,17 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       return
     }
 
-    const editorState = editorStates[value[index].id]
+    const editorState = editorStates[value[index]?.id]
+    const nextEditorState = editorStates[value[index + 1]?.id]
+
+    if (!(editorState && nextEditorState)) return
+
     const selection = editorState.getSelection()
-    const isLastLine = editorState.getCurrentContent().getLastBlock().getKey() === selection.getFocusKey()
+    const lastBlock = editorState.getCurrentContent().getLastBlock()
+    const isLastLine = lastBlock.getKey() === selection.getFocusKey()
 
     if (!isLastLine) return
 
-    const nextEditorState = editorStates[value[index + 1].id]
     const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
     const anchorOffset = Math.min(selection.getAnchorOffset(), nextLastBlock.getLength())
     const nextSelection = SelectionState.createEmpty(nextLastBlock.getKey()).merge({
@@ -493,7 +506,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setHoveredIndex(-1)
 
     event.preventDefault()
-  }, [value, instanceId, editorStates, contextMenuData])
+  }, [value, editorStates, contextMenuData])
 
   const handleFocus = useCallback((index: number) => {
     setFocusedIndex(index)
@@ -508,6 +521,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setSelection(null)
   }, [value?.length])
 
+  /* ---
+    BLOCK MOUSE DOWN
+  --- */
   const handleBlockMouseDown = useCallback(() => {
     setSelection(null)
   }, [])
@@ -601,7 +617,6 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     Handle context menu item selection after `/` then `enter` or click
   --- */
   const handleContextMenuSelect = useCallback((command: ReactBlockTextDataItemType) => {
-    console.log('command', command)
     setContextMenuData(null)
 
     const { id } = contextMenuData!
@@ -610,9 +625,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     if (!item) return
     if (item.type === command) return
 
-    console.log('change type', command)
-
     const editorState = editorStates[id]
+
+    if (!editorState) return
+
     const currentSelection = editorState.getSelection()
     const blockKey = currentSelection.getStartKey()
     const block = editorState.getCurrentContent().getBlockForKey(blockKey)
@@ -759,7 +775,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   }, [value, editorStates])
 
   /* ---
-    MUTLI BLOCK SELECTION MOUSE UP
+    MULTI BLOCK SELECTION MOUSE UP
     Handle the mouse up event when selecting multiple blocks
     If the selection is not empty, set the selected items
   --- */
@@ -798,10 +814,16 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [handleMultiBlockSelection, focusedIndex])
 
+  /* ---
+    ROOT DIV BLUR
+  --- */
   const handleRootBlur = useCallback(() => {
     setSelection(null)
   }, [])
 
+  /* ---
+    OUTSIDE CLICK
+  --- */
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
       handleRootBlur()
@@ -926,7 +948,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
 
   /* ---
-    MULTI BLOCK SELECTION
+    MULTI BLOCK SELECTION EVENTS
     Handle multi block selection by adding two listeners: mouseup and mousemove
     mouseup will check if the selection is valid and call handleMultiBlockSelection
     mousemove will trigger the selecting state if the mouse is down
@@ -953,6 +975,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [])
 
+  /* ---
+    OUTSIDE CLICK EVENT
+  --- */
   useEffect(() => {
     window.addEventListener('click', handleOutsideClick)
 
@@ -961,6 +986,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     }
   }, [handleOutsideClick])
 
+  /* ---
+    COPY EVENT
+  --- */
   useEffect(() => {
     window.addEventListener('copy', handleWindowCopy)
 
