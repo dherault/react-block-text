@@ -16,6 +16,7 @@ const typeToPaddingTop = {
   todo: 3,
   'bulleted-list': 3,
   'numbered-list': 3,
+  quote: 3,
 } as const
 
 const typeToPaddingBottom = {
@@ -26,6 +27,7 @@ const typeToPaddingBottom = {
   todo: 3,
   'bulleted-list': 3,
   'numbered-list': 3,
+  quote: 3,
 } as const
 
 const typeToIconsExtraPaddingTop = {
@@ -36,6 +38,7 @@ const typeToIconsExtraPaddingTop = {
   todo: 0,
   'bulleted-list': 0,
   'numbered-list': 0,
+  quote: 0,
 } as const
 
 function Block({
@@ -204,7 +207,9 @@ function Block({
           onClick={focusContent}
           style={{ height: typeToPaddingTop[type] }}
         />
-        {children}
+        <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
+          {children}
+        </div>
         <div
           onClick={focusNextContent}
           style={{ height: typeToPaddingBottom[type] }}

@@ -79,6 +79,15 @@ const items = [
       <NumberedListIcon />
     ),
   },
+  {
+    command: 'quote',
+    title: 'Quote',
+    shortcuts: 'citation',
+    label: 'Capture a quote.',
+    icon: (
+      <QuoteIcon />
+    ),
+  },
 ] as const
 
 const fuseOptions = {
@@ -333,6 +342,23 @@ function NumberedListIcon() {
           <div className="border-b border-gray-300" />
           <div className="w-[50%] border-b border-gray-300" />
           <div className="w-[75%] border-b border-gray-300" />
+        </div>
+      </div>
+    </ContextMenuIcon>
+  )
+}
+
+function QuoteIcon() {
+  return (
+    <ContextMenuIcon>
+      <div className="w-full h-full flex items-center gap-1">
+        <div className="-ml-0.5 w-[1.5px] h-full bg-black" />
+        <div className="-mr-2 font-serif text-[0.7rem] text-gray-300 italic leading-none">
+          To be
+          <br />
+          or not
+          <br />
+          to be
         </div>
       </div>
     </ContextMenuIcon>

@@ -33,6 +33,7 @@ import Block from './Block'
 import BlockContentText from './BlockContentText'
 import BlockContentTodo from './BlockContentTodo'
 import BlockContentList from './BlockContentList'
+import BlockContentQuote from './BlockContentQuote'
 import ContextMenu from './ContextMenu'
 
 // Remove onUpArrow and onDownArrow deprecation warnings
@@ -49,6 +50,7 @@ const blockContentComponents = {
   todo: BlockContentTodo,
   'bulleted-list': BlockContentList,
   'numbered-list': BlockContentList,
+  quote: BlockContentQuote,
 }
 
 // Not a state to avoid infinite render loops
@@ -448,8 +450,8 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
-    // If the item is a todo, we convert it to a text item
-    if (item.type === 'todo') {
+    // If the item is a todo or a quote, we convert it to a text item
+    if (item.type === 'todo' || item.type === 'quote') {
       const nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }

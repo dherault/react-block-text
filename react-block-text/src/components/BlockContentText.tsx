@@ -14,6 +14,7 @@ const typeToPlaceholder = {
   todo: "Start typing or press '/' for commands",
   'bulleted-list': "Start typing or press '/' for commands",
   'numbered-list': "Start typing or press '/' for commands",
+  quote: "Start typing or press '/' for commands",
 } as const
 
 const styleMap = {

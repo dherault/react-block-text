@@ -8,6 +8,7 @@ export type ReactBlockTextDataItemType = 'text'
   | 'todo'
   | 'bulleted-list'
   | 'numbered-list'
+  | 'quote'
 
 export type ReactBlockTextDataItem = {
   reactBlockTextVersion: string
