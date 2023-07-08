@@ -1,10 +1,12 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { BlockMenuItemProps, BlockMenuProps } from '../types'
 
 import TrashIcon from '../icons/Trash'
 
 function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
+
   /* ---
     DELETE
   --- */
@@ -14,10 +16,28 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
   }, [onDelete, onClose])
 
   /* ---
+    OUTSIDE CLICK
+  --- */
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+    if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+      onClose()
+    }
+  }, [onClose])
+
+  useEffect(() => {
+    window.addEventListener('click', handleOutsideClick)
+
+    return () => {
+      window.removeEventListener('click', handleOutsideClick)
+    }
+  }, [handleOutsideClick])
+
+  /* ---
     MAIN RETURN STATEMENT
   --- */
   return (
     <div
+      ref={rootRef}
       className="p-1 bg-white border rounded shadow-xl absolute z-50 select-none"
       style={{
         top,

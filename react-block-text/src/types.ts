@@ -1,13 +1,14 @@
-import type { ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
 import type { DraftHandleValue, EditorState } from 'draft-js'
 
-export type ReactBlockTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3'
+export type ReactBlockTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3' | 'todo'
 
 export type ReactBlockTextDataItem = {
   reactBlockTextVersion: string
   id: string
   type: ReactBlockTextDataItemType
   data: string
+  metadata: string
 }
 
 export type ReactBlockTextData = ReactBlockTextDataItem[]
@@ -36,12 +37,14 @@ export type BlockProps = {
   onDeleteItem: () => void
   focusContent: () => void
   focusNextContent: () => void
+  blurContent: () => void
 }
 
-export type BlockContentTextProps = {
+export type BlockContentProps = {
   type: ReactBlockTextDataItemType
-  readOnly: boolean
   editorState: EditorState
+  metadata: string
+  readOnly: boolean
   focused: boolean
   registerRef: (ref: any) => void
   onChange: (editorState: EditorState) => void
@@ -52,6 +55,7 @@ export type BlockContentTextProps = {
   onFocus: () => void
   onBlur: () => void
   onPaste: () => DraftHandleValue
+  onCheck: (checked: boolean) => void
 }
 
 export type ContextMenuProps = {
@@ -87,6 +91,11 @@ export type BlockMenuItemProps = {
   icon: ReactNode
   label: string
   onClick: () => void
+}
+
+export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
+  checked: boolean
+  onCheck: (checked: boolean) => void
 }
 
 export type ContextMenuData = {

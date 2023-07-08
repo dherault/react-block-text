@@ -16,7 +16,7 @@ import {
 import 'draft-js/dist/Draft.css'
 
 import {
-  BlockContentTextProps,
+  BlockContentProps,
   BlockProps,
   ContextMenuData,
   ReactBlockTextDataItem,
@@ -25,10 +25,11 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { COMMANDS, VERSION } from '../constants'
+import { COMMANDS, INLINE_STYLES, VERSION } from '../constants'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
+import BlockContentTodo from './BlockContentTodo'
 import ContextMenu from './ContextMenu'
 
 const blockContentComponents = {
@@ -36,6 +37,7 @@ const blockContentComponents = {
   heading1: BlockContentText,
   heading2: BlockContentText,
   heading3: BlockContentText,
+  todo: BlockContentTodo,
 }
 
 // Not a state to avoid infinite render loops
@@ -147,20 +149,39 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle editor value change
   --- */
   const handleChange = useCallback((id: string, editorState: EditorState) => {
-    setEditorStates(x => ({ ...x, [id]: editorState }))
-
-    const data = JSON.stringify(convertToRaw(editorState.getCurrentContent()))
-    const nextValue = [...value]
-    const index = nextValue.findIndex(x => x.id === id)
+    const index = value.findIndex(x => x.id === id)
 
     if (index === -1) return
+
+    const item = value[index]
+    let data = JSON.stringify(convertToRaw(editorState.getCurrentContent()))
+
+    if (data === item.data) {
+      setEditorStates(x => ({ ...x, [id]: editorState }))
+
+      return
+    }
+
+    let nextEditorState = editorState
+
+    if (item.type === 'todo') {
+      nextEditorState = applyTodoStyle(nextEditorState, item.metadata === 'true')
+    }
+
+    setEditorStates(x => ({ ...x, [id]: nextEditorState }))
+
+    data = JSON.stringify(convertToRaw(nextEditorState.getCurrentContent()))
+
+    if (data === item.data) return
+
+    const nextValue = [...value]
 
     nextValue[index] = { ...nextValue[index], data }
 
     onChange(nextValue)
 
-    const currentSelection = editorState.getSelection()
-    const block = editorState.getCurrentContent().getBlockForKey(currentSelection.getStartKey())
+    const currentSelection = nextEditorState.getSelection()
+    const block = nextEditorState.getCurrentContent().getBlockForKey(currentSelection.getStartKey())
     const text = block.getText()
     const lastWord = text.split(' ').pop() || ''
     const lastWordIncludesCommand = lastWord.includes('/')
@@ -185,6 +206,29 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       setContextMenuData(x => x ? ({ ...x!, query }) : null) // Due to side effects the ternary is mandatory here
     }
   }, [value, instanceId, contextMenuData, onChange])
+
+  /* ---
+    TO-DO CHECK
+  --- */
+  const handleCheck = useCallback((index: number, checked: boolean) => {
+    const item = value[index]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const nextEditorState = applyTodoStyle(editorState, checked)
+
+    setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
+
+    const nextValue = [...value]
+
+    nextValue[index] = { ...nextValue[index], metadata: checked ? 'true' : 'false' }
+
+    onChange(nextValue)
+  }, [value, editorStates, onChange])
 
   /* ---
     RETURN
@@ -249,7 +293,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       {
         reactBlockTextVersion: VERSION,
         id: nanoid(),
-        type: 'text',
+        type: item.type === 'todo' ? 'todo' : 'text',
       },
       secondEditorState
     )
@@ -287,6 +331,16 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
+
+    if (item.type === 'todo') {
+      const nextValue = [...value]
+
+      nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
+
+      onChange(nextValue)
+
+      return 'handled'
+    }
 
     const previousItem = value[index - 1]
 
@@ -555,12 +609,28 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     setHoveredIndex(-1)
   }, [value, onChange])
 
+  /* ---
+    FOCUS CONTENT
+  --- */
   const handleFocusContent = useCallback((index: number) => {
     const item = value[index]
 
     if (!item) return
 
     editorRefs[instanceId][item.id]?.focus()
+  }, [instanceId, value])
+
+  /* ---
+    BLUR CONTENT
+  --- */
+  const handleBlurContent = useCallback((index: number) => {
+    const item = value[index]
+
+    if (!item) return
+
+    console.log('handleBlurContent')
+
+    editorRefs[instanceId][item.id]?.blur()
   }, [instanceId, value])
 
   /* ---
@@ -603,6 +673,15 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
   const handlePasteItems = useCallback((index: number, items: ReactBlockTextDataItem[]) => {
     console.log('handlePasteItems', index, items)
+    // const item = value[index]
+
+    // if (!item) return
+
+    // const editorState = editorStates[item.id]
+
+    // if (!editorState) return
+
+    // }, [value, editorStates])
   }, [])
 
   const handleActualPaste = useCallback(async (index: number) => {
@@ -895,12 +974,14 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       onDragEnd: () => setIsDragging(false),
       focusContent: () => handleFocusContent(index),
       focusNextContent: () => handleFocusContent(index + 1),
+      blurContent: () => handleBlurContent(index),
     }
 
-    const blockContentProps: BlockContentTextProps = {
+    const blockContentProps: BlockContentProps = {
       type: item.type,
-      readOnly: isSelecting || !!readOnly,
       editorState: editorStates[item.id],
+      metadata: item.metadata,
+      readOnly: isSelecting || !!readOnly,
       focused: !isDragging && index === focusedIndex,
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
@@ -910,6 +991,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       onFocus: () => handleFocus(index),
       onBlur: handleBlur,
       onPaste: () => handlePaste(index),
+      onCheck: checked => handleCheck(index, checked),
       onKeyCommand: command => handleKeyCommand(index, command),
     }
 
@@ -938,9 +1020,11 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     handleFocus,
     handleBlur,
     handlePaste,
+    handleCheck,
     handleDrag,
     handleBlockMouseDown,
     handleFocusContent,
+    handleBlurContent,
     handleKeyCommand,
     registerRef,
   ])
@@ -1110,6 +1194,7 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
 --- */
 function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: EditorState) {
   return {
+    metadata: '',
     ...item,
     data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
   } as ReactBlockTextDataItem
@@ -1124,6 +1209,27 @@ function findAttributeInParents(element: HTMLElement, attribute: string) {
   if (!element.parentElement) return null
 
   return findAttributeInParents(element.parentElement, attribute)
+}
+
+/* ---
+  APPLY TO-DO STYLE
+--- */
+function applyTodoStyle(editorState: EditorState, checked: boolean) {
+  const currentSelection = editorState.getSelection()
+  const contentState = editorState.getCurrentContent()
+  const firstBlock = contentState.getFirstBlock()
+  const lastBlock = contentState.getLastBlock()
+  const selection = SelectionState.createEmpty(firstBlock.getKey()).merge({
+    anchorKey: firstBlock.getKey(),
+    anchorOffset: 0,
+    focusKey: lastBlock.getKey(),
+    focusOffset: lastBlock.getLength(),
+  })
+  const modify = checked ? Modifier.applyInlineStyle : Modifier.removeInlineStyle
+  const nextContentState = modify(contentState, selection, INLINE_STYLES.TODO_CHECKED)
+  const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
+
+  return EditorState.forceSelection(nextEditorState, currentSelection)
 }
 
 export default ReactBlockText

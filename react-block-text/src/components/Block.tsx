@@ -13,6 +13,7 @@ const typeToPaddingTop = {
   heading1: 24,
   heading2: 18,
   heading3: 12,
+  todo: 3,
 } as const
 
 const typeToPaddingBottom = {
@@ -20,6 +21,7 @@ const typeToPaddingBottom = {
   heading1: 9,
   heading2: 9,
   heading3: 9,
+  todo: 3,
 } as const
 
 const typeToIconsExtraPaddingTop = {
@@ -27,6 +29,7 @@ const typeToIconsExtraPaddingTop = {
   heading1: 5,
   heading2: 3,
   heading3: 2,
+  todo: 0,
 } as const
 
 function Block({
@@ -46,6 +49,7 @@ function Block({
   onDragEnd,
   focusContent,
   focusNextContent,
+  blurContent,
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -143,11 +147,6 @@ function Block({
     const previewRect = previewRef.current.getBoundingClientRect()
     const dragRect = dragRef.current.getBoundingClientRect()
 
-    console.log({
-      top: dragRect.top - previewRect.top,
-      left: dragRect.left - previewRect.left,
-    })
-
     setMenuPosition({
       top: dragRect.top - previewRect.top - 4,
       left: dragRect.left - previewRect.left,
@@ -186,6 +185,7 @@ function Block({
             <div
               ref={dragRef}
               onClick={handleDragClick}
+              onMouseDown={blurContent}
               className="py-1 hover:bg-gray-100 rounded cursor-pointer"
             >
               <DragIcon width={18} />

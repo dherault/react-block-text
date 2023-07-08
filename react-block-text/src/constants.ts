@@ -5,3 +5,7 @@ export const COMMANDS = {
   ARROW_UP: 'arrow-up',
   ARROW_DOWN: 'arrow-down',
 }
+
+export const INLINE_STYLES = {
+  TODO_CHECKED: 'TODO_CHECKED',
+}

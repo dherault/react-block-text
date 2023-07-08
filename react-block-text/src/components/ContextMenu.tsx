@@ -4,6 +4,8 @@ import _ from 'clsx'
 
 import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from '../types'
 
+import Checkbox from './Checkbox'
+
 /* ---
   ITEMS OF THE CONTEXT MENU
 --- */
@@ -48,6 +50,15 @@ const items = [
       <HeadingIcon>
         H3
       </HeadingIcon>
+    ),
+  },
+  {
+    command: 'todo',
+    title: 'To-do list',
+    shortcuts: 'todo',
+    label: 'Track tasks with a to-do list',
+    icon: (
+      <TodoIcon />
     ),
   },
 ] as const
@@ -208,6 +219,26 @@ function HeadingIcon({ children }: ContextMenuIconProps) {
         <div className="border-b border-gray-300" />
         <div className="w-[75%] border-b border-gray-300" />
         <div className="w-[50%] border-b border-gray-300" />
+      </div>
+    </ContextMenuIcon>
+  )
+}
+
+function TodoIcon() {
+  return (
+    <ContextMenuIcon>
+      <div className="w-full h-full flex items-center justify-center gap-1">
+        <div className="scale-[85%]">
+          <Checkbox
+            checked
+            onCheck={() => {}}
+          />
+        </div>
+        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+          <div className="border-b border-gray-300" />
+          <div className="w-[50%] border-b border-gray-300" />
+          <div className="w-[75%] border-b border-gray-300" />
+        </div>
       </div>
     </ContextMenuIcon>
   )
