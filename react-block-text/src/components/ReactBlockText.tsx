@@ -1162,6 +1162,24 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   ])
 
   /* ---
+    INITIAL VALUE POPULATION
+  --- */
+  useEffect(() => {
+    if (!(Array.isArray(value) && value.length)) return
+
+    const editorStates = value.map(item => ({
+      item,
+      editorState: item.data
+        ? EditorState.createWithContent(convertFromRaw(JSON.parse(item.data)))
+        : EditorState.createEmpty(),
+    }))
+    .reduce((acc, x) => ({ ...acc, [x.item.id]: applyStyles(x.item, x.editorState) }), {})
+
+    setEditorStates(editorStates)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /* ---
     NO VALUE LENGTH
     Create a text item if there is no value
   --- */
@@ -1173,6 +1191,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange([item])
+    setFocusedIndex(0)
   }, [value, readOnly, onChange, createTextItem])
 
   /* ---
@@ -1366,7 +1385,7 @@ function findAttributeInParents(element: HTMLElement, attribute: string) {
 /* ---
   APPLY TO-DO STYLE
 --- */
-function applyTodoStyle(editorState: EditorState, checked: boolean) {
+function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelection = false) {
   const currentSelection = editorState.getSelection()
   const contentState = editorState.getCurrentContent()
   const firstBlock = contentState.getFirstBlock()
@@ -1381,7 +1400,15 @@ function applyTodoStyle(editorState: EditorState, checked: boolean) {
   const nextContentState = modify(contentState, selection, INLINE_STYLES.TODO_CHECKED)
   const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
 
+  if (skipSelection) return nextEditorState
+
   return EditorState.forceSelection(nextEditorState, currentSelection)
+}
+
+function applyStyles(item: ReactBlockTextDataItem, editorState: EditorState) {
+  if (item.type === 'todo') return applyTodoStyle(editorState, item.metadata === 'true', true)
+
+  return editorState
 }
 
 /* ---

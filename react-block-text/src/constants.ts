@@ -4,7 +4,6 @@ export const COMMANDS = {
   SAVE: 'SAVE',
   ARROW_UP: 'ARROW_UP',
   ARROW_DOWN: 'ARROW_DOWN',
-  // META_BACKSPACE: 'META_BACKSPACE',
 }
 
 export const INLINE_STYLES = {
