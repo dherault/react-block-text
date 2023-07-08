@@ -58,8 +58,8 @@ function BlockContentText({
   --- */
   return (
     <div className={_('w-full', {
-      'text-4xl font-semibold': type === 'heading1',
-      'text-3xl font-semibold': type === 'heading2',
+      'text-3xl font-semibold': type === 'heading1',
+      'text-2xl font-semibold': type === 'heading2',
       'text-xl font-semibold': type === 'heading3',
     })}
     >

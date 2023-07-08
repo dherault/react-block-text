@@ -27,12 +27,14 @@ export type BlockProps = {
   hovered: boolean
   onAddItem: () => void
   onMouseDown: () => void
-  onMouseEnter: () => void
+  onMouseMove: () => void
   onMouseLeave: () => void
   onDragStart: () => void
   onDrag: (dragIndex: number, hoverIndex: number) => void
   onDragEnd: () => void
   onDeleteItem: () => void
+  focusContent: () => void
+  focusNextContent: () => void
 }
 
 export type BlockContentTextProps = {

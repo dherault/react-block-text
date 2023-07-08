@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.public-DraftEditorPlaceholder-root {
+  user-select: none;
+  color: #bdc1c9 !important;
+}

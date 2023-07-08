@@ -8,16 +8,25 @@ import { BlockProps, DragItem, TopLeft } from './types'
 import BlockMenu from './BlockMenu'
 
 const typeToPaddingTop = {
+  text: 3,
   heading1: 24,
-  heading2: 16,
+  heading2: 18,
   heading3: 12,
-}
+} as const
 
 const typeToPaddingBottom = {
-  heading1: 8,
-  heading2: 8,
-  heading3: 8,
-}
+  text: 3,
+  heading1: 9,
+  heading2: 9,
+  heading3: 9,
+} as const
+
+const typeToIconsExtraPaddingTop = {
+  text: 0,
+  heading1: 5,
+  heading2: 3,
+  heading3: 2,
+} as const
 
 function Block({
   children,
@@ -29,11 +38,13 @@ function Block({
   onAddItem,
   onDeleteItem,
   onMouseDown,
-  onMouseEnter,
+  onMouseMove,
   onMouseLeave,
   onDragStart,
   onDrag,
   onDragEnd,
+  focusContent,
+  focusNextContent,
 }: BlockProps) {
   const dragRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -112,7 +123,7 @@ function Block({
 
       if (!monitor.didDrop()) return
 
-      onMouseEnter()
+      onMouseMove()
     },
   })
 
@@ -150,37 +161,48 @@ function Block({
       ref={previewRef}
       data-handler-id={handlerId}
       data-react-block-text-id={id}
-      className="w-full flex items-start gap-1 relative"
-      style={{
-        opacity,
-        paddingTop: typeToPaddingTop[type as keyof typeof typeToPaddingTop] ?? 4,
-        paddingBottom: typeToPaddingBottom[type as keyof typeof typeToPaddingBottom] ?? 4,
-      }}
+      className="w-full flex gap-1"
+      style={{ opacity }}
       onMouseDown={onMouseDown}
-      onMouseMove={onMouseEnter}
-      onMouseEnter={onMouseEnter}
+      onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
       {!readOnly && (
-        <div
-          className="flex-shrink-0 flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
-          style={{ opacity: hovered ? 1 : 0 }}
-        >
+        <div className="flex-shrink-0">
           <div
-            className="p-1 hover:bg-gray-100 rounded cursor-pointer"
-            onClick={onAddItem}
-          >
-            <AddIcon width={18} />
-          </div>
+            style={{ height: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type] }}
+          />
           <div
-            ref={dragRef}
-            onClick={handleDragClick}
-            className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+            className="flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
+            style={{ opacity: hovered ? 1 : 0 }}
           >
-            <DragIcon width={18} />
+            <div
+              className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+              onClick={onAddItem}
+            >
+              <AddIcon width={18} />
+            </div>
+            <div
+              ref={dragRef}
+              onClick={handleDragClick}
+              className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+            >
+              <DragIcon width={18} />
+            </div>
           </div>
         </div>
       )}
+      <div className="flex-grow cursor-text">
+        <div
+          onClick={focusContent}
+          style={{ height: typeToPaddingTop[type] }}
+        />
+        {children}
+        <div
+          onClick={focusNextContent}
+          style={{ height: typeToPaddingBottom[type] }}
+        />
+      </div>
       {!!menuPosition && (
         <BlockMenu
           onDelete={onDeleteItem}
@@ -188,9 +210,6 @@ function Block({
           {...menuPosition}
         />
       )}
-      <div className="flex-grow">
-        {children}
-      </div>
     </div>
   )
 }

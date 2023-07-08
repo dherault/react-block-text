@@ -1,3 +1,4 @@
+import './index.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
@@ -91,7 +92,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
   /* ---
     ADD ITEM
-    Add a simple text item to the editor
+    Add a text item to the editor
   --- */
   const handleAddItem = useCallback((index: number) => {
     const { editorState, item } = createTextItem()
@@ -102,7 +103,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange(nextValue)
     setForceFocusIndex(index + 1)
-    setHoveredIndex(-1)
+    setHoveredIndex(index + 1)
+    setFocusedIndex(index + 1)
   }, [value, onChange, createTextItem])
 
   /* ---
@@ -164,6 +166,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     const lastWordIncludesCommand = lastWord.includes('/')
     const lastChar = lastWord.slice(-1)
 
+    // Toggle context menu with `/` command
     if (!contextMenuData && lastChar === '/') {
       setContextMenuData(getContextMenuData(instanceId, id))
 
@@ -259,6 +262,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     nextValue.splice(index + 1, 0, secondItem)
 
     onChange(nextValue)
+    setFocusedIndex(index + 1)
+    setHoveredIndex(-1)
 
     return 'handled'
   }, [value, editorStates, contextMenuData, onChange])
@@ -276,9 +281,11 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     if (!editorState) return 'not-handled'
 
+    const contentState = editorState.getCurrentContent()
+    const firstBlockKey = contentState.getFirstBlock().getKey()
     const selection = editorState.getSelection()
 
-    if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0)) return 'not-handled'
+    if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
     const previousItem = value[index - 1]
@@ -292,10 +299,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     let previousContent = previousEditorState.getCurrentContent()
     const previousLastBlock = previousContent.getLastBlock()
     // The first block text will be merged with the last block of the previous item
-    const firstBlock = editorState.getCurrentContent().getFirstBlock()
+    const firstBlock = contentState.getFirstBlock()
     // The other block will be added to the previous item
     // Modify keys to avoid duplicates
-    const otherBlocks = editorState.getCurrentContent()
+    const otherBlocks = contentState
       .getBlocksAsArray()
       .slice(1)
       .map(block => new ContentBlock(block.set('key', nanoid())))
@@ -334,6 +341,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     nextValue.splice(index, 1)
 
     onChange(nextValue)
+    setFocusedIndex(index - 1)
+    setHoveredIndex(-1)
 
     return 'handled'
   }, [value, editorStates, onChange])
@@ -355,8 +364,8 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     const lastBlock = editorState.getCurrentContent().getLastBlock()
     const lastBlockTextLength = lastBlock.getText().length
 
-    if (!(selection.isCollapsed() && selection.getAnchorOffset() === lastBlockTextLength)) return 'not-handled'
-    // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
+    if (!(selection.isCollapsed() && selection.getAnchorOffset() === lastBlockTextLength && selection.getAnchorKey() === lastBlock.getKey())) return 'not-handled'
+    // If the selection is collapsed and at the end of the block, we merge the block with the next one
 
     const nextItem = value[index + 1]
 
@@ -411,11 +420,12 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     nextValue[index + 1] = appendItemData(nextItem, nextEditorState)
     // Preserve first item type
     nextValue[index + 1].type = item.type
-
     // Delete the current item
     nextValue.splice(index, 1)
 
     onChange(nextValue)
+    setFocusedIndex(index)
+    setHoveredIndex(-1)
 
     return 'handled'
   }, [value, editorStates, onChange])
@@ -517,9 +527,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     BLUR
   --- */
   const handleBlur = useCallback((index: number) => {
-    setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
+    // setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
     setSelection(null)
-  }, [value?.length])
+  // }, [value?.length])
+  }, [])
 
   /* ---
     BLOCK MOUSE DOWN
@@ -542,6 +553,14 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     setFocusedIndex(-1)
     setHoveredIndex(-1)
   }, [value, onChange])
+
+  const handleFocusContent = useCallback((index: number) => {
+    const item = value[index]
+
+    if (!item) return
+
+    editorRefs[instanceId][item.id]?.focus()
+  }, [instanceId, value])
 
   /* ---
     COPY
@@ -846,11 +865,13 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       onAddItem: () => handleAddItem(index),
       onDeleteItem: () => handleDeleteItem(index),
       onMouseDown: handleBlockMouseDown,
-      onMouseEnter: () => setHoveredIndex(index),
+      onMouseMove: () => setHoveredIndex(index),
       onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
       onDragStart: () => setIsDragging(true),
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
+      focusContent: () => handleFocusContent(index),
+      focusNextContent: () => handleFocusContent(index + 1),
     }
 
     const blockContentProps: BlockContentTextProps = {
@@ -899,6 +920,7 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     handleDelete,
     handleDrag,
     handleBlockMouseDown,
+    handleFocusContent,
     registerRef,
   ])
 
