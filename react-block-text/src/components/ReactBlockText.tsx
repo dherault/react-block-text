@@ -413,7 +413,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     const nextEditorState = EditorState.push(editorState, nextFirstContentState, 'change-block-data')
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
-    const secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
+    let secondEditorState = EditorState.forceSelection(EditorState.createWithContent(nextSecondContentState), emptySelection)
     const secondItem: ReactBlockTextDataItem = appendItemData(
       {
         reactBlockTextVersion: VERSION,
@@ -424,6 +424,10 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       },
       secondEditorState
     )
+
+    if (secondItem.type === 'todo') {
+      secondEditorState = applyTodoStyle(secondEditorState, secondItem.metadata === 'true')
+    }
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
 
@@ -504,6 +508,10 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     previousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
     previousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
 
+    if (previousItem.type === 'todo') {
+      previousEditorState = applyTodoStyle(previousEditorState, previousItem.metadata === 'true')
+    }
+
     setEditorStates(x => {
       const nextEditorStates = { ...x }
 
@@ -551,6 +559,19 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       if (previousFirstBlockTextLength > 0) {
         // We refresh to update previousEditorStates
         forceRefresh(x => !x)
+
+        // But we can merge it with the previous one
+        const editorState = editorStates[item.id]
+
+        if (!editorState) return
+
+        const selection = editorState.getSelection()
+        const contentState = editorState.getCurrentContent()
+        const firstBlock = contentState.getFirstBlock()
+
+        if (selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlock.getKey()) {
+          handleBackspace(focusedIndex)
+        }
 
         return
       }
@@ -601,7 +622,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     nextPreviousEditorState = EditorState.forceSelection(nextPreviousEditorState, nextPreviousSelection)
 
     setEditorStates(x => ({ ...x, [previousItem.id]: nextPreviousEditorState }))
-  }, [value, editorStates, previousEditorStates, focusedIndex, handleDeleteItem, onChange])
+  }, [value, editorStates, previousEditorStates, focusedIndex, handleBackspace, handleDeleteItem, onChange])
 
   /* ---
     DELETE
