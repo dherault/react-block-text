@@ -76,6 +76,11 @@ function BlockContentText({
   BIND KEYBOARD SHORTCUTS
 --- */
 function bindKey(event: KeyboardEvent): string | null {
+  // console.log('event.key', event.key)
+  // if (event.key === 'Backspace' && KeyBindingUtil.hasCommandModifier(event)) {
+  //   return COMMANDS.META_BACKSPACE
+  // }
+
   if (event.key === 's' && KeyBindingUtil.hasCommandModifier(event)) {
     return COMMANDS.SAVE
   }

@@ -29,7 +29,7 @@ function BlockContentList(props: BlockContentProps) {
 
   return (
     <div className="flex items-start gap-3">
-      <div className="-mt-[2px] ml-2 scale-[200%]">
+      <div className="-mt-[2px] ml-2 scale-[200%] flex-shrink-0">
         {label || depthToBullet[depth & depthToBullet.length]}
       </div>
       <div className="flex-grow">

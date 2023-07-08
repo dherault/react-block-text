@@ -29,6 +29,8 @@ import {
 
 import { COMMANDS, INLINE_STYLES, VERSION } from '../constants'
 
+import usePrevious from '../hooks/usePrevious'
+
 import Block from './Block'
 import BlockContentText from './BlockContentText'
 import BlockContentTodo from './BlockContentTodo'
@@ -71,7 +73,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
-  const [, forceRerender] = useState(false)
+  const [, forceRefresh] = useState(false)
+
+  const previousEditorStates = usePrevious(editorStates)
 
   // A unique instance id for the sake of editorRefs, so multiple instances can be used on the same page
   const instanceId = useMemo(() => nanoid(), [])
@@ -437,6 +441,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle backspace input, if necessary merge blocks
   --- */
   const handleBackspace = useCallback((index: number) => {
+    console.log('handleBackspace')
     const item = value[index]
 
     if (!item) return 'not-handled'
@@ -453,7 +458,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
     // If the item is a todo, a quote or a list, we convert it to a text item
-    if (item.type === 'todo' || item.type === 'quote' || item.type === 'bulleted-list' || item.type === 'numbered-list') {
+    if (['todo', 'quote', 'bulleted-list', 'numbered-list'].includes(item.type)) {
       const nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
@@ -522,6 +527,73 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     return 'handled'
   }, [value, editorStates, onChange])
+
+  /* ---
+    META BACKSPACE
+    Handle delete block, fallback to backspace if necessary
+  --- */
+  const handleMetaBackspace = useCallback(() => {
+    console.log('handleMetaBackspace', focusedIndex)
+    if (focusedIndex <= 0) return
+
+    const item = value[focusedIndex]
+
+    if (!item) return
+
+    console.log('0')
+    // If in the previous state the first block is not empty, we don't delete the current item
+    // Because it means that the user has deleted a block
+    const previousEditorState = previousEditorStates[item.id]
+
+    if (previousEditorState) {
+
+      console.log('previousEditorState')
+      const previousFirstBlockTextLength = previousEditorState.getCurrentContent().getFirstBlock().getText().length
+
+      if (previousFirstBlockTextLength > 0) {
+        // We refresh to update previousEditorStates
+        forceRefresh(x => !x)
+
+        return
+      }
+    }
+
+    console.log('2')
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const selection = editorState.getSelection()
+    const contentState = editorState.getCurrentContent()
+    const nBlocks = contentState.getBlockMap().size
+    const firstBlockTextLength = contentState.getFirstBlock().getText().length
+
+    if (!(selection.isCollapsed() && selection.getFocusOffset() === 0 && nBlocks <= 1 && firstBlockTextLength === 0)) return
+    // If the selection if at the beginning of the only empty block, we delete the current item
+
+    handleDeleteItem(focusedIndex)
+    setFocusedIndex(focusedIndex - 1)
+    setForceFocusIndex(focusedIndex - 1)
+
+    // Then we put the caret at the end of the previous item
+    const previousItem = value[focusedIndex - 1]
+
+    if (!previousItem) return
+
+    let nextPreviousEditorState = editorStates[previousItem.id]
+
+    if (!nextPreviousEditorState) return
+
+    const previousLastBlock = nextPreviousEditorState.getCurrentContent().getLastBlock()
+    const previousLastBlockLength = previousLastBlock.getText().length
+    const nextPreviousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+      focusOffset: previousLastBlockLength,
+      anchorOffset: previousLastBlockLength,
+    })
+    nextPreviousEditorState = EditorState.forceSelection(nextPreviousEditorState, nextPreviousSelection)
+
+    setEditorStates(x => ({ ...x, [previousItem.id]: nextPreviousEditorState }))
+  }, [value, editorStates, previousEditorStates, focusedIndex, handleDeleteItem])
 
   /* ---
     DELETE
@@ -944,7 +1016,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     isSelecting = false
 
-    forceRerender(x => !x)
+    forceRefresh(x => !x)
 
     try {
       const range = window.getSelection()?.getRangeAt(0)
@@ -980,6 +1052,15 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const handleRootBlur = useCallback(() => {
     setSelection(null)
   }, [])
+
+  /* ---
+    KEYDOWN
+  --- */
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Backspace' && (event.metaKey || event.ctrlKey)) {
+      handleMetaBackspace()
+    }
+  }, [handleMetaBackspace])
 
   /* ---
     OUTSIDE CLICK
@@ -1143,6 +1224,17 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   }, [])
 
   /* ---
+    KEYDOWN EVENT
+  --- */
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleKeyDown])
+
+  /* ---
     OUTSIDE CLICK EVENT
   --- */
   useEffect(() => {
@@ -1263,7 +1355,7 @@ function applyTodoStyle(editorState: EditorState, checked: boolean) {
     anchorKey: firstBlock.getKey(),
     anchorOffset: 0,
     focusKey: lastBlock.getKey(),
-    focusOffset: lastBlock.getLength(),
+    focusOffset: lastBlock.getText().length,
   })
   const modify = checked ? Modifier.applyInlineStyle : Modifier.removeInlineStyle
   const nextContentState = modify(contentState, selection, INLINE_STYLES.TODO_CHECKED)
