@@ -25,7 +25,7 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { COMMANDS } from '../constants'
+import { COMMANDS, VERSION } from '../constants'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
@@ -37,8 +37,6 @@ const blockContentComponents = {
   heading2: BlockContentText,
   heading3: BlockContentText,
 }
-
-const VERSION = '1.0.0'
 
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
@@ -639,6 +637,8 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const handleKeyCommand = useCallback((index: number, command: string) => {
     if (command === COMMANDS.SAVE) {
       onSave?.()
+
+      return 'handled'
     }
 
     if (command === 'backspace') {
@@ -1048,7 +1048,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       <div
         ref={rootRef}
         onBlur={handleRootBlur}
-        className="w-full relative"
+        className="relative"
       >
         {value.map(renderEditor)}
         {!!contextMenuData && (
@@ -1113,6 +1113,9 @@ function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: Edit
   } as ReactBlockTextDataItem
 }
 
+/* ---
+  FIND ATTRIBUTE IN PARENTS
+--- */
 function findAttributeInParents(element: HTMLElement, attribute: string) {
   if (element.hasAttribute(attribute)) return element.getAttribute(attribute)
 

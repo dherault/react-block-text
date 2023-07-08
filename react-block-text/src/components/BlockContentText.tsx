@@ -40,6 +40,7 @@ function BlockContentText({
       })}
     >
       <Editor
+        spellCheck
         ref={registerRef}
         readOnly={readOnly}
         editorState={editorState}
@@ -53,7 +54,6 @@ function BlockContentText({
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
         handleKeyCommand={onKeyCommand}
-        autoCorrect="on"
       />
     </div>
   )
