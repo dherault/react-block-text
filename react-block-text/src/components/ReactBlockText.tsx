@@ -569,6 +569,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
         const contentState = editorState.getCurrentContent()
         const firstBlock = contentState.getFirstBlock()
 
+        // If the selection is at the beggining of the first block
         if (selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlock.getKey()) {
           handleBackspace(focusedIndex)
         }
@@ -1326,7 +1327,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       <div
         ref={rootRef}
         onBlur={handleRootBlur}
-        className="relative"
+        className="relative text-sm"
       >
         {value.map(renderEditor)}
         {!!contextMenuData && (

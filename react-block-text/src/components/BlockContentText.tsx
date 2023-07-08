@@ -17,6 +17,17 @@ const typeToPlaceholder = {
   quote: "Start typing or press '/' for commands",
 } as const
 
+const typeToFallbackPlaceholder = {
+  text: '',
+  heading1: '',
+  heading2: '',
+  heading3: '',
+  todo: 'To-do',
+  'bulleted-list': 'List',
+  'numbered-list': 'List',
+  quote: '',
+}
+
 const styleMap = {
   [INLINE_STYLES.TODO_CHECKED]: {
     color: '#9ca3af',
@@ -63,7 +74,7 @@ function BlockContentText({
         onFocus={onFocus}
         onBlur={onBlur}
         handlePastedText={onPaste}
-        placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
+        placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : typeToFallbackPlaceholder[type]}
         keyBindingFn={bindKey}
         handleKeyCommand={onKeyCommand}
         customStyleMap={styleMap}
