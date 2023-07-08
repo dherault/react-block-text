@@ -240,6 +240,96 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   }, [value, editorStates, onChange])
 
   /* ---
+    UP ARROW
+    Handle up arrow, to move between editor instances
+    Although this causes a warning in the console, I found it to be the only way to make it work
+  --- */
+  const handleUpArrow = useCallback((index: number, event: any) => {
+    if (index === 0) return
+
+    if (contextMenuData) {
+      event.preventDefault()
+
+      return
+    }
+
+    const editorState = editorStates[value[index]?.id]
+    const previousEditorState = editorStates[value[index - 1]?.id]
+
+    if (!(editorState && previousEditorState)) return
+
+    const selection = editorState.getSelection()
+    const firstBlock = editorState.getCurrentContent().getFirstBlock()
+    const isFirstline = firstBlock.getKey() === selection.getFocusKey()
+
+    if (!isFirstline) return
+
+    const firstBlockText = firstBlock.getText()
+    const indexOfCarriageReturn = firstBlockText.indexOf('\n')
+    const focusOffset = selection.getFocusOffset()
+
+    if (indexOfCarriageReturn !== -1 && selection.getFocusOffset() > indexOfCarriageReturn) return
+
+    const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
+    const previousLastBlockText = previousLastBlock.getText()
+    const lines = previousLastBlockText.split('\n')
+    const lastLine = lines.pop() ?? ''
+    const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
+    const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
+    const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+      anchorOffset: offset,
+      focusOffset: offset,
+    })
+    const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
+
+    setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
+    setFocusedIndex(index - 1)
+    setHoveredIndex(-1)
+
+    event.preventDefault()
+  }, [value, editorStates, contextMenuData])
+
+  /* ---
+    DOWN ARROW
+    Handle down arrow, to move between editor instances
+    Although this causes a warning in the console, I found it to be the only way to make it work
+  --- */
+  const handleDownArrow = useCallback((index: number, event: any) => {
+    if (index === value.length - 1) return
+
+    if (contextMenuData) {
+      event.preventDefault()
+
+      return
+    }
+
+    const editorState = editorStates[value[index]?.id]
+    const nextEditorState = editorStates[value[index + 1]?.id]
+
+    if (!(editorState && nextEditorState)) return
+
+    const selection = editorState.getSelection()
+    const lastBlock = editorState.getCurrentContent().getLastBlock()
+    const isLastLine = lastBlock.getKey() === selection.getFocusKey()
+
+    if (!isLastLine) return
+
+    const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
+    const anchorOffset = Math.min(selection.getAnchorOffset(), nextLastBlock.getLength())
+    const nextSelection = SelectionState.createEmpty(nextLastBlock.getKey()).merge({
+      anchorOffset,
+      focusOffset: anchorOffset,
+    })
+    const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
+
+    setEditorStates(x => ({ ...x, [value[index + 1].id]: updatedNextEditorState }))
+    setFocusedIndex(index + 1)
+    setHoveredIndex(-1)
+
+    event.preventDefault()
+  }, [value, editorStates, contextMenuData])
+
+  /* ---
     RETURN
     Handle carriage return
     If necessary, split block into two
@@ -492,96 +582,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     return 'handled'
   }, [value, editorStates, onChange])
-
-  /* ---
-    UP ARROW
-    Handle up arrow, to move between editor instances
-    Although this causes a warning in the console, I found it to be the only way to make it work
-  --- */
-  const handleUpArrow = useCallback((index: number, event: any) => {
-    if (index === 0) return
-
-    if (contextMenuData) {
-      event.preventDefault()
-
-      return
-    }
-
-    const editorState = editorStates[value[index]?.id]
-    const previousEditorState = editorStates[value[index - 1]?.id]
-
-    if (!(editorState && previousEditorState)) return
-
-    const selection = editorState.getSelection()
-    const firstBlock = editorState.getCurrentContent().getFirstBlock()
-    const isFirstline = firstBlock.getKey() === selection.getFocusKey()
-
-    if (!isFirstline) return
-
-    const firstBlockText = firstBlock.getText()
-    const indexOfCarriageReturn = firstBlockText.indexOf('\n')
-    const focusOffset = selection.getFocusOffset()
-
-    if (indexOfCarriageReturn !== -1 && selection.getFocusOffset() > indexOfCarriageReturn) return
-
-    const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
-    const previousLastBlockText = previousLastBlock.getText()
-    const lines = previousLastBlockText.split('\n')
-    const lastLine = lines.pop() ?? ''
-    const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
-    const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
-    const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
-      anchorOffset: offset,
-      focusOffset: offset,
-    })
-    const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
-
-    setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
-    setFocusedIndex(index - 1)
-    setHoveredIndex(-1)
-
-    event.preventDefault()
-  }, [value, editorStates, contextMenuData])
-
-  /* ---
-    DOWN ARROW
-    Handle down arrow, to move between editor instances
-    Although this causes a warning in the console, I found it to be the only way to make it work
-  --- */
-  const handleDownArrow = useCallback((index: number, event: any) => {
-    if (index === value.length - 1) return
-
-    if (contextMenuData) {
-      event.preventDefault()
-
-      return
-    }
-
-    const editorState = editorStates[value[index]?.id]
-    const nextEditorState = editorStates[value[index + 1]?.id]
-
-    if (!(editorState && nextEditorState)) return
-
-    const selection = editorState.getSelection()
-    const lastBlock = editorState.getCurrentContent().getLastBlock()
-    const isLastLine = lastBlock.getKey() === selection.getFocusKey()
-
-    if (!isLastLine) return
-
-    const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
-    const anchorOffset = Math.min(selection.getAnchorOffset(), nextLastBlock.getLength())
-    const nextSelection = SelectionState.createEmpty(nextLastBlock.getKey()).merge({
-      anchorOffset,
-      focusOffset: anchorOffset,
-    })
-    const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
-
-    setEditorStates(x => ({ ...x, [value[index + 1].id]: updatedNextEditorState }))
-    setFocusedIndex(index + 1)
-    setHoveredIndex(-1)
-
-    event.preventDefault()
-  }, [value, editorStates, contextMenuData])
 
   /* ---
     BLOCK MOUSE DOWN
