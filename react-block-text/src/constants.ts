@@ -1,9 +1,9 @@
 export const VERSION = '1.0.0'
 
 export const COMMANDS = {
-  SAVE: 'save',
-  ARROW_UP: 'arrow-up',
-  ARROW_DOWN: 'arrow-down',
+  SAVE: 'SAVE',
+  ARROW_UP: 'ARROW_UP',
+  ARROW_DOWN: 'ARROW_DOWN',
 }
 
 export const INLINE_STYLES = {
