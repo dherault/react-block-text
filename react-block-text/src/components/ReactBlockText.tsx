@@ -113,9 +113,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     setEditorStates(x => ({ ...x, [item.id]: editorState }))
     onChange(nextValue)
-    setForceFocusIndex(index + 1)
     setHoveredIndex(index + 1)
     setFocusedIndex(index + 1)
+    setForceFocusIndex(index + 1)
   }, [value, onChange, createTextItem])
 
   /* ---
@@ -242,7 +242,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   /* ---
     UP ARROW
     Handle up arrow, to move between editor instances
-    Although this causes a warning in the console, I found it to be the only way to make it work
+    Although this causes a warning in the console (suppressed), I found it to be the only way to make it work
   --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
@@ -260,16 +260,20 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     const selection = editorState.getSelection()
     const firstBlock = editorState.getCurrentContent().getFirstBlock()
-    const isFirstline = firstBlock.getKey() === selection.getFocusKey()
+    const isFirstBlock = firstBlock.getKey() === selection.getFocusKey()
 
-    if (!isFirstline) return
+    if (!isFirstBlock) return
+    // If on the first block, we focus the previous block
+    // The caret position must be conserved
 
     const firstBlockText = firstBlock.getText()
     const indexOfCarriageReturn = firstBlockText.indexOf('\n')
     const focusOffset = selection.getFocusOffset()
 
-    if (indexOfCarriageReturn !== -1 && selection.getFocusOffset() > indexOfCarriageReturn) return
+    // If within a multiline block and not on the first line, we do nothing
+    if (indexOfCarriageReturn !== -1 && focusOffset > indexOfCarriageReturn) return
 
+    // Find the position of the caret and apply the selection to the previous block
     const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
     const previousLastBlockText = previousLastBlock.getText()
     const lines = previousLastBlockText.split('\n')
@@ -292,7 +296,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   /* ---
     DOWN ARROW
     Handle down arrow, to move between editor instances
-    Although this causes a warning in the console, I found it to be the only way to make it work
+    Although this causes a warning in the console (suppressed), I found it to be the only way to make it work
   --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
@@ -310,15 +314,27 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     const selection = editorState.getSelection()
     const lastBlock = editorState.getCurrentContent().getLastBlock()
-    const isLastLine = lastBlock.getKey() === selection.getFocusKey()
+    const isLastBlock = lastBlock.getKey() === selection.getFocusKey()
 
-    if (!isLastLine) return
+    if (!isLastBlock) return
+    // If on the last block, we focus the next block
+    // The caret position must be conserved
 
-    const nextLastBlock = nextEditorState.getCurrentContent().getLastBlock()
-    const anchorOffset = Math.min(selection.getAnchorOffset(), nextLastBlock.getLength())
-    const nextSelection = SelectionState.createEmpty(nextLastBlock.getKey()).merge({
-      anchorOffset,
-      focusOffset: anchorOffset,
+    const lastBlockText = lastBlock.getText()
+    const indexOfLastCarriageReturn = lastBlockText.lastIndexOf('\n')
+    const focusOffset = selection.getFocusOffset()
+
+    // If within a multiline block and not on the last line, we do nothing
+    if (indexOfLastCarriageReturn !== -1 && focusOffset <= indexOfLastCarriageReturn) return
+
+    // Find the position of the caret and apply the selection to the previous block
+    const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
+    const nextFirstBlockText = nextFirstBlock.getText()
+    const firstLine = nextFirstBlockText.split('\n')[0] ?? ''
+    const offset = Math.min(focusOffset - indexOfLastCarriageReturn - 1, firstLine.length)
+    const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
+      anchorOffset: offset,
+      focusOffset: offset,
     })
     const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
 
@@ -431,6 +447,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
+    // If the item is a todo, we convert it to a text item
     if (item.type === 'todo') {
       const nextValue = [...value]
 
@@ -441,6 +458,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       return 'handled'
     }
 
+    // Otherwise we merge the blocks
     const previousItem = value[index - 1]
 
     if (!previousItem) return 'not-handled'
@@ -1249,6 +1267,9 @@ function applyTodoStyle(editorState: EditorState, checked: boolean) {
   return EditorState.forceSelection(nextEditorState, currentSelection)
 }
 
+/* ---
+  FORCE CONTENT FOCUS
+--- */
 function forceContentFocus(instanceId: string, id: string) {
   if (!editorRefs[instanceId]?.[id]) return
   if (editorRefs[instanceId][id]?.editorContainer?.contains(document.activeElement)) return

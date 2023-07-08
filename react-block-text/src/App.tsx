@@ -22,10 +22,10 @@ function App() {
           value={data}
           onChange={setData}
         />
-      </div>
+      </div> */}
       <div className="mt-8 p-2 bg-white w-full rounded">
         {JSON.stringify(data, null, 2)}
-      </div> */}
+      </div>
     </div>
   )
 }
