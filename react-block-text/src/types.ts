@@ -1,7 +1,13 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 import type { DraftHandleValue, EditorState } from 'draft-js'
 
-export type ReactBlockTextDataItemType = 'text' | 'heading1' | 'heading2' | 'heading3' | 'todo'
+export type ReactBlockTextDataItemType = 'text'
+  | 'heading1'
+  | 'heading2'
+  | 'heading3'
+  | 'todo'
+  | 'bulleted-list'
+  | 'numbered-list'
 
 export type ReactBlockTextDataItem = {
   reactBlockTextVersion: string
@@ -71,6 +77,8 @@ export type ContextMenuItemProps = {
   label: string
   icon: ReactNode
   active: boolean
+  shouldScrollIntoView: boolean
+  resetShouldScrollIntoView: () => void
   onClick: () => void
   onMouseEnter: () => void
   onMouseLeave: () => void
@@ -119,4 +127,9 @@ export type TopLeft = {
 export type ReactBlockTextSelection = {
   items: ReactBlockTextDataItem[]
   startId: string
+}
+
+export type BlockContentListMetadata = {
+  label: string
+  depth: number
 }

@@ -32,6 +32,7 @@ import { COMMANDS, INLINE_STYLES, VERSION } from '../constants'
 import Block from './Block'
 import BlockContentText from './BlockContentText'
 import BlockContentTodo from './BlockContentTodo'
+import BlockContentList from './BlockContentList'
 import ContextMenu from './ContextMenu'
 
 // Remove onUpArrow and onDownArrow deprecation warnings
@@ -46,6 +47,8 @@ const blockContentComponents = {
   heading2: BlockContentText,
   heading3: BlockContentText,
   todo: BlockContentTodo,
+  'bulleted-list': BlockContentList,
+  'numbered-list': BlockContentList,
 }
 
 // Not a state to avoid infinite render loops
@@ -275,8 +278,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     // Find the position of the caret and apply the selection to the previous block
     const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
-    const previousLastBlockText = previousLastBlock.getText()
-    const lines = previousLastBlockText.split('\n')
+    const lines = previousLastBlock.getText().split('\n')
     const lastLine = lines.pop() ?? ''
     const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
     const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
@@ -329,8 +331,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     // Find the position of the caret and apply the selection to the previous block
     const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
-    const nextFirstBlockText = nextFirstBlock.getText()
-    const firstLine = nextFirstBlockText.split('\n')[0] ?? ''
+    const firstLine = nextFirstBlock.getText().split('\n')[0] ?? ''
     const offset = Math.min(focusOffset - indexOfLastCarriageReturn - 1, firstLine.length)
     const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
       anchorOffset: offset,
@@ -408,7 +409,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       {
         reactBlockTextVersion: VERSION,
         id: nanoid(),
-        type: item.type === 'todo' ? 'todo' : 'text',
+        type: item.type === 'todo' ? 'todo' : 'text', // Create a todo after a todo
       },
       secondEditorState
     )

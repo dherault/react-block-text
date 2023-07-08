@@ -14,7 +14,7 @@ const items = [
     command: 'text',
     shortcuts: 'txt',
     title: 'Text',
-    label: 'Just start writing with plain text',
+    label: 'Just start writing with plain text.',
     icon: (
       <TextIcon />
     ),
@@ -23,7 +23,7 @@ const items = [
     command: 'heading1',
     title: 'Heading 1',
     shortcuts: 'h1',
-    label: 'Big section heading',
+    label: 'Big section heading.',
     icon: (
       <HeadingIcon>
         H1
@@ -34,7 +34,7 @@ const items = [
     command: 'heading2',
     title: 'Heading 2',
     shortcuts: 'h2',
-    label: 'Medium section heading',
+    label: 'Medium section heading.',
     icon: (
       <HeadingIcon>
         H2
@@ -45,7 +45,7 @@ const items = [
     command: 'heading3',
     title: 'Heading 3',
     shortcuts: 'h3',
-    label: 'Small section heading',
+    label: 'Small section heading.',
     icon: (
       <HeadingIcon>
         H3
@@ -56,9 +56,27 @@ const items = [
     command: 'todo',
     title: 'To-do list',
     shortcuts: 'todo',
-    label: 'Track tasks with a to-do list',
+    label: 'Track tasks with a to-do list.',
     icon: (
       <TodoIcon />
+    ),
+  },
+  {
+    command: 'bulleted-list',
+    title: 'Bulleted list',
+    shortcuts: 'task',
+    label: 'Create a simple bulleted list.',
+    icon: (
+      <BulletedListIcon />
+    ),
+  },
+  {
+    command: 'numbered-list',
+    title: 'Numbered list',
+    shortcuts: 'task',
+    label: 'Create a list with numbering.',
+    icon: (
+      <NumberedListIcon />
     ),
   },
 ] as const
@@ -70,7 +88,9 @@ const fuseOptions = {
 
 function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [hoveredIndex, setHoveredIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [scrollIntoViewIndex, setScrollIntoViewIndex] = useState(-1)
+  const [isHovering, setIsHovering] = useState(false)
   const fuse = useMemo(() => new Fuse(items, fuseOptions), [])
   const results = useMemo(() => query ? fuse.search(query) : items.map(item => ({ item })), [fuse, query])
 
@@ -80,14 +100,24 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setHoveredIndex(x => (x + 1) % results.length)
+
+      const nextIndex = (activeIndex + 1) % results.length
+
+      setActiveIndex(nextIndex)
+      setScrollIntoViewIndex(nextIndex)
+      setIsHovering(false)
 
       return
     }
 
     if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setHoveredIndex(x => x === -1 ? results.length - 1 : (x - 1 + results.length) % results.length)
+
+      const nextIndex = activeIndex === -1 ? results.length - 1 : (activeIndex - 1 + results.length) % results.length
+
+      setActiveIndex(nextIndex)
+      setScrollIntoViewIndex(nextIndex)
+      setIsHovering(false)
 
       return
     }
@@ -95,8 +125,8 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
     if (event.key === 'Enter') {
       event.preventDefault()
 
-      if (hoveredIndex !== -1) {
-        onSelect(results[hoveredIndex].item.command)
+      if (activeIndex !== -1) {
+        onSelect(results[activeIndex].item.command)
       }
 
       return
@@ -107,7 +137,7 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
 
       onClose()
     }
-  }, [results, hoveredIndex, onSelect, onClose])
+  }, [results, activeIndex, onSelect, onClose])
 
   /* ---
     OUTSIDE CLICK
@@ -143,7 +173,8 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   return (
     <div
       ref={rootRef}
-      className="py-2 px-1 bg-white border shadow-xl rounded fixed z-50"
+      onMouseMove={() => setIsHovering(true)}
+      className="py-2 px-1 max-h-[264px] bg-white border shadow-xl rounded fixed z-50 overflow-y-auto"
       style={{
         top,
         left,
@@ -156,10 +187,12 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
         {results.map((result, i) => (
           <ContextMenuItem
             key={result.item.title}
-            active={i === hoveredIndex}
-            onMouseEnter={() => setHoveredIndex(i)}
-            onMouseLeave={() => setHoveredIndex(-1)}
+            active={i === activeIndex}
+            onMouseEnter={() => isHovering && setActiveIndex(i)}
+            onMouseLeave={() => isHovering && setActiveIndex(-1)}
             onClick={() => onSelect(result.item.command)}
+            shouldScrollIntoView={i === scrollIntoViewIndex}
+            resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
             {...result.item}
           />
         ))}
@@ -172,9 +205,34 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
   CONTEXT MENU ITEM
   And icons
 --- */
-function ContextMenuItem({ title, label, icon, active, onClick, onMouseEnter, onMouseLeave }: ContextMenuItemProps) {
+function ContextMenuItem({
+  title,
+  label,
+  icon,
+  active,
+  shouldScrollIntoView,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+  resetShouldScrollIntoView,
+}: ContextMenuItemProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!shouldScrollIntoView) return
+    if (!rootRef.current) return
+
+    rootRef.current.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest',
+    })
+
+    resetShouldScrollIntoView()
+  }, [shouldScrollIntoView, resetShouldScrollIntoView])
+
   return (
     <div
+      ref={rootRef}
       className={_('py-1 px-2 flex items-center gap-2 cursor-pointer rounded', {
         'bg-gray-100': active,
       })}
@@ -202,7 +260,7 @@ function ContextMenuIcon({ children }: ContextMenuIconProps) {
 function TextIcon() {
   return (
     <ContextMenuIcon>
-      <div className="w-full h-full flex items-center justify-center font-serif text-xl">
+      <div className="w-full h-full flex items-center justify-center font-serif text-xl text-gray-600">
         Aa
       </div>
     </ContextMenuIcon>
@@ -212,7 +270,7 @@ function TextIcon() {
 function HeadingIcon({ children }: ContextMenuIconProps) {
   return (
     <ContextMenuIcon>
-      <div className="font-serif">
+      <div className="font-serif text-gray-600">
         {children}
       </div>
       <div className="w-full flex flex-col gap-1">
@@ -233,6 +291,43 @@ function TodoIcon() {
             checked
             onCheck={() => {}}
           />
+        </div>
+        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+          <div className="border-b border-gray-300" />
+          <div className="w-[50%] border-b border-gray-300" />
+          <div className="w-[75%] border-b border-gray-300" />
+        </div>
+      </div>
+    </ContextMenuIcon>
+  )
+}
+
+function BulletedListIcon() {
+  return (
+    <ContextMenuIcon>
+      <div className="w-full h-full flex items-center justify-center gap-1">
+        <div className="-mt-1.5 text-4xl text-gray-600">
+          •
+        </div>
+        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+          <div className="border-b border-gray-300" />
+          <div className="w-[50%] border-b border-gray-300" />
+          <div className="w-[75%] border-b border-gray-300" />
+        </div>
+      </div>
+    </ContextMenuIcon>
+  )
+}
+
+function NumberedListIcon() {
+  return (
+    <ContextMenuIcon>
+      <div className="w-full h-full flex items-center justify-center gap-1">
+        <div className="text-lg text-gray-600 font-mono">
+          1
+          <span className="font-sans">
+            .
+          </span>
         </div>
         <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
           <div className="border-b border-gray-300" />

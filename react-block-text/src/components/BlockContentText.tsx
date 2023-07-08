@@ -12,6 +12,8 @@ const typeToPlaceholder = {
   heading2: 'Heading 2',
   heading3: 'Heading 3',
   todo: "Start typing or press '/' for commands",
+  'bulleted-list': "Start typing or press '/' for commands",
+  'numbered-list': "Start typing or press '/' for commands",
 } as const
 
 const styleMap = {

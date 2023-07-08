@@ -14,6 +14,8 @@ const typeToPaddingTop = {
   heading2: 18,
   heading3: 12,
   todo: 3,
+  'bulleted-list': 3,
+  'numbered-list': 3,
 } as const
 
 const typeToPaddingBottom = {
@@ -22,6 +24,8 @@ const typeToPaddingBottom = {
   heading2: 9,
   heading3: 9,
   todo: 3,
+  'bulleted-list': 3,
+  'numbered-list': 3,
 } as const
 
 const typeToIconsExtraPaddingTop = {
@@ -30,6 +34,8 @@ const typeToIconsExtraPaddingTop = {
   heading2: 3,
   heading3: 2,
   todo: 0,
+  'bulleted-list': 0,
+  'numbered-list': 0,
 } as const
 
 function Block({
