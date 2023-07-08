@@ -55,6 +55,8 @@ const blockContentComponents = {
   quote: BlockContentQuote,
 }
 
+const convertibleToTextTypes = ['todo', 'quote', 'bulleted-list', 'numbered-list']
+
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
 const editorRefs: Record<string, Record<string, Editor | null>> = {}
@@ -74,6 +76,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
   const [, forceRefresh] = useState(false)
+  const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
 
   const previousEditorStates = usePrevious(editorStates)
 
@@ -441,7 +444,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle backspace input, if necessary merge blocks
   --- */
   const handleBackspace = useCallback((index: number) => {
-    console.log('handleBackspace')
     const item = value[index]
 
     if (!item) return 'not-handled'
@@ -458,7 +460,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
     // If the item is a todo, a quote or a list, we convert it to a text item
-    if (['todo', 'quote', 'bulleted-list', 'numbered-list'].includes(item.type)) {
+    if (convertibleToTextTypes.includes(item.type)) {
       const nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
@@ -530,7 +532,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
   /* ---
     META BACKSPACE
-    Handle delete block, fallback to backspace if necessary
+    Handle delete block on Backspace + Meta or Ctrl
   --- */
   const handleMetaBackspace = useCallback(() => {
     if (focusedIndex <= 0) return
@@ -552,6 +554,17 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
         return
       }
+    }
+
+    // If the item is a todo, a quote or a list, we convert it to a text item
+    if (convertibleToTextTypes.includes(item.type)) {
+      const nextValue = [...value]
+
+      nextValue[focusedIndex] = { ...nextValue[focusedIndex], type: 'text', metadata: '' }
+
+      onChange(nextValue)
+
+      return
     }
 
     const editorState = editorStates[item.id]
@@ -588,7 +601,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     nextPreviousEditorState = EditorState.forceSelection(nextPreviousEditorState, nextPreviousSelection)
 
     setEditorStates(x => ({ ...x, [previousItem.id]: nextPreviousEditorState }))
-  }, [value, editorStates, previousEditorStates, focusedIndex, handleDeleteItem])
+  }, [value, editorStates, previousEditorStates, focusedIndex, handleDeleteItem, onChange])
 
   /* ---
     DELETE
@@ -818,28 +831,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   }, [handleActualPaste])
 
   /* ---
-    HANDLE KEY COMMANDS
-    Respond to the editor's key-bound commands
-  --- */
-  const handleKeyCommand = useCallback((index: number, command: string) => {
-    if (command === COMMANDS.SAVE) {
-      onSave?.()
-
-      return 'handled'
-    }
-
-    if (command === 'backspace') {
-      return handleBackspace(index)
-    }
-
-    if (command === 'delete') {
-      return handleDelete(index)
-    }
-
-    return 'not-handled'
-  }, [onSave, handleBackspace, handleDelete])
-
-  /* ---
     CONTEXT MENU SELECT
     Handle context menu item selection after `/` then `enter` or click
   --- */
@@ -895,6 +886,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     nextValue.splice(nextValue.indexOf(item), 1, appendItemData({ ...item, type: command }, nextEditorState))
 
     onChange(nextValue)
+
+    // Update previousEditorState to clear the command query from them
+    setShouldTriggerRefresh(true)
   }, [value, editorStates, contextMenuData, onChange])
 
   /* ---
@@ -1068,6 +1062,28 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   }, [handleRootBlur, handleBlurAllContent])
 
   /* ---
+    HANDLE KEY COMMANDS
+    Respond to the editor's key-bound commands
+  --- */
+  const handleKeyCommand = useCallback((index: number, command: string) => {
+    if (command === COMMANDS.SAVE) {
+      onSave?.()
+
+      return 'handled'
+    }
+
+    if (command === 'backspace') {
+      return handleBackspace(index)
+    }
+
+    if (command === 'delete') {
+      return handleDelete(index)
+    }
+
+    return 'not-handled'
+  }, [onSave, handleBackspace, handleDelete])
+
+  /* ---
     RENDER EDITOR
     Render the editor for each item of value
   --- */
@@ -1189,6 +1205,15 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     setForceFocusIndex(-1)
     forceContentFocus(instanceId, value[forceFocusIndex]?.id)
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
+
+  /* ---
+    FORCE REFRESH
+  --- */
+  useEffect(() => {
+    if (!shouldTriggerRefresh) return
+
+    forceRefresh(x => !x)
+  }, [shouldTriggerRefresh])
 
   /* ---
     MULTI BLOCK SELECTION EVENTS
