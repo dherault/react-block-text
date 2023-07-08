@@ -14,6 +14,8 @@ import {
   convertToRaw,
 } from 'draft-js'
 import 'draft-js/dist/Draft.css'
+// @ts-expect-error
+import ignoreWarnings from 'ignore-warnings'
 
 import {
   BlockContentProps,
@@ -32,6 +34,12 @@ import BlockContentText from './BlockContentText'
 import BlockContentTodo from './BlockContentTodo'
 import ContextMenu from './ContextMenu'
 
+// Remove onUpArrow and onDownArrow deprecation warnings
+ignoreWarnings([
+  'Supplying an `onUpArrow`',
+  'Supplying an `onDownArrow`',
+])
+
 const blockContentComponents = {
   text: BlockContentText,
   heading1: BlockContentText,
@@ -46,6 +54,7 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 
 // Not a state for performance reasons
 let isSelecting = false
+let lastForceFocusTime = 0
 
 function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextProps) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -574,19 +583,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     event.preventDefault()
   }, [value, editorStates, contextMenuData])
 
-  const handleFocus = useCallback((index: number) => {
-    setFocusedIndex(index)
-    setSelection(null)
-  }, [])
-
-  /* ---
-    BLUR
-  --- */
-  const handleBlur = useCallback(() => {
-    // setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
-    setSelection(null)
-  }, [])
-
   /* ---
     BLOCK MOUSE DOWN
   --- */
@@ -610,6 +606,21 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   }, [value, onChange])
 
   /* ---
+    FOCUS
+  --- */
+  const handleFocus = useCallback((index: number) => {
+    setFocusedIndex(index)
+    setSelection(null)
+  }, [])
+
+  /* ---
+    BLUR
+  --- */
+  const handleBlur = useCallback(() => {
+    setSelection(null)
+  }, [])
+
+  /* ---
     FOCUS CONTENT
   --- */
   const handleFocusContent = useCallback((index: number) => {
@@ -617,7 +628,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     if (!item) return
 
-    editorRefs[instanceId][item.id]?.focus()
+    forceContentFocus(instanceId, item.id)
   }, [instanceId, value])
 
   /* ---
@@ -628,10 +639,17 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     if (!item) return
 
-    console.log('handleBlurContent')
-
     editorRefs[instanceId][item.id]?.blur()
   }, [instanceId, value])
+
+  /* ---
+    BLUR ALL CONTENT
+  --- */
+  const handleBlurAllContent = useCallback(() => {
+    const allEditorRefs = Object.values(editorRefs[instanceId])
+
+    allEditorRefs.forEach(editorRef => editorRef?.blur())
+  }, [instanceId])
 
   /* ---
     COPY
@@ -648,8 +666,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle paste of text, ~images, files~ or blocks
   --- */
   const handlePasteText = useCallback((index: number, text: string) => {
-    console.log('paste text', index, text)
-
     const item = value[index]
 
     if (!item) return
@@ -927,13 +943,13 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       }
       // Force break a focus bug
       else {
-        setForceFocusIndex(focusedIndex)
+        setForceFocusIndex(hoveredIndex)
       }
     }
     catch (error) {
       //
     }
-  }, [handleMultiBlockSelection, focusedIndex])
+  }, [handleMultiBlockSelection, hoveredIndex])
 
   /* ---
     ROOT DIV BLUR
@@ -948,8 +964,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
       handleRootBlur()
+      handleBlurAllContent()
     }
-  }, [handleRootBlur])
+  }, [handleRootBlur, handleBlurAllContent])
 
   /* ---
     RENDER EDITOR
@@ -1066,12 +1083,12 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   useEffect(() => {
     if (readOnly) return
     if (forceFocusIndex === -1) return
+    if (lastForceFocusTime + 3 * 16 > Date.now()) return
+
+    lastForceFocusTime = Date.now()
 
     setForceFocusIndex(-1)
-
-    if (!editorRefs[instanceId]?.[value[forceFocusIndex]?.id]) return
-
-    editorRefs[instanceId][value[forceFocusIndex].id]?.focus()
+    forceContentFocus(instanceId, value[forceFocusIndex]?.id)
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
 
   /* ---
@@ -1230,6 +1247,13 @@ function applyTodoStyle(editorState: EditorState, checked: boolean) {
   const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
 
   return EditorState.forceSelection(nextEditorState, currentSelection)
+}
+
+function forceContentFocus(instanceId: string, id: string) {
+  if (!editorRefs[instanceId]?.[id]) return
+  if (editorRefs[instanceId][id]?.editorContainer?.contains(document.activeElement)) return
+
+  editorRefs[instanceId][id]?.focus()
 }
 
 export default ReactBlockText
