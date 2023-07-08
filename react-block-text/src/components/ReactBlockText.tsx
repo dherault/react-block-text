@@ -55,7 +55,7 @@ const blockContentComponents = {
   quote: BlockContentQuote,
 }
 
-const convertibleToTextTypes = ['todo', 'quote', 'bulleted-list', 'numbered-list']
+const convertibleToTextTypes = ['todo', 'bulleted-list', 'numbered-list', 'quote']
 
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
