@@ -2,9 +2,9 @@ import { KeyboardEvent } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import _ from 'clsx'
 
-import { BlockContentTextProps } from './types'
+import { BlockContentTextProps } from '../types'
 
-import { COMMANDS } from './constants'
+import { COMMANDS } from '../constants'
 
 const typeToPlaceholder = {
   text: "Start typing or press '/' for commands",
@@ -32,11 +32,12 @@ function BlockContentText({
     MAIN RETURN STATEMENT
   --- */
   return (
-    <div className={_('w-full', {
-      'text-3xl font-semibold': type === 'heading1',
-      'text-2xl font-semibold': type === 'heading2',
-      'text-xl font-semibold': type === 'heading3',
-    })}
+    <div
+      className={_({
+        'text-3xl font-semibold': type === 'heading1',
+        'text-2xl font-semibold': type === 'heading2',
+        'text-xl font-semibold': type === 'heading3',
+      })}
     >
       <Editor
         ref={registerRef}

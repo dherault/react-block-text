@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 
-import AddIcon from './icons/Add'
-import DragIcon from './icons/Drag'
+import { BlockProps, DragItem, TopLeft } from '../types'
 
-import { BlockProps, DragItem, TopLeft } from './types'
+import AddIcon from '../icons/Add'
+import DragIcon from '../icons/Drag'
+
 import BlockMenu from './BlockMenu'
 
 const typeToPaddingTop = {

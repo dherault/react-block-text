@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 
-import { BlockMenuItemProps, BlockMenuProps } from './types'
+import { BlockMenuItemProps, BlockMenuProps } from '../types'
 
-import TrashIcon from './icons/Trash'
+import TrashIcon from '../icons/Trash'
 
 function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
   /* ---

@@ -1,4 +1,4 @@
-import './index.css'
+import '../index.css'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
@@ -23,13 +23,13 @@ import {
   ReactBlockTextDataItemType,
   ReactBlockTextProps,
   ReactBlockTextSelection,
-} from './types'
+} from '../types'
+
+import { COMMANDS } from '../constants'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
 import ContextMenu from './ContextMenu'
-
-import { COMMANDS } from './constants'
 
 const blockContentComponents = {
   text: BlockContentText,
@@ -634,9 +634,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
   /* ---
     HANDLE KEY COMMANDS
+    Respond to the editor's key-bound commands
   --- */
   const handleKeyCommand = useCallback((index: number, command: string) => {
-    // console.log('command', command)
     if (command === COMMANDS.SAVE) {
       onSave?.()
     }
