@@ -13,6 +13,7 @@ function App() {
         <ReactBlockText
           value={data}
           onChange={setData}
+          // onSave={() => console.log('save')}
         />
       </div>
       {/* <div className="mt-8 px-2 bg-white w-full rounded">

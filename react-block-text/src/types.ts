@@ -16,6 +16,7 @@ export type ReactBlockTextProps = {
   value: ReactBlockTextData
   readOnly?: boolean
   onChange: (value: ReactBlockTextData) => void
+  onSave?: () => void
 }
 
 export type BlockProps = {
@@ -44,14 +45,13 @@ export type BlockContentTextProps = {
   focused: boolean
   registerRef: (ref: any) => void
   onChange: (editorState: EditorState) => void
+  onKeyCommand: (command: string) => DraftHandleValue
   onReturn: (event: any) => DraftHandleValue
   onUpArrow: (event: any) => void
   onDownArrow: (event: any) => void
   onFocus: () => void
   onBlur: () => void
   onPaste: () => DraftHandleValue
-  onBackspace: () => DraftHandleValue
-  onDelete: () => DraftHandleValue
 }
 
 export type ContextMenuProps = {

@@ -1,13 +1,10 @@
-import { KeyboardEvent, useCallback } from 'react'
+import { KeyboardEvent } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import _ from 'clsx'
 
 import { BlockContentTextProps } from './types'
 
-const COMMANDS = {
-  OPEN_MENU: 'open-menu',
-  SAVE: 'save',
-}
+import { COMMANDS } from './constants'
 
 const typeToPlaceholder = {
   text: "Start typing or press '/' for commands",
@@ -23,36 +20,14 @@ function BlockContentText({
   editorState,
   registerRef,
   onChange,
+  onKeyCommand,
   onReturn,
   onUpArrow,
   onDownArrow,
   onFocus,
   onBlur,
   onPaste,
-  onBackspace,
-  onDelete,
 }: BlockContentTextProps) {
-  /* ---
-    HANDLE KEY COMMANDS
-  --- */
-  const handleKeyCommand = useCallback((command: string) => {
-    // console.log('command', command)
-
-    if (command === COMMANDS.OPEN_MENU) {
-      return 'not-handled'
-    }
-
-    if (command === 'backspace') {
-      return onBackspace()
-    }
-
-    if (command === 'delete') {
-      return onDelete()
-    }
-
-    return 'not-handled'
-  }, [onBackspace, onDelete])
-
   /* ---
     MAIN RETURN STATEMENT
   --- */
@@ -76,7 +51,7 @@ function BlockContentText({
         handlePastedText={onPaste}
         placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : ''}
         keyBindingFn={bindKey}
-        handleKeyCommand={handleKeyCommand}
+        handleKeyCommand={onKeyCommand}
         autoCorrect="on"
       />
     </div>

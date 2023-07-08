@@ -29,6 +29,8 @@ import Block from './Block'
 import BlockContentText from './BlockContentText'
 import ContextMenu from './ContextMenu'
 
+import { COMMANDS } from './constants'
+
 const blockContentComponents = {
   text: BlockContentText,
   heading1: BlockContentText,
@@ -45,7 +47,7 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 // Not a state for performance reasons
 let isSelecting = false
 
-function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
+function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
@@ -526,10 +528,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
   /* ---
     BLUR
   --- */
-  const handleBlur = useCallback((index: number) => {
+  const handleBlur = useCallback(() => {
     // setFocusedIndex(previous => value.length === 1 ? 0 : previous === index ? -1 : previous)
     setSelection(null)
-  // }, [value?.length])
   }, [])
 
   /* ---
@@ -630,6 +631,26 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
 
     return 'handled'
   }, [handleActualPaste])
+
+  /* ---
+    HANDLE KEY COMMANDS
+  --- */
+  const handleKeyCommand = useCallback((index: number, command: string) => {
+    // console.log('command', command)
+    if (command === COMMANDS.SAVE) {
+      onSave?.()
+    }
+
+    if (command === 'backspace') {
+      return handleBackspace(index)
+    }
+
+    if (command === 'delete') {
+      return handleDelete(index)
+    }
+
+    return 'not-handled'
+  }, [onSave, handleBackspace, handleDelete])
 
   /* ---
     CONTEXT MENU SELECT
@@ -885,10 +906,9 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
       onUpArrow: event => handleUpArrow(index, event),
       onDownArrow: event => handleDownArrow(index, event),
       onFocus: () => handleFocus(index),
-      onBlur: () => handleBlur(index),
+      onBlur: handleBlur,
       onPaste: () => handlePaste(index),
-      onBackspace: () => handleBackspace(index),
-      onDelete: () => handleDelete(index),
+      onKeyCommand: command => handleKeyCommand(index, command),
     }
 
     const BlockContent = blockContentComponents[item.type]
@@ -916,11 +936,10 @@ function ReactBlockText({ value, readOnly, onChange }: ReactBlockTextProps) {
     handleFocus,
     handleBlur,
     handlePaste,
-    handleBackspace,
-    handleDelete,
     handleDrag,
     handleBlockMouseDown,
     handleFocusContent,
+    handleKeyCommand,
     registerRef,
   ])
 
