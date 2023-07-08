@@ -1,5 +1,3 @@
-import _ from 'clsx'
-
 import { BlockContentProps } from '../types'
 
 import BlockContentText from './BlockContentText'
