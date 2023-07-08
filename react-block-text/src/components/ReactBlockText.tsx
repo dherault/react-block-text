@@ -533,21 +533,17 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle delete block, fallback to backspace if necessary
   --- */
   const handleMetaBackspace = useCallback(() => {
-    console.log('handleMetaBackspace', focusedIndex)
     if (focusedIndex <= 0) return
 
     const item = value[focusedIndex]
 
     if (!item) return
 
-    console.log('0')
     // If in the previous state the first block is not empty, we don't delete the current item
     // Because it means that the user has deleted a block
     const previousEditorState = previousEditorStates[item.id]
 
     if (previousEditorState) {
-
-      console.log('previousEditorState')
       const previousFirstBlockTextLength = previousEditorState.getCurrentContent().getFirstBlock().getText().length
 
       if (previousFirstBlockTextLength > 0) {
@@ -558,7 +554,6 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       }
     }
 
-    console.log('2')
     const editorState = editorStates[item.id]
 
     if (!editorState) return
