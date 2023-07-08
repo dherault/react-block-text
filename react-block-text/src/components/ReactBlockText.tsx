@@ -433,6 +433,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   /* ---
     UP ARROW
     Handle up arrow, to move between editor instances
+    Although this causes a warning in the console, I found it to be the only way to make it work
   --- */
   const handleUpArrow = useCallback((index: number, event: any) => {
     if (index === 0) return
@@ -482,6 +483,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   /* ---
     DOWN ARROW
     Handle down arrow, to move between editor instances
+    Although this causes a warning in the console, I found it to be the only way to make it work
   --- */
   const handleDownArrow = useCallback((index: number, event: any) => {
     if (index === value.length - 1) return
