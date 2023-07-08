@@ -411,7 +411,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       {
         reactBlockTextVersion: VERSION,
         id: nanoid(),
-        type: item.type === 'todo' ? 'todo' : 'text', // Create a todo after a todo
+        type: item.type === 'todo' || item.type === 'bulleted-list' || item.type === 'numbered-list'
+          ? item.type // Create a todo after a todo, same for lists
+          : 'text',
       },
       secondEditorState
     )
@@ -450,8 +452,8 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
-    // If the item is a todo or a quote, we convert it to a text item
-    if (item.type === 'todo' || item.type === 'quote') {
+    // If the item is a todo, a quote or a list, we convert it to a text item
+    if (item.type === 'todo' || item.type === 'quote' || item.type === 'bulleted-list' || item.type === 'numbered-list') {
       const nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
