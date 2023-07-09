@@ -215,7 +215,6 @@ function ReactBlockText({
     setEditorStates(x => ({ ...x, [nextItem.id]: editorState }))
     setHoveredIndex(index + 1)
     setFocusedIndex(index + 1)
-    setForceFocusIndex(index + 1)
   }, [value, editorStates, onChange])
 
   /* ---
