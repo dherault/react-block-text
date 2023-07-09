@@ -21,6 +21,7 @@ import {
   BlockContentProps,
   BlockProps,
   ContextMenuData,
+  DragData,
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextProps,
@@ -43,29 +44,17 @@ import usePrevious from '../hooks/usePrevious'
 
 import hasParentWithId from '../utils/hasParentWithId'
 
+import blockContentComponents from '../blockContentComponents'
+
 import Block from './Block'
-import BlockContentText from './BlockContentText'
-import BlockContentTodo from './BlockContentTodo'
-import BlockContentList from './BlockContentList'
-import BlockContentQuote from './BlockContentQuote'
 import ContextMenu from './ContextMenu'
+import CustomDragLayer from './CustomDragLayer'
 
 // Remove onUpArrow and onDownArrow deprecation warnings
 ignoreWarnings([
   'Supplying an `onUpArrow`',
   'Supplying an `onDownArrow`',
 ])
-
-const blockContentComponents = {
-  text: BlockContentText,
-  heading1: BlockContentText,
-  heading2: BlockContentText,
-  heading3: BlockContentText,
-  todo: BlockContentTodo,
-  'bulleted-list': BlockContentList,
-  'numbered-list': BlockContentList,
-  quote: BlockContentQuote,
-}
 
 const convertibleToTextTypes = ['todo', 'bulleted-list', 'numbered-list', 'quote']
 
@@ -106,7 +95,7 @@ function ReactBlockText({
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
-  const [isDragging, setIsDragging] = useState(false)
+  const [dragData, setDragData] = useState<DragData | null>(null)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
@@ -119,8 +108,8 @@ function ReactBlockText({
   const instanceId = useMemo(() => nanoid(), [])
 
   // TODO
-  const last = Object.values(previousEditorStates).pop()
-  console.log(last?.getSelection().getFocusOffset(), refresh)
+  // const last = Object.values(previousEditorStates).pop()
+  // console.log(last?.getSelection().getFocusOffset(), refresh)
 
   /* ---
     REGISTER REF
@@ -778,21 +767,6 @@ function ReactBlockText({
   }, [])
 
   /* ---
-    DRAG
-    Handle editor move via drag and drop
-  --- */
-  const handleDrag = useCallback((dragIndex: number, hoverIndex: number) => {
-    const nextValue = [...value]
-    const [dragItem] = nextValue.splice(dragIndex, 1)
-
-    nextValue.splice(hoverIndex, 0, dragItem)
-
-    onChange(nextValue)
-    setFocusedIndex(-1)
-    setHoveredIndex(-1)
-  }, [value, onChange])
-
-  /* ---
     FOCUS
   --- */
   const handleFocus = useCallback((index: number) => {
@@ -869,6 +843,61 @@ function ReactBlockText({
   const handleRootBlur = useCallback(() => {
     setSelection(null)
   }, [])
+
+  /* ---
+    DRAG
+  --- */
+  const handleDrag = useCallback((index: number, isTop: boolean | null) => {
+    setDragData({ index, isTop })
+  }, [])
+
+  /* ---
+    DRAG END
+    Move items
+  --- */
+  const handleDragEnd = useCallback((dragIndex: number) => {
+    setDragData(null)
+    setFocusedIndex(-1)
+    handleBlurAllContent()
+
+    if (!dragData) return
+
+    const { index, isTop } = dragData
+
+    if (dragIndex === index) return
+
+    const finalIndex = isTop ? index : index + 1
+    const nextValue = [...value]
+    setHoveredIndex(finalIndex)
+
+    if (dragIndex > finalIndex) {
+      nextValue.splice(finalIndex, 0, value[dragIndex])
+      nextValue.splice(dragIndex + 1, 1)
+    }
+    else {
+      nextValue.splice(finalIndex, 0, value[dragIndex])
+      nextValue.splice(dragIndex, 1)
+    }
+
+    onChange(nextValue)
+
+    console.log('dragIndex, index', dragIndex, finalIndex)
+    // const nextValue = [...value]
+
+    // const item = nextValue[dragIndex]
+
+    // if (!item) return
+
+    // const nextItem = nextValue[isTop ? index : index + 1]
+
+    // if (!nextItem) return
+
+    // // Swap items
+    // nextValue[index] = nextItem
+    // nextValue[dragIndex] = item
+
+    // onChange(nextValue)
+  }, [value, dragData, onChange, handleBlurAllContent])
 
   /* ---
     COPY
@@ -1216,39 +1245,16 @@ function ReactBlockText({
     RENDER EDITOR
     Render the editor for each item of value
   --- */
-  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number) => {
+  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
     if (!editorStates[item.id]) return null
-
-    const blockProps: Omit<BlockProps, 'children'> = {
-      id: item.id,
-      type: item.type,
-      index,
-      readOnly: !!readOnly,
-      hovered: !isDragging && index === hoveredIndex,
-      paddingLeft,
-      onAddItem: () => handleAddItem(index),
-      onDeleteItem: () => handleDeleteItem(index),
-      onDuplicateItem: () => handleDuplicateItem(index),
-      onMouseDown: handleBlockMouseDown,
-      onMouseMove: () => setHoveredIndex(index),
-      onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
-      onDragStart: () => setIsDragging(true),
-      onDrag: handleDrag,
-      onDragEnd: () => setIsDragging(false),
-      onBlockMenuOpen: () => setIsBlockMenuOpen(true),
-      onBlockMenuClose: handleBlockMenuClose,
-      focusContent: () => handleFocusContent(index),
-      focusContentAtStart: () => handleFocusContent(index, true),
-      focusNextContent: () => handleFocusContent(index + 1),
-      blurContent: () => handleBlurContent(index),
-    }
 
     const blockContentProps: BlockContentProps = {
       type: item.type,
+      index,
       editorState: editorStates[item.id],
       metadata: item.metadata,
       readOnly: isSelecting || !!readOnly,
-      focused: !isDragging && index === focusedIndex,
+      focused: !dragData && index === focusedIndex,
       isSelecting,
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
@@ -1260,6 +1266,38 @@ function ReactBlockText({
       onPaste: () => handlePaste(index),
       onCheck: checked => handleCheck(index, checked),
       onKeyCommand: command => handleKeyCommand(index, command),
+    }
+
+    const blockProps: Omit<BlockProps, 'children'> = {
+      id: item.id,
+      type: item.type,
+      index,
+      readOnly: !!readOnly,
+      hovered: !dragData && index === hoveredIndex,
+      isDraggingTop: dragData?.index === index
+        ? index === array.length - 1
+          ? dragData.isTop
+          : dragData.isTop || null
+        : dragData?.index === index - 1 && dragData.isTop === false
+          ? true
+          : null,
+      paddingLeft,
+      onAddItem: () => handleAddItem(index),
+      onDeleteItem: () => handleDeleteItem(index),
+      onDuplicateItem: () => handleDuplicateItem(index),
+      onMouseDown: handleBlockMouseDown,
+      onMouseMove: () => setHoveredIndex(index),
+      onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
+      onDragStart: () => setDragData({ index, isTop: null }),
+      onDrag: handleDrag,
+      onDragEnd: () => handleDragEnd(index),
+      onBlockMenuOpen: () => setIsBlockMenuOpen(true),
+      onBlockMenuClose: handleBlockMenuClose,
+      focusContent: () => handleFocusContent(index),
+      focusContentAtStart: () => handleFocusContent(index, true),
+      focusNextContent: () => handleFocusContent(index + 1),
+      blurContent: () => handleBlurContent(index),
+      blockContentProps, // Pass block content props to block for drag preview display
     }
 
     const BlockContent = blockContentComponents[item.type]
@@ -1278,7 +1316,7 @@ function ReactBlockText({
     editorStates,
     hoveredIndex,
     focusedIndex,
-    isDragging,
+    dragData,
     handleAddItem,
     handleDeleteItem,
     handleDuplicateItem,
@@ -1291,6 +1329,7 @@ function ReactBlockText({
     handlePaste,
     handleCheck,
     handleDrag,
+    handleDragEnd,
     handleBlockMenuClose,
     handleBlockMouseDown,
     handleFocusContent,
@@ -1486,6 +1525,7 @@ function ReactBlockText({
             style={{ height: paddingBottom ?? 0 }}
           />
         </div>
+        <CustomDragLayer />
       </PrimaryColorContext.Provider>
     </DndProvider>
   )

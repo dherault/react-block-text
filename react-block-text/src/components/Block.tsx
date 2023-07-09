@@ -1,10 +1,14 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
 import _ from 'clsx'
+import type { XYCoord } from 'react-dnd'
 
-import { BlockProps, DragItem, TopLeft } from '../types'
+import { BlockContentProps, BlockProps, TopLeft } from '../types'
 
 import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID } from '../constants'
+
+import PrimaryColorContext from '../context/PrimaryColorContext'
 
 import AddIcon from '../icons/Add'
 import DragIcon from '../icons/Drag'
@@ -44,6 +48,8 @@ const typeToIconsExtraPaddingTop = {
   quote: 0,
 } as const
 
+const DRAG_INDICATOR_SIZE = 3
+
 function Block({
   children,
   readOnly,
@@ -51,6 +57,7 @@ function Block({
   type,
   index,
   hovered,
+  isDraggingTop,
   paddingLeft,
   onAddItem,
   onDeleteItem,
@@ -67,16 +74,18 @@ function Block({
   focusContentAtStart,
   focusNextContent,
   blurContent,
+  blockContentProps,
 }: BlockProps) {
+  const rootRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<HTMLDivElement>(null)
-  const previewRef = useRef<HTMLDivElement>(null)
+  const primaryColor = useContext(PrimaryColorContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
   /* ---
     DRAG AND DROP
   --- */
   const [{ handlerId }, drop] = useDrop<
-    DragItem,
+    BlockContentProps,
     void,
     { handlerId: string | symbol | null }
   >({
@@ -86,28 +95,24 @@ function Block({
         handlerId: monitor.getHandlerId(),
       }
     },
-    hover(item: DragItem, monitor) {
+    hover(item: BlockContentProps, monitor) {
       if (!dragRef.current) return
 
       const dragIndex = item.index
       const hoverIndex = index
 
-      // Don't replace items with themselves
-      if (dragIndex === hoverIndex) {
-        return
-      }
-
       // Determine rectangle on screen
       const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
 
       // Get vertical middle
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+      const hoverHeight = hoverBoundingRect.bottom - hoverBoundingRect.top
+      const hoverMiddleY = hoverHeight / 2
 
       // Determine mouse position
-      const clientOffset = monitor.getClientOffset()
+      const clientOffset = monitor.getClientOffset() as XYCoord
 
       // Get pixels to the top
-      const hoverClientY = (clientOffset as any).y - hoverBoundingRect.top
+      const hoverClientY = clientOffset.y - hoverBoundingRect.top
 
       // Only perform the move when the mouse has crossed half of the items height
       // When dragging downwards, only move when the cursor is below 50%
@@ -119,54 +124,45 @@ function Block({
       // Dragging upwards
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return
 
+      // Don't display a drag indicator if the dragged block is hovered in the middle
+      const isMiddleOfSameIndex = dragIndex === hoverIndex && hoverClientY > hoverHeight / 3 && hoverClientY < hoverHeight * 2 / 3
+
       // Time to actually perform the action
-      onDrag(dragIndex, hoverIndex)
-
-      // Note: we're mutating the monitor item here!
-      // Generally it's better to avoid mutations,
-      // but it's good here for the sake of performance
-      // to avoid expensive index searches.
-      item.index = hoverIndex
+      onDrag(hoverIndex, isMiddleOfSameIndex ? null : hoverClientY < hoverMiddleY)
     },
-  })
+  }, [index, onDrag])
 
-  const [{ isDragging }, drag, preview] = useDrag({
+  const [, drag, preview] = useDrag({
     type: 'block',
     item() {
       onDragStart()
 
-      return { id, index }
+      return blockContentProps
     },
-    collect: (monitor: any) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    end(_item, monitor) {
+    // collect: (monitor: any) => ({
+    //   isDragging: monitor.isDragging(),
+    // }),
+    end() {
       onDragEnd()
-
-      if (!monitor.didDrop()) return
-
-      onMouseMove()
     },
-  })
+  }, [onDragStart, onDragEnd])
 
   drag(dragRef)
-  drop(preview(previewRef))
-
-  const opacity = isDragging ? 0.01 : 1
+  drop(rootRef)
 
   /* ---
     BLOCK MENU POSITIONING AND TRIGGER
   --- */
   const handleDragClick = useCallback(() => {
-    if (!previewRef.current) return
+    if (!rootRef.current) return
     if (!dragRef.current) return
 
-    const previewRect = previewRef.current.getBoundingClientRect()
+    const rootRect = rootRef.current.getBoundingClientRect()
     const dragRect = dragRef.current.getBoundingClientRect()
 
     setMenuPosition({
-      top: dragRect.top - previewRect.top - 4,
-      left: dragRect.left - previewRect.left + 12,
+      top: dragRect.top - rootRect.top - 4,
+      left: dragRect.left - rootRect.left + 12,
     })
     onBlockMenuOpen()
   }, [onBlockMenuOpen])
@@ -176,16 +172,22 @@ function Block({
     onBlockMenuClose()
   }, [onBlockMenuClose])
 
+  const isDraggingBottom = isDraggingTop === false
+
+  useEffect(() => {
+    preview(getEmptyImage())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   /* ---
     MAIN RETURN STATEMENT
   --- */
   return (
     <div
-      ref={previewRef}
+      ref={rootRef}
       data-handler-id={handlerId}
       data-react-block-text-id={id}
       className="flex"
-      style={{ opacity }}
       onMouseDown={() => !menuPosition && onMouseDown()}
       onMouseMove={() => !menuPosition && onMouseMove()}
       onMouseEnter={() => !menuPosition && onMouseMove()}
@@ -232,14 +234,32 @@ function Block({
         <div className="flex-grow cursor-text">
           <div
             onClick={focusContent}
-            style={{ height: typeToPaddingTop[type] }}
+            className="transition-opacity duration-300"
+            style={{
+              height: DRAG_INDICATOR_SIZE,
+              backgroundColor: primaryColor,
+              opacity: isDraggingTop ? 0.5 : 0,
+            }}
+          />
+          <div
+            onClick={focusContent}
+            style={{ height: typeToPaddingTop[type] - DRAG_INDICATOR_SIZE }}
           />
           <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
             {children}
           </div>
           <div
             onClick={focusNextContent}
-            style={{ height: typeToPaddingBottom[type] }}
+            style={{ height: typeToPaddingBottom[type] - DRAG_INDICATOR_SIZE }}
+          />
+          <div
+            onClick={focusNextContent}
+            className="transition-opacity duration-200"
+            style={{
+              height: DRAG_INDICATOR_SIZE,
+              backgroundColor: primaryColor,
+              opacity: isDraggingBottom ? 0.5 : 0,
+            }}
           />
         </div>
         {!!menuPosition && (

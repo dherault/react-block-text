@@ -38,6 +38,7 @@ export type BlockProps = {
   readOnly: boolean
   hovered: boolean
   paddingLeft?: number | string
+  isDraggingTop: boolean | null
   onAddItem: () => void
   onDeleteItem: () => void
   onDuplicateItem: () => void
@@ -45,7 +46,7 @@ export type BlockProps = {
   onMouseMove: () => void
   onMouseLeave: () => void
   onDragStart: () => void
-  onDrag: (dragIndex: number, hoverIndex: number) => void
+  onDrag: (index: number, isTop: boolean | null) => void
   onDragEnd: () => void
   onBlockMenuOpen: () => void
   onBlockMenuClose: () => void
@@ -53,10 +54,12 @@ export type BlockProps = {
   focusContentAtStart: () => void
   focusNextContent: () => void
   blurContent: () => void
+  blockContentProps: BlockContentProps
 }
 
 export type BlockContentProps = {
   type: ReactBlockTextDataItemType
+  index: number
   editorState: EditorState
   metadata: string
   readOnly: boolean
@@ -126,12 +129,6 @@ export type ContextMenuData = {
   left: number
 }
 
-export interface DragItem {
-  index: number
-  id: string
-  type: string
-}
-
 export type TopLeft = {
   top: number
   left: number
@@ -145,4 +142,9 @@ export type ReactBlockTextSelection = {
 export type BlockContentListMetadata = {
   label: string
   depth: number
+}
+
+export type DragData = {
+  index: number
+  isTop: boolean | null
 }
