@@ -71,6 +71,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
+  const [forceBlurIndex, setForceBlurIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
@@ -232,6 +233,8 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     TO-DO CHECK
   --- */
   const handleCheck = useCallback((index: number, checked: boolean) => {
+    if (readOnly) return
+
     const item = value[index]
 
     if (!item) return
@@ -249,7 +252,10 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     nextValue[index] = { ...nextValue[index], metadata: checked ? 'true' : 'false' }
 
     onChange(nextValue)
-  }, [value, editorStates, onChange])
+
+    // Blur the to-do on next render
+    setForceBlurIndex(index)
+  }, [value, readOnly, editorStates, onChange])
 
   /* ---
     UP ARROW
@@ -1246,10 +1252,26 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     lastForceFocusTime = Date.now()
 
-    console.log('forceFocusIndex', forceFocusIndex)
     setForceFocusIndex(-1)
     forceContentFocus(instanceId, value[forceFocusIndex]?.id)
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
+
+  /* ---
+    FORCE BLUR
+    Handle forcing blur on a specific block
+  --- */
+  useEffect(() => {
+    if (readOnly) return
+    if (forceBlurIndex === -1) return
+
+    setForceBlurIndex(-1)
+
+    const item = value[forceBlurIndex]
+
+    if (!item) return
+
+    editorRefs[instanceId][item.id]?.blur()
+  }, [value, readOnly, instanceId, forceBlurIndex])
 
   /* ---
     FORCE REFRESH
@@ -1412,7 +1434,7 @@ function findAttributeInParents(element: HTMLElement, attribute: string) {
   APPLY TO-DO STYLE
 --- */
 function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelection = false) {
-  const currentSelection = editorState.getSelection()
+  let currentSelection = editorState.getSelection()
   const contentState = editorState.getCurrentContent()
   const firstBlock = contentState.getFirstBlock()
   const lastBlock = contentState.getLastBlock()
@@ -1427,6 +1449,12 @@ function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelectio
   const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
 
   if (skipSelection) return nextEditorState
+
+  if (currentSelection.getAnchorOffset() !== currentSelection.getFocusOffset()) {
+    currentSelection = currentSelection.merge({
+      anchorOffset: currentSelection.getFocusOffset(),
+    })
+  }
 
   return EditorState.forceSelection(nextEditorState, currentSelection)
 }

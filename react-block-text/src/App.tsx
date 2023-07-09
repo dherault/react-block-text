@@ -16,7 +16,7 @@ function App() {
   }, [data])
 
   return (
-    <div className="px-8 py-4 w-full min-h-screen bg-gray-100">
+    <div className="p-4 min-h-screen bg-gray-100">
       <div className="flex gap-2">
         <button
           type="button"
