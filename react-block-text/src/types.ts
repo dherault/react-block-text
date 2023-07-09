@@ -38,13 +38,16 @@ export type BlockProps = {
   hovered: boolean
   paddingLeft?: number | string
   onAddItem: () => void
+  onDeleteItem: () => void
+  onDuplicateItem: () => void
   onMouseDown: () => void
   onMouseMove: () => void
   onMouseLeave: () => void
   onDragStart: () => void
   onDrag: (dragIndex: number, hoverIndex: number) => void
   onDragEnd: () => void
-  onDeleteItem: () => void
+  onBlockMenuOpen: () => void
+  onBlockMenuClose: () => void
   focusContent: () => void
   focusContentAtStart: () => void
   focusNextContent: () => void
@@ -96,7 +99,8 @@ export type ContextMenuIconProps = {
 export type BlockMenuProps = {
   top: number
   left: number
-  onDelete: () => void
+  onDeleteItem: () => void
+  onDuplicateItem: () => void
   onClose: () => void
 }
 

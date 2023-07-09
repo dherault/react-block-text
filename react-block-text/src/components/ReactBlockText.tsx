@@ -33,6 +33,8 @@ import PrimaryColorContext from '../context/PrimaryColorContext'
 
 import usePrevious from '../hooks/usePrevious'
 
+import hasParentWithId from '../utils/hasParentWithId'
+
 import Block from './Block'
 import BlockContentText from './BlockContentText'
 import BlockContentTodo from './BlockContentTodo'
@@ -96,6 +98,7 @@ function ReactBlockText({
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [isDragging, setIsDragging] = useState(false)
+  const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
   const [refresh, forceRefresh] = useState(false)
@@ -191,6 +194,29 @@ function ReactBlockText({
       return nextEditorStates
     })
   }, [value, onChange, createTextItem])
+
+  /* ---
+    DUPLICATE ITEM
+  --- */
+  const handleDuplicateItem = useCallback((index: number) => {
+    const item = value[index]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const nextItem = { ...item, id: nanoid() }
+
+    value.splice(index + 1, 0, nextItem)
+
+    onChange(value)
+    setEditorStates(x => ({ ...x, [nextItem.id]: editorState }))
+    setHoveredIndex(index + 1)
+    setFocusedIndex(index + 1)
+    setForceFocusIndex(index + 1)
+  }, [value, editorStates, onChange])
 
   /* ---
     CHANGE
@@ -1172,12 +1198,15 @@ function ReactBlockText({
       paddingLeft,
       onAddItem: () => handleAddItem(index),
       onDeleteItem: () => handleDeleteItem(index),
+      onDuplicateItem: () => handleDuplicateItem(index),
       onMouseDown: handleBlockMouseDown,
       onMouseMove: () => setHoveredIndex(index),
       onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
       onDragStart: () => setIsDragging(true),
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
+      onBlockMenuOpen: () => setIsBlockMenuOpen(true),
+      onBlockMenuClose: () => setIsBlockMenuOpen(false),
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
       focusNextContent: () => handleFocusContent(index + 1),
@@ -1221,6 +1250,7 @@ function ReactBlockText({
     isDragging,
     handleAddItem,
     handleDeleteItem,
+    handleDuplicateItem,
     handleChange,
     handleReturn,
     handleUpArrow,
@@ -1414,6 +1444,9 @@ function ReactBlockText({
               onSelect={handleContextMenuSelect}
             />
           )}
+          {isBlockMenuOpen && (
+            <div className="absolute inset-0 z-10" />
+          )}
         </div>
       </PrimaryColorContext.Provider>
     </DndProvider>
@@ -1438,7 +1471,7 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
       id,
       query: '',
       top: rects[0].bottom + 4,
-      left: rects[0].right,
+      left: rects[0].right - 6,
     }
   }
 
@@ -1454,7 +1487,7 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
     id,
     query: '',
     top: editorRects[0].top + 24,
-    left: editorRects[0].left,
+    left: editorRects[0].left - 2,
   }
 }
 
@@ -1523,16 +1556,6 @@ function forceContentFocus(instanceId: string, id: string) {
   if (editorRefs[instanceId][id]?.editorContainer?.contains(document.activeElement)) return
 
   editorRefs[instanceId][id]?.focus()
-}
-
-/* ---
-  HAS PARENT WITH ID
---- */
-function hasParentWithId(element: HTMLElement, id: string) {
-  if (element.id === id) return true
-  if (!element.parentElement) return false
-
-  return hasParentWithId(element.parentElement, id)
 }
 
 export default ReactBlockText

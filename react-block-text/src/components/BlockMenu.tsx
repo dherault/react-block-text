@@ -2,26 +2,40 @@ import { useCallback, useEffect, useRef } from 'react'
 
 import { BlockMenuItemProps, BlockMenuProps } from '../types'
 
-import TrashIcon from '../icons/Trash'
+import { DRAG_ITEM_BUTTON_ID } from '../constants'
 
-function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
+import hasParentWithId from '../utils/hasParentWithId'
+
+import TrashIcon from '../icons/Trash'
+import DuplicateIcon from '../icons/Duplicate'
+
+function BlockMenu({ top, left, onDeleteItem, onDuplicateItem, onClose }: BlockMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   /* ---
     DELETE
   --- */
-  const handleDelete = useCallback(() => {
-    onDelete()
+  const handleDeleteItem = useCallback(() => {
+    onDeleteItem()
     onClose()
-  }, [onDelete, onClose])
+  }, [onDeleteItem, onClose])
+
+  /* ---
+    DUPLICATE
+  --- */
+  const handleDuplicateItem = useCallback(() => {
+    onDuplicateItem()
+    onClose()
+  }, [onDuplicateItem, onClose])
 
   /* ---
     OUTSIDE CLICK
   --- */
   const handleOutsideClick = useCallback((event: MouseEvent) => {
-    if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-      onClose()
-    }
+    if (hasParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
+    if (!rootRef.current || rootRef.current.contains(event.target as Node)) return
+
+    onClose()
   }, [onClose])
 
   useEffect(() => {
@@ -31,6 +45,8 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
       window.removeEventListener('click', handleOutsideClick)
     }
   }, [handleOutsideClick])
+
+  console.log('top', top)
 
   /* ---
     MAIN RETURN STATEMENT
@@ -51,7 +67,17 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
           />
         )}
         label="Delete"
-        onClick={handleDelete}
+        onClick={handleDeleteItem}
+      />
+      <BlockMenuItem
+        icon={(
+          <DuplicateIcon
+            width={16}
+            className="scale-y-[-1]"
+          />
+        )}
+        label="Duplicate"
+        onClick={handleDuplicateItem}
       />
     </div>
   )
@@ -63,13 +89,11 @@ function BlockMenu({ top, left, onDelete, onClose }: BlockMenuProps) {
 function BlockMenuItem({ icon, label, onClick }: BlockMenuItemProps) {
   return (
     <div
-      className="p-1 w-full hover:bg-gray-100 cursor-pointer flex items-center gap-1 rounded"
+      className="py-1 px-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 rounded"
       onClick={onClick}
     >
       {icon}
-      <div className="text-sm">
-        {label}
-      </div>
+      {label}
     </div>
   )
 }

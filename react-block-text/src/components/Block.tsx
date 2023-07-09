@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import _ from 'clsx'
 
 import { BlockProps, DragItem, TopLeft } from '../types'
 
@@ -53,12 +54,15 @@ function Block({
   paddingLeft,
   onAddItem,
   onDeleteItem,
+  onDuplicateItem,
   onMouseDown,
   onMouseMove,
   onMouseLeave,
   onDragStart,
   onDrag,
   onDragEnd,
+  onBlockMenuOpen,
+  onBlockMenuClose,
   focusContent,
   focusContentAtStart,
   focusNextContent,
@@ -162,9 +166,15 @@ function Block({
 
     setMenuPosition({
       top: dragRect.top - previewRect.top - 4,
-      left: dragRect.left - previewRect.left,
+      left: dragRect.left - previewRect.left + 12,
     })
-  }, [])
+    onBlockMenuOpen()
+  }, [onBlockMenuOpen])
+
+  const handleBlockMenuClose = useCallback(() => {
+    setMenuPosition(null)
+    onBlockMenuClose()
+  }, [onBlockMenuClose])
 
   /* ---
     MAIN RETURN STATEMENT
@@ -176,16 +186,17 @@ function Block({
       data-react-block-text-id={id}
       className="flex"
       style={{ opacity }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      onMouseDown={() => !menuPosition && onMouseDown()}
+      onMouseMove={() => !menuPosition && onMouseMove()}
+      onMouseEnter={() => !menuPosition && onMouseMove()}
+      onMouseLeave={() => !menuPosition && onMouseLeave()}
     >
       <div
         onClick={focusContentAtStart}
         className="cursor-text flex-shrink-0"
         style={{ width: paddingLeft }}
       />
-      <div className="flex-grow flex">
+      <div className="flex-grow flex items-start relative">
         {!readOnly && (
           <div
             className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
@@ -196,7 +207,9 @@ function Block({
           >
             <div
               id={ADD_ITEM_BUTTON_ID}
-              className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+              className={_('p-1 hover:bg-gray-100 rounded cursor-pointer', {
+                'opacity-0': !!menuPosition,
+              })}
               onClick={onAddItem}
             >
               <AddIcon width={18} />
@@ -231,8 +244,9 @@ function Block({
         </div>
         {!!menuPosition && (
           <BlockMenu
-            onDelete={onDeleteItem}
-            onClose={() => setMenuPosition(null)}
+            onDeleteItem={onDeleteItem}
+            onDuplicateItem={onDuplicateItem}
+            onClose={handleBlockMenuClose}
             {...menuPosition}
           />
         )}

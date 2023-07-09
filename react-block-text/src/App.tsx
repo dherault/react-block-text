@@ -3,12 +3,18 @@ import { useCallback, useState } from 'react'
 import ReactBlockText from './components/ReactBlockText'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
+const PADDINGS = [
+  8,
+  32,
+  128,
+]
 
 function App() {
   const savedData = localStorage.getItem(LOCAL_STORAGE_KEY) ?? ''
 
   const [data, setData] = useState(savedData)
   const [primaryColor, setPrimaryColor] = useState<string | null>(null)
+  const [padding, setPadding] = useState(PADDINGS[0])
 
   const handleSave = useCallback(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, data)
@@ -38,13 +44,20 @@ function App() {
         >
           {primaryColor ? 'Reset primary color' : 'Set primary color red'}
         </button>
+        <button
+          type="button"
+          onClick={() => setPadding(x => PADDINGS[(PADDINGS.indexOf(x) + 1) % PADDINGS.length])}
+          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+        >
+          Change left padding
+        </button>
       </div>
       <div className="mt-4 bg-white w-full rounded">
         <ReactBlockText
           value={data}
           onChange={setData}
           onSave={handleSave}
-          paddingLeft={8}
+          paddingLeft={padding}
           primaryColor={primaryColor}
         />
       </div>
