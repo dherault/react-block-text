@@ -49,7 +49,7 @@ function App() {
           onClick={() => setPadding(x => PADDINGS[(PADDINGS.indexOf(x) + 1) % PADDINGS.length])}
           className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
         >
-          Change left padding
+          Change padding left
         </button>
       </div>
       <div className="mt-4 bg-white w-full rounded">
@@ -58,7 +58,6 @@ function App() {
           onChange={setData}
           onSave={handleSave}
           paddingLeft={padding}
-          paddingBottom={32}
           primaryColor={primaryColor}
         />
       </div>

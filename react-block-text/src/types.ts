@@ -23,8 +23,9 @@ export type ReactBlockTextData = ReactBlockTextDataItem[]
 export type ReactBlockTextProps = {
   value: string
   readOnly?: boolean
-  paddingLeft?: number | string
+  paddingTop?: number | string
   paddingBottom?: number | string
+  paddingLeft?: number | string
   primaryColor?: string | null
   onChange: (value: string) => void
   onSave?: () => void

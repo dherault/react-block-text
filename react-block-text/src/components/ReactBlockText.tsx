@@ -69,8 +69,9 @@ let lastForceFocusTime = 0
 function ReactBlockText({
   value: rawValue,
   readOnly,
-  paddingLeft,
+  paddingTop,
   paddingBottom,
+  paddingLeft,
   primaryColor,
   onChange: rawOnChange,
   onSave,
@@ -1505,6 +1506,11 @@ function ReactBlockText({
           onBlur={handleRootBlur}
           className="relative"
         >
+          <div
+            onClick={() => handleFocusContent(0)}
+            className="cursor-text"
+            style={{ height: paddingTop ?? 0 }}
+          />
           {value.map(renderEditor)}
           {!!contextMenuData && (
             <ContextMenu
