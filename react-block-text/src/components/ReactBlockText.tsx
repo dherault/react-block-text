@@ -864,6 +864,13 @@ function ReactBlockText({
   }, [instanceId])
 
   /* ---
+    ROOT DIV BLUR
+  --- */
+  const handleRootBlur = useCallback(() => {
+    setSelection(null)
+  }, [])
+
+  /* ---
     COPY
     Write selected items to clipboard
   --- */
@@ -999,6 +1006,14 @@ function ReactBlockText({
     // Update previousEditorState to clear the command query from them
     setShouldTriggerRefresh(true)
   }, [value, editorStates, contextMenuData, onChange])
+
+  /* ---
+    CONTEXT MENU CLOSE
+  --- */
+  const handleBlockMenuClose = useCallback(() => {
+    setIsBlockMenuOpen(false)
+    handleBlurAllContent()
+  }, [handleBlurAllContent])
 
   /* ---
     MULTI BLOCK SELECTION
@@ -1148,13 +1163,6 @@ function ReactBlockText({
   }, [handleMultiBlockSelection, hoveredIndex])
 
   /* ---
-    ROOT DIV BLUR
-  --- */
-  const handleRootBlur = useCallback(() => {
-    setSelection(null)
-  }, [])
-
-  /* ---
     KEYDOWN
   --- */
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -1228,7 +1236,7 @@ function ReactBlockText({
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
       onBlockMenuOpen: () => setIsBlockMenuOpen(true),
-      onBlockMenuClose: () => setIsBlockMenuOpen(false),
+      onBlockMenuClose: handleBlockMenuClose,
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
       focusNextContent: () => handleFocusContent(index + 1),
@@ -1283,6 +1291,7 @@ function ReactBlockText({
     handlePaste,
     handleCheck,
     handleDrag,
+    handleBlockMenuClose,
     handleBlockMouseDown,
     handleFocusContent,
     handleBlurContent,
