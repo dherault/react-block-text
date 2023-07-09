@@ -1439,7 +1439,7 @@ function ReactBlockText({
         <div
           ref={rootRef}
           onBlur={handleRootBlur}
-          className="relative text-sm"
+          className="relative"
         >
           {value.map(renderEditor)}
           {!!contextMenuData && (

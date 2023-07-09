@@ -34,14 +34,14 @@ const typeToPaddingBottom = {
 } as const
 
 const typeToIconsExtraPaddingTop = {
-  text: -3,
-  heading1: 5,
-  heading2: 3,
-  heading3: 2,
-  todo: -3,
-  'bulleted-list': -3,
-  'numbered-list': -3,
-  quote: -3,
+  text: 0,
+  heading1: 6,
+  heading2: 4,
+  heading3: 1,
+  todo: 0,
+  'bulleted-list': 0,
+  'numbered-list': 0,
+  quote: 0,
 } as const
 
 function Block({

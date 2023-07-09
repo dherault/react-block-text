@@ -11,7 +11,7 @@ function BlockContentTodo(props: BlockContentProps) {
       <Checkbox
         checked={metadata === 'true'}
         onCheck={onCheck}
-        style={{ marginTop: 3 }}
+        style={{ marginTop: 6 }}
       />
       <div className="flex-grow">
         <BlockContentText {...props} />
