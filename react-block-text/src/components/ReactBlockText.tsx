@@ -1480,7 +1480,7 @@ function getContextMenuData(instanceId: string, id: string, rootElement: HTMLEle
       id,
       query: '',
       left: rects[0].right - rootRect.left - 6,
-      ...getContextMenuYPosition(rects[0], rootRect, false),
+      ...getContextMenuYPosition(rects[0], rootRect, rootElement.offsetTop, false),
     }
   }
 
@@ -1496,14 +1496,14 @@ function getContextMenuData(instanceId: string, id: string, rootElement: HTMLEle
     id,
     query: '',
     left: editorRects[0].left - rootRect.left - 2,
-    ...getContextMenuYPosition(editorRects[0], rootRect, true),
+    ...getContextMenuYPosition(editorRects[0], rootRect, rootElement.offsetTop, true),
   }
 }
 
-function getContextMenuYPosition(rect: DOMRectReadOnly, rootRect: DOMRect, isEditorRect: boolean) {
+function getContextMenuYPosition(rect: DOMRectReadOnly, rootRect: DOMRect, rootOffsetTop: number, isEditorRect: boolean) {
   const top = (isEditorRect ? rect.top + 24 : rect.bottom + 4) - rootRect.top
 
-  if (top + CONTEXT_MENU_HEIGHT < window.innerHeight) return { top }
+  if (top + rootOffsetTop + CONTEXT_MENU_HEIGHT < window.innerHeight) return { top }
 
   const bottom = rootRect.height - rect.top + rootRect.top + 4
 
