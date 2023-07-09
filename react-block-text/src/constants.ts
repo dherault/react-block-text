@@ -15,3 +15,5 @@ export const ADD_ITEM_BUTTON_ID = 'react-block-text-add-item-button'
 export const DRAG_ITEM_BUTTON_ID = 'react-block-text-drag-item-button'
 
 export const DEFAULT_PRIMARY_COLOR = '#3b82f6'
+
+export const CONTEXT_MENU_HEIGHT = 264

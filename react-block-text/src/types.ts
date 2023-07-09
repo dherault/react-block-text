@@ -74,7 +74,8 @@ export type BlockContentProps = {
 
 export type ContextMenuProps = {
   query: string
-  top: number
+  top?: number
+  bottom?: number
   left: number
   onSelect: (command: ReactBlockTextDataItemType) => void
   onClose: () => void
@@ -118,7 +119,8 @@ export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
 export type ContextMenuData = {
   id: string
   query: string
-  top: number
+  top?: number
+  bottom?: number
   left: number
 }
 

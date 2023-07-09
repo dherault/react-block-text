@@ -27,7 +27,15 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { ADD_ITEM_BUTTON_ID, COMMANDS, DEFAULT_PRIMARY_COLOR, DRAG_ITEM_BUTTON_ID, INLINE_STYLES, VERSION } from '../constants'
+import {
+  ADD_ITEM_BUTTON_ID,
+  COMMANDS,
+  CONTEXT_MENU_HEIGHT,
+  DEFAULT_PRIMARY_COLOR,
+  DRAG_ITEM_BUTTON_ID,
+  INLINE_STYLES,
+  VERSION,
+} from '../constants'
 
 import PrimaryColorContext from '../context/PrimaryColorContext'
 
@@ -262,7 +270,7 @@ function ReactBlockText({
 
     // Toggle context menu with `/` command
     if (!contextMenuData && lastChar === '/') {
-      setContextMenuData(getContextMenuData(instanceId, id))
+      setContextMenuData(getContextMenuData(instanceId, id, rootRef.current!))
 
       return
     }
@@ -276,7 +284,7 @@ function ReactBlockText({
     if (contextMenuData && lastWordIncludesCommand) {
       const query = lastWord.slice(lastWord.lastIndexOf('/') + 1)
 
-      setContextMenuData(x => x ? ({ ...x!, query }) : null) // Due to side effects the ternary is mandatory here
+      setContextMenuData(x => x ? ({ ...x, query }) : null) // Due to side effects the ternary is mandatory here
     }
   }, [value, instanceId, contextMenuData, onChange])
 
@@ -1438,6 +1446,7 @@ function ReactBlockText({
             <ContextMenu
               query={contextMenuData.query}
               top={contextMenuData.top}
+              bottom={contextMenuData.bottom}
               left={contextMenuData.left}
               onClose={() => setContextMenuData(null)}
               onSelect={handleContextMenuSelect}
@@ -1456,7 +1465,7 @@ function ReactBlockText({
   GET CONTEXT MENU DATA
   Get the context menu position based on the current selection
 --- */
-function getContextMenuData(instanceId: string, id: string): ContextMenuData | null {
+function getContextMenuData(instanceId: string, id: string, rootElement: HTMLElement): ContextMenuData | null {
   const range = window.getSelection()?.getRangeAt(0)?.cloneRange()
 
   if (!range) return null
@@ -1464,13 +1473,14 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
   range.collapse(true)
 
   const rects = range.getClientRects()
+  const rootRect = rootElement.getBoundingClientRect()
 
   if (rects.length) {
     return {
       id,
       query: '',
-      top: rects[0].bottom + 4,
-      left: rects[0].right - 6,
+      left: rects[0].right - rootRect.left - 6,
+      ...getContextMenuYPosition(rects[0], rootRect, false),
     }
   }
 
@@ -1485,9 +1495,19 @@ function getContextMenuData(instanceId: string, id: string): ContextMenuData | n
   return {
     id,
     query: '',
-    top: editorRects[0].top + 24,
-    left: editorRects[0].left - 2,
+    left: editorRects[0].left - rootRect.left - 2,
+    ...getContextMenuYPosition(editorRects[0], rootRect, true),
   }
+}
+
+function getContextMenuYPosition(rect: DOMRectReadOnly, rootRect: DOMRect, isEditorRect: boolean) {
+  const top = (isEditorRect ? rect.top + 24 : rect.bottom + 4) - rootRect.top
+
+  if (top + CONTEXT_MENU_HEIGHT < window.innerHeight) return { top }
+
+  const bottom = rootRect.height - rect.top + rootRect.top + 4
+
+  return { bottom }
 }
 
 /* ---
@@ -1541,6 +1561,9 @@ function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelectio
   return EditorState.forceSelection(nextEditorState, currentSelection)
 }
 
+/* ---
+  APPLY ANY STYLE
+--- */
 function applyStyles(item: ReactBlockTextDataItem, editorState: EditorState) {
   if (item.type === 'todo') return applyTodoStyle(editorState, item.metadata === 'true', true)
 

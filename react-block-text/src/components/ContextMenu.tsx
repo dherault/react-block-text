@@ -4,6 +4,8 @@ import _ from 'clsx'
 
 import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from '../types'
 
+import { CONTEXT_MENU_HEIGHT } from '../constants'
+
 import Checkbox from './Checkbox'
 
 /* ---
@@ -95,7 +97,7 @@ const fuseOptions = {
   threshold: 0.3,
 }
 
-function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) {
+function ContextMenu({ query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [scrollIntoViewIndex, setScrollIntoViewIndex] = useState(-1)
@@ -183,10 +185,12 @@ function ContextMenu({ query, top, left, onSelect, onClose }: ContextMenuProps) 
     <div
       ref={rootRef}
       onMouseMove={() => setIsHovering(true)}
-      className="py-2 px-1 max-h-[264px] bg-white border shadow-xl rounded fixed z-50 overflow-y-auto"
+      className="py-2 px-1 bg-white border shadow-xl rounded absolute z-50 overflow-y-auto"
       style={{
         top,
+        bottom,
         left,
+        maxHeight: CONTEXT_MENU_HEIGHT,
       }}
     >
       <div className="px-2 py-1 text-gray-400 text-xs">

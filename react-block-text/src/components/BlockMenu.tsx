@@ -46,8 +46,6 @@ function BlockMenu({ top, left, onDeleteItem, onDuplicateItem, onClose }: BlockM
     }
   }, [handleOutsideClick])
 
-  console.log('top', top)
-
   /* ---
     MAIN RETURN STATEMENT
   --- */
@@ -89,8 +87,8 @@ function BlockMenu({ top, left, onDeleteItem, onDuplicateItem, onClose }: BlockM
 function BlockMenuItem({ icon, label, onClick }: BlockMenuItemProps) {
   return (
     <div
-      className="py-1 px-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 rounded"
       onClick={onClick}
+      className="py-1 px-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 rounded"
     >
       {icon}
       {label}
