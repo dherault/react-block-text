@@ -33,11 +33,12 @@ function App() {
           Save
         </button>
       </div>
-      <div className="mt-4 px-2 bg-white w-full rounded">
+      <div className="mt-4 bg-white w-full rounded">
         <ReactBlockText
           value={data}
           onChange={setData}
           onSave={handleSave}
+          paddingLeft={8}
         />
       </div>
       {/* <div className="mt-8 px-2 bg-white w-full rounded">

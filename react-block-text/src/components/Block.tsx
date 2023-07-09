@@ -3,7 +3,7 @@ import { useDrag, useDrop } from 'react-dnd'
 
 import { BlockProps, DragItem, TopLeft } from '../types'
 
-import { ADD_ITEM_BUTTON_ID } from '../constants'
+import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID } from '../constants'
 
 import AddIcon from '../icons/Add'
 import DragIcon from '../icons/Drag'
@@ -50,6 +50,7 @@ function Block({
   type,
   index,
   hovered,
+  paddingLeft,
   onAddItem,
   onDeleteItem,
   onMouseDown,
@@ -59,6 +60,7 @@ function Block({
   onDrag,
   onDragEnd,
   focusContent,
+  focusContentAtStart,
   focusNextContent,
   blurContent,
 }: BlockProps) {
@@ -172,16 +174,21 @@ function Block({
       ref={previewRef}
       data-handler-id={handlerId}
       data-react-block-text-id={id}
-      className="w-full flex gap-1"
+      className="flex"
       style={{ opacity }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
-      {!readOnly && (
-        <div className="flex-shrink-0">
+      <div
+        onClick={focusContentAtStart}
+        className="cursor-text flex-shrink-0"
+        style={{ width: paddingLeft }}
+      />
+      <div className="flex-grow flex">
+        {!readOnly && (
           <div
-            className="flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
+            className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
             style={{
               opacity: hovered ? 1 : 0,
               marginTop: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type],
@@ -196,6 +203,7 @@ function Block({
             </div>
             <div
               ref={dragRef}
+              id={DRAG_ITEM_BUTTON_ID}
               onClick={handleDragClick}
               onMouseDown={blurContent}
               className="py-1 hover:bg-gray-100 rounded cursor-pointer"
@@ -203,28 +211,32 @@ function Block({
               <DragIcon width={18} />
             </div>
           </div>
-        </div>
-      )}
-      <div className="flex-grow cursor-text">
+        )}
         <div
-          onClick={focusContent}
-          style={{ height: typeToPaddingTop[type] }}
+          onClick={focusContentAtStart}
+          className="w-1 cursor-text"
         />
-        <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
-          {children}
+        <div className="flex-grow cursor-text">
+          <div
+            onClick={focusContent}
+            style={{ height: typeToPaddingTop[type] }}
+          />
+          <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
+            {children}
+          </div>
+          <div
+            onClick={focusNextContent}
+            style={{ height: typeToPaddingBottom[type] }}
+          />
         </div>
-        <div
-          onClick={focusNextContent}
-          style={{ height: typeToPaddingBottom[type] }}
-        />
+        {!!menuPosition && (
+          <BlockMenu
+            onDelete={onDeleteItem}
+            onClose={() => setMenuPosition(null)}
+            {...menuPosition}
+          />
+        )}
       </div>
-      {!!menuPosition && (
-        <BlockMenu
-          onDelete={onDeleteItem}
-          onClose={() => setMenuPosition(null)}
-          {...menuPosition}
-        />
-      )}
     </div>
   )
 }

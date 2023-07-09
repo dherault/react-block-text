@@ -23,6 +23,7 @@ export type ReactBlockTextData = ReactBlockTextDataItem[]
 export type ReactBlockTextProps = {
   value: ReactBlockTextData
   readOnly?: boolean
+  paddingLeft?: number | string
   onChange: (value: ReactBlockTextData) => void
   onSave?: () => void
 }
@@ -34,6 +35,7 @@ export type BlockProps = {
   index: number
   readOnly: boolean
   hovered: boolean
+  paddingLeft?: number | string
   onAddItem: () => void
   onMouseDown: () => void
   onMouseMove: () => void
@@ -43,6 +45,7 @@ export type BlockProps = {
   onDragEnd: () => void
   onDeleteItem: () => void
   focusContent: () => void
+  focusContentAtStart: () => void
   focusNextContent: () => void
   blurContent: () => void
 }

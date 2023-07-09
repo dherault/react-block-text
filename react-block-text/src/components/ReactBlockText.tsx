@@ -27,7 +27,7 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { ADD_ITEM_BUTTON_ID, COMMANDS, INLINE_STYLES, VERSION } from '../constants'
+import { ADD_ITEM_BUTTON_ID, COMMANDS, DRAG_ITEM_BUTTON_ID, INLINE_STYLES, VERSION } from '../constants'
 
 import usePrevious from '../hooks/usePrevious'
 
@@ -65,7 +65,7 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 let isSelecting = false
 let lastForceFocusTime = 0
 
-function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextProps) {
+function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: ReactBlockTextProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
@@ -754,13 +754,24 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
   /* ---
     FOCUS CONTENT
   --- */
-  const handleFocusContent = useCallback((index: number) => {
+  const handleFocusContent = useCallback((index: number, atStart = false) => {
     const item = value[index]
 
     if (!item) return
 
     forceContentFocus(instanceId, item.id)
-  }, [instanceId, value])
+
+    if (!atStart) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const selection = SelectionState.createEmpty(editorState.getCurrentContent().getFirstBlock().getKey())
+    const nextEditorState = EditorState.forceSelection(editorState, selection)
+
+    setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
+  }, [value, editorStates, instanceId])
 
   /* ---
     BLUR CONTENT
@@ -771,7 +782,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     if (!item) return
 
     editorRefs[instanceId][item.id]?.blur()
-  }, [instanceId, value])
+  }, [value, instanceId])
 
   /* ---
     BLUR ALL CONTENT
@@ -1127,6 +1138,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       index,
       readOnly: !!readOnly,
       hovered: !isDragging && index === hoveredIndex,
+      paddingLeft,
       onAddItem: () => handleAddItem(index),
       onDeleteItem: () => handleDeleteItem(index),
       onMouseDown: handleBlockMouseDown,
@@ -1136,6 +1148,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       onDrag: handleDrag,
       onDragEnd: () => setIsDragging(false),
       focusContent: () => handleFocusContent(index),
+      focusContentAtStart: () => handleFocusContent(index, true),
       focusNextContent: () => handleFocusContent(index + 1),
       blurContent: () => handleBlurContent(index),
     }
@@ -1170,6 +1183,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     )
   }, [
     readOnly,
+    paddingLeft,
     editorStates,
     hoveredIndex,
     focusedIndex,
@@ -1298,7 +1312,10 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
+      // Start selection only if the mouse is down
       if (event.buttons !== 1) return
+      // Prevent selection on drag
+      if (hasParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
 
       isSelecting = true
     }
