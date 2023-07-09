@@ -40,6 +40,7 @@ function BlockContentText({
   readOnly,
   type,
   focused,
+  isSelecting,
   editorState,
   registerRef,
   onChange,
@@ -71,7 +72,7 @@ function BlockContentText({
         onFocus={onFocus}
         onBlur={onBlur}
         handlePastedText={onPaste}
-        placeholder={readOnly ? '' : focused ? typeToPlaceholder[type] : typeToFallbackPlaceholder[type]}
+        placeholder={readOnly ? isSelecting ? typeToFallbackPlaceholder[type] : '' : focused ? typeToPlaceholder[type] : typeToFallbackPlaceholder[type]}
         keyBindingFn={bindKey}
         handleKeyCommand={onKeyCommand}
         customStyleMap={styleMap}

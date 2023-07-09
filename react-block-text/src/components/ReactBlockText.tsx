@@ -1226,6 +1226,7 @@ function ReactBlockText({
       metadata: item.metadata,
       readOnly: isSelecting || !!readOnly,
       focused: !isDragging && index === focusedIndex,
+      isSelecting,
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
       onReturn: event => handleReturn(index, event),

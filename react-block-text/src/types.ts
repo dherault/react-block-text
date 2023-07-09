@@ -60,6 +60,7 @@ export type BlockContentProps = {
   metadata: string
   readOnly: boolean
   focused: boolean
+  isSelecting: boolean
   registerRef: (ref: any) => void
   onChange: (editorState: EditorState) => void
   onKeyCommand: (command: string) => DraftHandleValue
