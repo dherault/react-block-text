@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react'
+import type { HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 import type { DraftHandleValue, EditorState } from 'draft-js'
 
 export type ReactBlockTextDataItemType = 'text'
@@ -46,6 +46,7 @@ export type BlockProps = {
   onMouseDown: () => void
   onMouseMove: () => void
   onMouseLeave: () => void
+  onRectSelectionMouseDown: (event: ReactMouseEvent) => void
   onDragStart: () => void
   onDrag: (index: number, isTop: boolean | null) => void
   onDragEnd: () => void
@@ -135,9 +136,16 @@ export type TopLeft = {
   left: number
 }
 
-export type ReactBlockTextSelection = {
+export type SelectionData = {
   items: ReactBlockTextDataItem[]
   startId: string
+}
+
+export type SelectionRectData = {
+  top: number
+  left: number
+  width: number
+  height: number
 }
 
 export type BlockContentListMetadata = {

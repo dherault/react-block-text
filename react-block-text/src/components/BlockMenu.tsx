@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-import { BlockMenuItemProps, BlockMenuProps } from '../types'
+import type { BlockMenuItemProps, BlockMenuProps } from '../types'
 
 import { DRAG_ITEM_BUTTON_ID } from '../constants'
 

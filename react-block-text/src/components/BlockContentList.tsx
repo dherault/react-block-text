@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { BlockContentListMetadata, BlockContentProps } from '../types'
+import type { BlockContentListMetadata, BlockContentProps } from '../types'
 
 import BlockContentText from './BlockContentText'
 

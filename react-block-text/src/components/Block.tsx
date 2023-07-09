@@ -4,7 +4,7 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import _ from 'clsx'
 import type { XYCoord } from 'react-dnd'
 
-import { BlockContentProps, BlockProps, TopLeft } from '../types'
+import type { BlockContentProps, BlockProps, TopLeft } from '../types'
 
 import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID } from '../constants'
 
@@ -65,6 +65,7 @@ function Block({
   onMouseDown,
   onMouseMove,
   onMouseLeave,
+  onRectSelectionMouseDown,
   onDragStart,
   onDrag,
   onDragEnd,
@@ -192,6 +193,7 @@ function Block({
     >
       <div
         onClick={focusContentAtStart}
+        onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
         style={{ width: paddingLeft }}
       />
@@ -226,11 +228,13 @@ function Block({
         )}
         <div
           onClick={focusContentAtStart}
+          onMouseDown={onRectSelectionMouseDown}
           className="w-1 cursor-text"
         />
         <div className="flex-grow cursor-text">
           <div
             onClick={focusContent}
+            onMouseDown={onRectSelectionMouseDown}
             className="transition-opacity duration-300"
             style={{
               height: DRAG_INDICATOR_SIZE,
@@ -240,6 +244,7 @@ function Block({
           />
           <div
             onClick={focusContent}
+            onMouseDown={onRectSelectionMouseDown}
             style={{ height: typeToPaddingTop[type] - DRAG_INDICATOR_SIZE }}
           />
           <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
@@ -247,10 +252,12 @@ function Block({
           </div>
           <div
             onClick={focusNextContent}
+            onMouseDown={onRectSelectionMouseDown}
             style={{ height: typeToPaddingBottom[type] - DRAG_INDICATOR_SIZE }}
           />
           <div
             onClick={focusNextContent}
+            onMouseDown={onRectSelectionMouseDown}
             className="transition-opacity duration-200"
             style={{
               height: DRAG_INDICATOR_SIZE,

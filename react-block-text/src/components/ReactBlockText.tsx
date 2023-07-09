@@ -1,5 +1,5 @@
 import '../index.css'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type MouseEvent as RectMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -17,7 +17,7 @@ import 'draft-js/dist/Draft.css'
 // @ts-expect-error
 import ignoreWarnings from 'ignore-warnings'
 
-import {
+import type {
   BlockContentProps,
   BlockProps,
   ContextMenuData,
@@ -25,7 +25,8 @@ import {
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextProps,
-  ReactBlockTextSelection,
+  SelectionData,
+  SelectionRectData,
 } from '../types'
 
 import {
@@ -48,6 +49,7 @@ import blockContentComponents from '../blockContentComponents'
 
 import Block from './Block'
 import ContextMenu from './ContextMenu'
+import SelectionRect from './SelectionRect'
 import CustomDragLayer from './CustomDragLayer'
 
 // Remove onUpArrow and onDownArrow deprecation warnings
@@ -100,7 +102,8 @@ function ReactBlockText({
   const [wasDragging, setWasDragging] = useState(false)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
-  const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
+  const [selectionRect, setSelectionRect] = useState<SelectionRectData | null>(null)
+  const [selectionData, setSelectionData] = useState<SelectionData | null>(null)
   const [refresh, forceRefresh] = useState(false)
   const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
 
@@ -765,7 +768,7 @@ function ReactBlockText({
     BLOCK MOUSE DOWN
   --- */
   const handleBlockMouseDown = useCallback(() => {
-    setSelection(null)
+    setSelectionData(null)
   }, [])
 
   /* ---
@@ -773,14 +776,14 @@ function ReactBlockText({
   --- */
   const handleFocus = useCallback((index: number) => {
     setFocusedIndex(index)
-    setSelection(null)
+    setSelectionData(null)
   }, [])
 
   /* ---
     BLUR
   --- */
   const handleBlur = useCallback(() => {
-    setSelection(null)
+    setSelectionData(null)
   }, [])
 
   /* ---
@@ -843,7 +846,7 @@ function ReactBlockText({
     ROOT DIV BLUR
   --- */
   const handleRootBlur = useCallback(() => {
-    setSelection(null)
+    setSelectionData(null)
   }, [])
 
   /* ---
@@ -891,10 +894,10 @@ function ReactBlockText({
     Write selected items to clipboard
   --- */
   const handleWindowCopy = useCallback(() => {
-    if (!(selection && selection.items.length)) return
+    if (!(selectionData && selectionData.items.length)) return
 
-    navigator.clipboard.writeText(JSON.stringify(selection.items))
-  }, [selection])
+    navigator.clipboard.writeText(JSON.stringify(selectionData.items))
+  }, [selectionData])
 
   /* ---
     PASTE
@@ -1032,13 +1035,21 @@ function ReactBlockText({
   }, [handleBlurAllContent])
 
   /* ---
-    MULTI BLOCK SELECTION
+    MULTI BLOCK RECT SELECTION START
+  --- */
+  const handleRectSelectionStart = useCallback((id: string, event: RectMouseEvent) => {
+    console.log('id, event', id, event)
+  }, [])
+
+  /* ---
+    MULTI BLOCK TEXT SELECTION END
+    Triggered when a text selection ends
     Set selectedItems with the content of the selected blocks
     Trimmed at the beginning and end to fit to selection
     When selecting the editor goes into read-only mode, to allow selection between multiple contenteditable divs
     This handler is invoked at mouseup
   --- */
-  const handleMultiBlockSelection = useCallback((id: string, blockKey: string, text: string) => {
+  const handleMultiBlockTextSelectionEnd = useCallback((id: string, blockKey: string, text: string) => {
     const itemIndex = value.findIndex(x => x.id === id)
 
     if (itemIndex === -1) return
@@ -1129,7 +1140,7 @@ function ReactBlockText({
       selected.push(appendItemData(item, nextEditorState))
     })
 
-    setSelection({
+    setSelectionData({
       items: selected,
       startId: id,
     })
@@ -1162,7 +1173,7 @@ function ReactBlockText({
         const blockKey = dataOffsetKey.split('-')[0]
 
         if (blockKey) {
-          handleMultiBlockSelection(dataReactBlockTextId, blockKey, text)
+          handleMultiBlockTextSelectionEnd(dataReactBlockTextId, blockKey, text)
         }
       }
       // Force break a focus bug
@@ -1176,7 +1187,7 @@ function ReactBlockText({
     catch (error) {
       //
     }
-  }, [handleMultiBlockSelection, hoveredIndex])
+  }, [handleMultiBlockTextSelectionEnd, hoveredIndex])
 
   /* ---
     KEYDOWN
@@ -1275,6 +1286,7 @@ function ReactBlockText({
       onMouseDown: handleBlockMouseDown,
       onMouseMove: () => !wasDragging && setHoveredIndex(index),
       onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
+      onRectSelectionMouseDown: event => handleRectSelectionStart(item.id, event),
       onDragStart: () => setDragData({ index, isTop: null }),
       onDrag: handleDrag,
       onDragEnd: () => handleDragEnd(index),
@@ -1322,6 +1334,7 @@ function ReactBlockText({
     handleBlockMouseDown,
     handleFocusContent,
     handleBlurContent,
+    handleRectSelectionStart,
     handleKeyCommand,
     registerRef,
   ])
@@ -1518,6 +1531,9 @@ function ReactBlockText({
               onClose={() => setContextMenuData(null)}
               onSelect={handleContextMenuSelect}
             />
+          )}
+          {!!selectionRect && (
+            <SelectionRect {...selectionRect} />
           )}
           {isBlockMenuOpen && (
             <div className="absolute inset-0 z-10" />

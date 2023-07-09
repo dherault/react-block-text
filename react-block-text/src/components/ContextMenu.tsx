@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import _ from 'clsx'
 
-import { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from '../types'
+import type { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from '../types'
 
 import { CONTEXT_MENU_HEIGHT } from '../constants'
 

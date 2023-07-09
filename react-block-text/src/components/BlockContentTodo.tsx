@@ -1,4 +1,4 @@
-import { BlockContentProps } from '../types'
+import type { BlockContentProps } from '../types'
 
 import BlockContentText from './BlockContentText'
 import Checkbox from './Checkbox'

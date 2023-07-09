@@ -2,7 +2,7 @@ import { type CSSProperties, useCallback } from 'react'
 import type { XYCoord } from 'react-dnd'
 import { useDragLayer } from 'react-dnd'
 
-import { BlockContentProps } from '../types'
+import type { BlockContentProps } from '../types'
 
 import blockContentComponents from '../blockContentComponents'
 

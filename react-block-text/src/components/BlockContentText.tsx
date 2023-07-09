@@ -2,7 +2,7 @@ import { KeyboardEvent } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 import _ from 'clsx'
 
-import { BlockContentProps } from '../types'
+import type { BlockContentProps } from '../types'
 
 import { COMMANDS, INLINE_STYLES } from '../constants'
 

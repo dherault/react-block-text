@@ -1,9 +1,11 @@
 import { useCallback, useContext } from 'react'
 import _ from 'clsx'
 
-import { CheckboxProps } from '../types'
-import CheckIcon from '../icons/Check'
+import type { CheckboxProps } from '../types'
+
 import PrimaryColorContext from '../context/PrimaryColorContext'
+
+import CheckIcon from '../icons/Check'
 
 function Checkbox({ checked, onCheck, ...props }: CheckboxProps) {
   const primaryColor = useContext(PrimaryColorContext)
