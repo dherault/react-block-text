@@ -3,6 +3,8 @@ import { useDrag, useDrop } from 'react-dnd'
 
 import { BlockProps, DragItem, TopLeft } from '../types'
 
+import { ADD_ITEM_BUTTON_ID } from '../constants'
+
 import AddIcon from '../icons/Add'
 import DragIcon from '../icons/Drag'
 
@@ -179,13 +181,14 @@ function Block({
       {!readOnly && (
         <div className="flex-shrink-0">
           <div
-            style={{ height: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type] }}
-          />
-          <div
             className="flex items-center gap-1 opacity-0 transition-opacity duration-300 text-gray-500"
-            style={{ opacity: hovered ? 1 : 0 }}
+            style={{
+              opacity: hovered ? 1 : 0,
+              marginTop: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type],
+            }}
           >
             <div
+              id={ADD_ITEM_BUTTON_ID}
               className="p-1 hover:bg-gray-100 rounded cursor-pointer"
               onClick={onAddItem}
             >

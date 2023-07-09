@@ -27,7 +27,7 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { COMMANDS, INLINE_STYLES, VERSION } from '../constants'
+import { ADD_ITEM_BUTTON_ID, COMMANDS, INLINE_STYLES, VERSION } from '../constants'
 
 import usePrevious from '../hooks/usePrevious'
 
@@ -1022,7 +1022,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
     Handle the mouse up event when selecting multiple blocks
     If the selection is not empty, set the selected items
   --- */
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback((event: MouseEvent) => {
     if (!isSelecting) return
 
     isSelecting = false
@@ -1049,6 +1049,9 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
       }
       // Force break a focus bug
       else {
+        // Prevent force focus happening on block add button click
+        if (hasParentWithId(event.target as HTMLElement, ADD_ITEM_BUTTON_ID)) return
+
         setForceFocusIndex(hoveredIndex)
       }
     }
@@ -1243,6 +1246,7 @@ function ReactBlockText({ value, readOnly, onChange, onSave }: ReactBlockTextPro
 
     lastForceFocusTime = Date.now()
 
+    console.log('forceFocusIndex', forceFocusIndex)
     setForceFocusIndex(-1)
     forceContentFocus(instanceId, value[forceFocusIndex]?.id)
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
@@ -1441,6 +1445,16 @@ function forceContentFocus(instanceId: string, id: string) {
   if (editorRefs[instanceId][id]?.editorContainer?.contains(document.activeElement)) return
 
   editorRefs[instanceId][id]?.focus()
+}
+
+/* ---
+  HAS PARENT WITH ID
+--- */
+function hasParentWithId(element: HTMLElement, id: string) {
+  if (element.id === id) return true
+  if (!element.parentElement) return false
+
+  return hasParentWithId(element.parentElement, id)
 }
 
 export default ReactBlockText
