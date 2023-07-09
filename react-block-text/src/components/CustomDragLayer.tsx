@@ -39,11 +39,10 @@ function getItemStyles(
 
 function CustomDragLayer() {
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(monitor => ({
+    isDragging: monitor.isDragging(),
     item: monitor.getItem() as BlockContentProps,
-    itemType: monitor.getItemType(),
     initialOffset: monitor.getInitialSourceClientOffset(),
     currentOffset: monitor.getSourceClientOffset(),
-    isDragging: monitor.isDragging(),
   }))
 
   const renderItem = useCallback(() => {

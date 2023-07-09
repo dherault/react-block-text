@@ -97,6 +97,7 @@ function ReactBlockText({
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [dragData, setDragData] = useState<DragData | null>(null)
+  const [wasDragging, setWasDragging] = useState(false)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
@@ -854,7 +855,7 @@ function ReactBlockText({
 
   /* ---
     DRAG END
-    Move items
+    Move items at the end of a drag session
   --- */
   const handleDragEnd = useCallback((dragIndex: number) => {
     setDragData(null)
@@ -869,7 +870,7 @@ function ReactBlockText({
 
     const finalIndex = isTop ? index : index + 1
     const nextValue = [...value]
-    setHoveredIndex(finalIndex)
+    let hoveredIndex = finalIndex
 
     if (dragIndex > finalIndex) {
       nextValue.splice(finalIndex, 0, value[dragIndex])
@@ -878,26 +879,11 @@ function ReactBlockText({
     else {
       nextValue.splice(finalIndex, 0, value[dragIndex])
       nextValue.splice(dragIndex, 1)
+      hoveredIndex--
     }
 
     onChange(nextValue)
-
-    console.log('dragIndex, index', dragIndex, finalIndex)
-    // const nextValue = [...value]
-
-    // const item = nextValue[dragIndex]
-
-    // if (!item) return
-
-    // const nextItem = nextValue[isTop ? index : index + 1]
-
-    // if (!nextItem) return
-
-    // // Swap items
-    // nextValue[index] = nextItem
-    // nextValue[dragIndex] = item
-
-    // onChange(nextValue)
+    setHoveredIndex(hoveredIndex)
   }, [value, dragData, onChange, handleBlurAllContent])
 
   /* ---
@@ -1287,8 +1273,8 @@ function ReactBlockText({
       onDeleteItem: () => handleDeleteItem(index),
       onDuplicateItem: () => handleDuplicateItem(index),
       onMouseDown: handleBlockMouseDown,
-      onMouseMove: () => setHoveredIndex(index),
-      onMouseLeave: () => setHoveredIndex(previous => previous === index ? -1 : previous),
+      onMouseMove: () => !wasDragging && setHoveredIndex(index),
+      onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
       onDragStart: () => setDragData({ index, isTop: null }),
       onDrag: handleDrag,
       onDragEnd: () => handleDragEnd(index),
@@ -1318,6 +1304,7 @@ function ReactBlockText({
     hoveredIndex,
     focusedIndex,
     dragData,
+    wasDragging,
     handleAddItem,
     handleDeleteItem,
     handleDuplicateItem,
@@ -1428,6 +1415,16 @@ function ReactBlockText({
 
     forceRefresh(x => !x)
   }, [shouldTriggerRefresh])
+
+  /* ---
+    DRAG SIDE EFFECT
+    Prevent hoveredIndex from being set to dragIndex after dragging
+  --- */
+  useEffect(() => {
+    setTimeout(() => {
+      setWasDragging(!!dragData)
+    }, 16) // 1 frame
+  }, [dragData])
 
   /* ---
     MULTI BLOCK SELECTION EVENTS

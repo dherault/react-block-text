@@ -139,9 +139,6 @@ function Block({
 
       return blockContentProps
     },
-    // collect: (monitor: any) => ({
-    //   isDragging: monitor.isDragging(),
-    // }),
     end() {
       onDragEnd()
     },
@@ -188,10 +185,10 @@ function Block({
       data-handler-id={handlerId}
       data-react-block-text-id={id}
       className="flex"
-      onMouseDown={() => !menuPosition && onMouseDown()}
-      onMouseMove={() => !menuPosition && onMouseMove()}
-      onMouseEnter={() => !menuPosition && onMouseMove()}
-      onMouseLeave={() => !menuPosition && onMouseLeave()}
+      onMouseDown={() => !menuPosition && !readOnly && onMouseDown()}
+      onMouseMove={() => !menuPosition && !readOnly && onMouseMove()}
+      onMouseEnter={() => !menuPosition && !readOnly && onMouseMove()}
+      onMouseLeave={() => !menuPosition && !readOnly && onMouseLeave()}
     >
       <div
         onClick={focusContentAtStart}
