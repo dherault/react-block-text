@@ -51,9 +51,6 @@ function BlockContentText({
   onBlur,
   onPaste,
 }: BlockContentProps) {
-  /* ---
-    MAIN RETURN STATEMENT
-  --- */
   return (
     <div
       className={_({

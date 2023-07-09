@@ -1,18 +1,17 @@
 import { useCallback, useState } from 'react'
 
-import { ReactBlockTextData } from './types'
-
 import ReactBlockText from './components/ReactBlockText'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 
 function App() {
-  const savedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) ?? '[]') as ReactBlockTextData
+  const savedData = localStorage.getItem(LOCAL_STORAGE_KEY) ?? ''
 
-  const [data, setData] = useState<ReactBlockTextData>(savedData)
+  const [data, setData] = useState(savedData)
+  const [primaryColor, setPrimaryColor] = useState<string | null>(null)
 
   const handleSave = useCallback(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data))
+    localStorage.setItem(LOCAL_STORAGE_KEY, data)
   }, [data])
 
   return (
@@ -20,17 +19,24 @@ function App() {
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => setData([])}
-          className="p-1 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          onClick={() => setData('')}
+          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
         >
           Clear
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className="p-1 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
         >
           Save
+        </button>
+        <button
+          type="button"
+          onClick={() => setPrimaryColor(x => x ? null : 'red')}
+          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+        >
+          {primaryColor ? 'Reset primary color' : 'Set primary color red'}
         </button>
       </div>
       <div className="mt-4 bg-white w-full rounded">
@@ -39,6 +45,7 @@ function App() {
           onChange={setData}
           onSave={handleSave}
           paddingLeft={8}
+          primaryColor={primaryColor}
         />
       </div>
       {/* <div className="mt-8 px-2 bg-white w-full rounded">

@@ -27,7 +27,9 @@ import {
   ReactBlockTextSelection,
 } from '../types'
 
-import { ADD_ITEM_BUTTON_ID, COMMANDS, DRAG_ITEM_BUTTON_ID, INLINE_STYLES, VERSION } from '../constants'
+import { ADD_ITEM_BUTTON_ID, COMMANDS, DEFAULT_PRIMARY_COLOR, DRAG_ITEM_BUTTON_ID, INLINE_STYLES, VERSION } from '../constants'
+
+import PrimaryColorContext from '../context/PrimaryColorContext'
 
 import usePrevious from '../hooks/usePrevious'
 
@@ -65,8 +67,28 @@ const editorRefs: Record<string, Record<string, Editor | null>> = {}
 let isSelecting = false
 let lastForceFocusTime = 0
 
-function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: ReactBlockTextProps) {
+function ReactBlockText({
+  value: rawValue,
+  readOnly,
+  paddingLeft,
+  primaryColor,
+  onChange: rawOnChange,
+  onSave,
+}: ReactBlockTextProps) {
   const rootRef = useRef<HTMLDivElement>(null)
+
+  const value = useMemo<ReactBlockTextDataItem[]>(() => {
+    try {
+      return JSON.parse(rawValue)
+    }
+    catch (error) {
+      return []
+    }
+  }, [rawValue])
+
+  const onChange = useCallback((nextValue: ReactBlockTextDataItem[]) => {
+    rawOnChange(JSON.stringify(nextValue))
+  }, [rawOnChange])
 
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
@@ -76,13 +98,17 @@ function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: Reac
   const [isDragging, setIsDragging] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selection, setSelection] = useState<ReactBlockTextSelection | null>(null)
-  const [, forceRefresh] = useState(false)
+  const [refresh, forceRefresh] = useState(false)
   const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
 
-  const previousEditorStates = usePrevious(editorStates)
+  const previousEditorStates = usePrevious(editorStates, refresh || shouldTriggerRefresh)
 
   // A unique instance id for the sake of editorRefs, so multiple instances can be used on the same page
   const instanceId = useMemo(() => nanoid(), [])
+
+  // TODO
+  const last = Object.values(previousEditorStates).pop()
+  console.log(last?.getSelection().getFocusOffset(), refresh)
 
   /* ---
     REGISTER REF
@@ -560,23 +586,19 @@ function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: Reac
     const previousEditorState = previousEditorStates[item.id]
 
     if (previousEditorState) {
-      const previousFirstBlockTextLength = previousEditorState.getCurrentContent().getFirstBlock().getText().length
+      const previousFirstBlock = previousEditorState.getCurrentContent().getFirstBlock()
 
-      if (previousFirstBlockTextLength > 0) {
+      if (previousFirstBlock.getText().length > 0) {
         // We refresh to update previousEditorStates
         forceRefresh(x => !x)
 
         // But we can merge it with the previous one
-        const editorState = editorStates[item.id]
+        const previousSelection = previousEditorState.getSelection()
 
-        if (!editorState) return
-
-        const selection = editorState.getSelection()
-        const contentState = editorState.getCurrentContent()
-        const firstBlock = contentState.getFirstBlock()
-
+        console.log('focusOffset', previousSelection.getFocusOffset())
         // If the selection is at the beggining of the first block
-        if (selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlock.getKey()) {
+        if (previousSelection.isCollapsed() && previousSelection.getFocusOffset() === 0 && previousSelection.getAnchorKey() === previousFirstBlock.getKey()) {
+          console.log('merge')
           handleBackspace(focusedIndex)
         }
 
@@ -1091,6 +1113,15 @@ function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: Reac
     if (event.key === 'Backspace' && (event.metaKey || event.ctrlKey)) {
       handleMetaBackspace()
     }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      console.log('arrow')
+      setShouldTriggerRefresh(true)
+
+      setTimeout(() => {
+        setShouldTriggerRefresh(true)
+      }, 1)
+    }
   }, [handleMetaBackspace])
 
   /* ---
@@ -1363,26 +1394,28 @@ function ReactBlockText({ value, readOnly, paddingLeft, onChange, onSave }: Reac
   /* ---
     MAIN RETURN STATEMENT
   --- */
-  if (!Array.isArray(value)) throw new Error('ReactBlockText value prop must be an array')
+  if (typeof rawValue !== 'string') throw new Error('ReactBlockText value prop must be a string')
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div
-        ref={rootRef}
-        onBlur={handleRootBlur}
-        className="relative text-sm"
-      >
-        {value.map(renderEditor)}
-        {!!contextMenuData && (
-          <ContextMenu
-            query={contextMenuData.query}
-            top={contextMenuData.top}
-            left={contextMenuData.left}
-            onClose={() => setContextMenuData(null)}
-            onSelect={handleContextMenuSelect}
-          />
-        )}
-      </div>
+      <PrimaryColorContext.Provider value={primaryColor ?? DEFAULT_PRIMARY_COLOR}>
+        <div
+          ref={rootRef}
+          onBlur={handleRootBlur}
+          className="relative text-sm"
+        >
+          {value.map(renderEditor)}
+          {!!contextMenuData && (
+            <ContextMenu
+              query={contextMenuData.query}
+              top={contextMenuData.top}
+              left={contextMenuData.left}
+              onClose={() => setContextMenuData(null)}
+              onSelect={handleContextMenuSelect}
+            />
+          )}
+        </div>
+      </PrimaryColorContext.Provider>
     </DndProvider>
   )
 }

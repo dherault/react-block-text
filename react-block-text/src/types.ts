@@ -21,10 +21,11 @@ export type ReactBlockTextDataItem = {
 export type ReactBlockTextData = ReactBlockTextDataItem[]
 
 export type ReactBlockTextProps = {
-  value: ReactBlockTextData
+  value: string
   readOnly?: boolean
   paddingLeft?: number | string
-  onChange: (value: ReactBlockTextData) => void
+  primaryColor?: string | null
+  onChange: (value: string) => void
   onSave?: () => void
 }
 

@@ -4,7 +4,7 @@ import BlockContentText from './BlockContentText'
 
 function BlockContentQuote(props: BlockContentProps) {
   return (
-    <div className="flex items-center gap-2 h-full">
+    <div className="flex gap-2 h-full">
       <div className="w-[3px] h-full bg-black flex-shrink-0" />
       <div className="flex-grow">
         <BlockContentText {...props} />

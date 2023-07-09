@@ -1,9 +1,8 @@
 {
   "private": true,
-  "name": "react-block-text-root",
+  "name": "react-block-text-monorepo",
   "version": "0.0.0",
-  "description": "A block text editor for React",
-  "main": "index.js",
+  "description": "The monorepo for react-block-text",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,13 +10,6 @@
     "type": "git",
     "url": "git+https://github.com/dherault/react-block-text.git"
   },
-  "keywords": [
-    "React",
-    "block",
-    "text",
-    "block",
-    "editor"
-  ],
   "author": "David Hérault <dherault@gmail.com> (https://github.com/dherault)",
   "license": "MIT",
   "bugs": {

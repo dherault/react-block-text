@@ -6,12 +6,10 @@ import Checkbox from './Checkbox'
 function BlockContentTodo(props: BlockContentProps) {
   const { metadata, onCheck } = props
 
-  const checked = metadata === 'true'
-
   return (
     <div className="flex items-start gap-2">
       <Checkbox
-        checked={checked}
+        checked={metadata === 'true'}
         onCheck={onCheck}
         style={{ marginTop: 3 }}
       />
