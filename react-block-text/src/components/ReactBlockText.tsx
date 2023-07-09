@@ -81,6 +81,7 @@ function ReactBlockText({
   value: rawValue,
   readOnly,
   paddingLeft,
+  paddingBottom,
   primaryColor,
   onChange: rawOnChange,
   onSave,
@@ -809,20 +810,34 @@ function ReactBlockText({
   /* ---
     FOCUS CONTENT
   --- */
-  const handleFocusContent = useCallback((index: number, atStart = false) => {
+  const handleFocusContent = useCallback((index: number, atStart = false, atEnd = false) => {
     const item = value[index]
 
     if (!item) return
 
     forceContentFocus(instanceId, item.id)
 
-    if (!atStart) return
+    if (!(atStart || atEnd)) return
 
     const editorState = editorStates[item.id]
 
     if (!editorState) return
 
-    const selection = SelectionState.createEmpty(editorState.getCurrentContent().getFirstBlock().getKey())
+    const contentState = editorState.getCurrentContent()
+    let selection: SelectionState
+
+    if (atStart) {
+      selection = SelectionState.createEmpty(contentState.getFirstBlock().getKey())
+    }
+    else {
+      const lastBlock = contentState.getLastBlock()
+
+      selection = SelectionState.createEmpty(lastBlock.getKey()).merge({
+        focusOffset: lastBlock.getText().length,
+        anchorOffset: lastBlock.getText().length,
+      })
+    }
+
     const nextEditorState = EditorState.forceSelection(editorState, selection)
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
@@ -1456,6 +1471,11 @@ function ReactBlockText({
           {isBlockMenuOpen && (
             <div className="absolute inset-0 z-10" />
           )}
+          <div
+            onClick={() => handleFocusContent(value.length - 1, false, true)}
+            className="cursor-text"
+            style={{ height: paddingBottom ?? 0 }}
+          />
         </div>
       </PrimaryColorContext.Provider>
     </DndProvider>

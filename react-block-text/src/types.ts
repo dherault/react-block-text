@@ -24,6 +24,7 @@ export type ReactBlockTextProps = {
   value: string
   readOnly?: boolean
   paddingLeft?: number | string
+  paddingBottom?: number | string
   primaryColor?: string | null
   onChange: (value: string) => void
   onSave?: () => void

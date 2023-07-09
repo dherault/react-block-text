@@ -58,6 +58,7 @@ function App() {
           onChange={setData}
           onSave={handleSave}
           paddingLeft={padding}
+          paddingBottom={256}
           primaryColor={primaryColor}
         />
       </div>
