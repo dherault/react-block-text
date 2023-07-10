@@ -1,5 +1,10 @@
 import ReactBlockText from './components/ReactBlockText'
 
+import headerPlugin from './plugins/header'
+import todoPlugin from './plugins/todo'
+import listPlugin from './plugins/list'
+import quotePlugin from './plugins/quote'
+
 export type {
   ReactBlockTextData,
   ReactBlockTextDataItem,
@@ -11,14 +16,13 @@ export type {
   ReactBlockTextProps,
 } from './types'
 
-export * from './plugins/header'
-
-export * from './plugins/todo'
-
-export * from './plugins/list'
-
-export * from './plugins/quote'
-
 export { DEFAULT_PRIMARY_COLOR, VERSION } from './constants'
+
+export {
+  headerPlugin,
+  todoPlugin,
+  listPlugin,
+  quotePlugin,
+}
 
 export default ReactBlockText

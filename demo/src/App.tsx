@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
+import 'react-block-text/dist/style.css'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 const PADDINGS = [
