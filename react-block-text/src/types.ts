@@ -1,14 +1,7 @@
-import type { HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
+import type { ComponentType, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 import type { DraftHandleValue, Editor, EditorState } from 'draft-js'
 
-export type ReactBlockTextDataItemType = 'text'
-  | 'heading1'
-  | 'heading2'
-  | 'heading3'
-  | 'todo'
-  | 'bulleted-list'
-  | 'numbered-list'
-  | 'quote'
+export type ReactBlockTextDataItemType = 'text' | string
 
 export type ReactBlockTextDataItem = {
   reactBlockTextVersion: string
@@ -20,8 +13,22 @@ export type ReactBlockTextDataItem = {
 
 export type ReactBlockTextData = ReactBlockTextDataItem[]
 
+export type ReactBlockTextPlugins = Array<{
+  type: string
+  title: string
+  label: string
+  shortcuts: string
+  icon: ReactNode
+  isConvertibleToText: boolean
+  paddingTop: number
+  paddingBottom: number
+  iconsPaddingTop: number
+  BlockContent: ComponentType<BlockContentProps>
+}>
+
 export type ReactBlockTextProps = {
   value: string
+  plugins?: ReactBlockTextPlugins
   readOnly?: boolean
   paddingTop?: number | string
   paddingBottom?: number | string
@@ -33,6 +40,7 @@ export type ReactBlockTextProps = {
 
 export type BlockProps = {
   children: ReactNode
+  plugins: ReactBlockTextPlugins
   id: string
   type: ReactBlockTextDataItemType
   index: number
@@ -62,6 +70,8 @@ export type BlockProps = {
 }
 
 export type BlockContentProps = {
+  BlockContentText: ComponentType<BlockContentProps>
+  plugins: ReactBlockTextPlugins
   type: ReactBlockTextDataItemType
   index: number
   editorState: EditorState
@@ -69,6 +79,8 @@ export type BlockContentProps = {
   readOnly: boolean
   focused: boolean
   isSelecting: boolean
+  placeholder: string
+  fallbackPlaceholder: string
   registerRef: (ref: any) => void
   onChange: (editorState: EditorState) => void
   onKeyCommand: (command: string) => DraftHandleValue
@@ -88,6 +100,7 @@ export type BlockContentProps = {
 }
 
 export type ContextMenuProps = {
+  plugins: ReactBlockTextPlugins
   query: string
   top?: number
   bottom?: number
@@ -129,6 +142,10 @@ export type BlockMenuItemProps = {
 export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
   checked: boolean
   onCheck: (checked: boolean) => void
+}
+
+export type DragLayerProps = {
+  plugins: ReactBlockTextPlugins
 }
 
 export type SelectionRectProps = {

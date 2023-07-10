@@ -15,43 +15,44 @@ import DragIcon from '../icons/Drag'
 
 import BlockMenu from './BlockMenu'
 
-const typeToPaddingTop = {
-  text: 3,
-  heading1: 24,
-  heading2: 18,
-  heading3: 12,
-  todo: 3,
-  'bulleted-list': 3,
-  'numbered-list': 3,
-  quote: 5,
-} as const
+// const plugin(?.paddingTop ?? 3){
+//   text: 3,
+//   heading1: 24,
+//   heading2: 18,
+//   heading3: 12,
+//   todo: 3,
+//   'bulleted-list': 3,
+//   'numbered-list': 3,
+//   quote: 5,
+// } as const
 
-const typeToPaddingBottom = {
-  text: 3,
-  heading1: 9,
-  heading2: 9,
-  heading3: 9,
-  todo: 3,
-  'bulleted-list': 3,
-  'numbered-list': 3,
-  quote: 5,
-} as const
+// const typeToPaddingBottom = {
+//   text: 3,
+//   heading1: 9,
+//   heading2: 9,
+//   heading3: 9,
+//   todo: 3,
+//   'bulleted-list': 3,
+//   'numbered-list': 3,
+//   quote: 5,
+// } as const
 
-const typeToIconsExtraPaddingTop = {
-  text: 0,
-  heading1: 6,
-  heading2: 4,
-  heading3: 1,
-  todo: 0,
-  'bulleted-list': 0,
-  'numbered-list': 0,
-  quote: 0,
-} as const
+// const typeToIconsExtraPaddingTop = {
+//   text: 0,
+//   heading1: 6,
+//   heading2: 4,
+//   heading3: 1,
+//   todo: 0,
+//   'bulleted-list': 0,
+//   'numbered-list': 0,
+//   quote: 0,
+// } as const
 
 const DRAG_INDICATOR_SIZE = 3
 
 function Block({
   children,
+  plugins,
   id,
   type,
   index,
@@ -85,6 +86,7 @@ function Block({
   const primaryColor = useContext(PrimaryColorContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
+  const plugin = useMemo(() => plugins.find(plugin => plugin.type === type), [plugins, type])
   const isEmpty = useMemo(() => (
     type === 'text'
     && !blockContentProps.editorState.getCurrentContent().getPlainText().length
@@ -213,9 +215,9 @@ function Block({
           ref={registerSelectionRef}
           className="absolute rounded-sm z-0 transition-opacity"
           style={{
-            top: typeToPaddingTop[type] - 2,
-            bottom: typeToPaddingBottom[type] - 2,
-            left: (contentRef.current?.offsetLeft ?? 0) - 4,
+            top: (plugin?.paddingTop || 3) - 2,
+            bottom: (plugin?.paddingBottom || 3) - 2,
+            left: (contentRef.current?.offsetLeft || 0) - 4,
             right: 2,
             backgroundColor: primaryColor,
             opacity: !isEmpty && selected ? 0.15 : 0,
@@ -231,7 +233,7 @@ function Block({
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
               className="flex-shrink-0 cursor-text"
-              style={{ height: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type] }}
+              style={{ height: (plugin?.paddingTop || 3) + (plugin?.iconsPaddingTop || 0) }}
             />
             <div
               className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
@@ -287,15 +289,15 @@ function Block({
           <div
             onClick={focusContent}
             onMouseDown={onRectSelectionMouseDown}
-            style={{ height: typeToPaddingTop[type] - DRAG_INDICATOR_SIZE }}
+            style={{ height: (plugin?.paddingTop || 3) - DRAG_INDICATOR_SIZE }}
           />
-          <div style={{ height: `calc(100% - ${typeToPaddingTop[type] + typeToPaddingBottom[type]}px)` }}>
+          <div style={{ height: `calc(100% - ${(plugin?.paddingTop || 3) + (plugin?.paddingBottom || 3)}px)` }}>
             {children}
           </div>
           <div
             onClick={focusNextContent}
             onMouseDown={onRectSelectionMouseDown}
-            style={{ height: typeToPaddingBottom[type] - DRAG_INDICATOR_SIZE }}
+            style={{ height: (plugin?.paddingBottom || 3) - DRAG_INDICATOR_SIZE }}
           />
           <div
             onClick={focusNextContent}

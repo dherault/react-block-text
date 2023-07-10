@@ -13,6 +13,8 @@
 // - Write table plugin (may need to set editorStates as an array)
 // - Create inline menu and handle styling and block conversion
 // - Handle block conversion on block menu
+// - Fix / and backspace bug
+// - Handle text conversion
 
 import '../index.css'
 import {
@@ -40,17 +42,20 @@ import 'draft-js/dist/Draft.css'
 // @ts-expect-error
 import ignoreWarnings from 'ignore-warnings'
 
-import type {
-  BlockContentProps,
-  BlockProps,
-  ContextMenuData,
-  DragData,
-  EditorRefRegistry,
-  ReactBlockTextDataItem,
-  ReactBlockTextDataItemType,
-  ReactBlockTextProps,
-  SelectionData,
-  SelectionRectData,
+import textPlugin from '../plugins/text/plugin'
+
+import {
+  type BlockContentProps,
+  type BlockProps,
+  type ContextMenuData,
+  type DragData,
+  type EditorRefRegistry,
+  type ReactBlockTextDataItem,
+  type ReactBlockTextDataItemType,
+  ReactBlockTextPlugins,
+  type ReactBlockTextProps,
+  type SelectionData,
+  type SelectionRectData,
 } from '../types'
 
 import {
@@ -75,12 +80,11 @@ import getContextMenuData from '../utils/getContextMenuData'
 import forceContentFocus from '../utils/forceContentFocus'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
 
-import blockContentComponents from '../blockContentComponents'
-
 import Block from './Block'
+import BlockContentText from './BlockContentText'
 import ContextMenu from './ContextMenu'
 import SelectionRect from './SelectionRect'
-import CustomDragLayer from './CustomDragLayer'
+import DragLayer from './DragLayer'
 
 // Remove onUpArrow and onDownArrow deprecation warnings
 ignoreWarnings([
@@ -102,6 +106,7 @@ let lastForceFocusTime = 0
 function ReactBlockText({
   value: rawValue,
   onChange: rawOnChange,
+  plugins: rawPlugins = [],
   readOnly,
   paddingTop,
   paddingBottom,
@@ -129,6 +134,14 @@ function ReactBlockText({
   const onChange = useCallback((nextValue: ReactBlockTextDataItem[]) => {
     rawOnChange(JSON.stringify(nextValue))
   }, [rawOnChange])
+
+  /* ---
+    PLUGINS MERGING
+  --- */
+  const plugins = useMemo<ReactBlockTextPlugins>(() => [
+    ...textPlugin(),
+    ...rawPlugins,
+  ], [rawPlugins])
 
   /* ---
     COMPONENT STATE
@@ -846,7 +859,6 @@ function ReactBlockText({
     FOCUS CONTENT
   --- */
   const handleFocusContent = useCallback((index: number, atStart = false, atEnd = false) => {
-    console.log('handleFocusContent')
     const item = value[index]
 
     if (!item) return
@@ -1389,7 +1401,12 @@ function ReactBlockText({
   const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
     if (!editorStates[item.id]) return null
 
+    const plugin = plugins.find(plugin => plugin.type === item.type)
+
+    if (!plugin) return null
+
     const commonProps = {
+      plugins,
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
       focusNextContent: () => handleFocusContent(index + 1),
@@ -1399,6 +1416,7 @@ function ReactBlockText({
 
     const blockContentProps: BlockContentProps = {
       ...commonProps,
+      BlockContentText,
       type: item.type,
       index,
       editorState: editorStates[item.id],
@@ -1406,6 +1424,8 @@ function ReactBlockText({
       readOnly: isSelecting || !!readOnly,
       focused: !dragData && index === focusedIndex,
       isSelecting,
+      placeholder: "Start typing or press '/' for commands",
+      fallbackPlaceholder: '',
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
       onReturn: event => handleReturn(index, event),
@@ -1450,7 +1470,7 @@ function ReactBlockText({
       blockContentProps, // Pass block content props to block for drag preview display
     }
 
-    const BlockContent = blockContentComponents[item.type]
+    const { BlockContent } = plugin
 
     return (
       <Block
@@ -1463,6 +1483,7 @@ function ReactBlockText({
   }, [
     readOnly,
     paddingLeft,
+    plugins,
     editorStates,
     hoveredIndex,
     focusedIndex,
@@ -1701,6 +1722,7 @@ function ReactBlockText({
           {value.map(renderEditor)}
           {!!contextMenuData && (
             <ContextMenu
+              plugins={plugins}
               query={contextMenuData.query}
               top={contextMenuData.top}
               bottom={contextMenuData.bottom}
@@ -1718,7 +1740,7 @@ function ReactBlockText({
             />
           )}
           {!!(
-            (selectionRect?.isSelecting && selectionRect.width > 0 && selectionRect.height > 0)
+            (selectionRect?.isSelecting && selectionRect.width && selectionRect.height)
             || isBlockMenuOpen
           ) && (
             <div className="absolute inset-0 z-10" />
@@ -1730,7 +1752,7 @@ function ReactBlockText({
             style={{ height: paddingBottom ?? 0 }}
           />
         </div>
-        <CustomDragLayer />
+        <DragLayer plugins={plugins} />
       </PrimaryColorContext.Provider>
     </DndProvider>
   )

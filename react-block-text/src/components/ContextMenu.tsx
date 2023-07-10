@@ -6,104 +6,18 @@ import type { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } fro
 
 import { CONTEXT_MENU_HEIGHT } from '../constants'
 
-import Checkbox from './Checkbox'
-
-/* ---
-  ITEMS OF THE CONTEXT MENU
---- */
-const items = [
-  {
-    command: 'text',
-    shortcuts: 'txt',
-    title: 'Text',
-    label: 'Just start writing with plain text.',
-    icon: (
-      <TextIcon />
-    ),
-  },
-  {
-    command: 'heading1',
-    title: 'Heading 1',
-    shortcuts: 'h1',
-    label: 'Big section heading.',
-    icon: (
-      <HeadingIcon>
-        H1
-      </HeadingIcon>
-    ),
-  },
-  {
-    command: 'heading2',
-    title: 'Heading 2',
-    shortcuts: 'h2',
-    label: 'Medium section heading.',
-    icon: (
-      <HeadingIcon>
-        H2
-      </HeadingIcon>
-    ),
-  },
-  {
-    command: 'heading3',
-    title: 'Heading 3',
-    shortcuts: 'h3',
-    label: 'Small section heading.',
-    icon: (
-      <HeadingIcon>
-        H3
-      </HeadingIcon>
-    ),
-  },
-  {
-    command: 'todo',
-    title: 'To-do list',
-    shortcuts: 'todo',
-    label: 'Track tasks with a to-do list.',
-    icon: (
-      <TodoIcon />
-    ),
-  },
-  {
-    command: 'bulleted-list',
-    title: 'Bulleted list',
-    shortcuts: 'task',
-    label: 'Create a simple bulleted list.',
-    icon: (
-      <BulletedListIcon />
-    ),
-  },
-  {
-    command: 'numbered-list',
-    title: 'Numbered list',
-    shortcuts: 'task',
-    label: 'Create a list with numbering.',
-    icon: (
-      <NumberedListIcon />
-    ),
-  },
-  {
-    command: 'quote',
-    title: 'Quote',
-    shortcuts: 'citation',
-    label: 'Capture a quote.',
-    icon: (
-      <QuoteIcon />
-    ),
-  },
-] as const
-
 const fuseOptions = {
   keys: ['title', 'label', 'shortcuts'],
   threshold: 0.3,
 }
 
-function ContextMenu({ query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
+function ContextMenu({ plugins, query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [scrollIntoViewIndex, setScrollIntoViewIndex] = useState(-1)
   const [isHovering, setIsHovering] = useState(false)
-  const fuse = useMemo(() => new Fuse(items, fuseOptions), [])
-  const results = useMemo(() => query ? fuse.search(query) : items.map(item => ({ item })), [fuse, query])
+  const fuse = useMemo(() => new Fuse(plugins, fuseOptions), [plugins])
+  const results = useMemo(() => query ? fuse.search(query) : plugins.map(item => ({ item })), [plugins, query, fuse])
 
   /* ---
     ARROW UP, DOWN, ENTER, ESCAPE HANDLERS
@@ -136,8 +50,8 @@ function ContextMenu({ query, top, bottom, left, onSelect, onClose }: ContextMen
     if (event.key === 'Enter') {
       event.preventDefault()
 
-      if (activeIndex !== -1) {
-        onSelect(results[activeIndex].item.command)
+      if (activeIndex !== -1 && results[activeIndex]) {
+        onSelect(results[activeIndex].item.type)
       }
 
       return
@@ -200,13 +114,15 @@ function ContextMenu({ query, top, bottom, left, onSelect, onClose }: ContextMen
         {results.map((result, i) => (
           <ContextMenuItem
             key={result.item.title}
+            title={result.item.title}
+            label={result.item.label}
+            icon={result.item.icon}
             active={i === activeIndex}
             onMouseEnter={() => isHovering && setActiveIndex(i)}
             onMouseLeave={() => isHovering && setActiveIndex(-1)}
-            onClick={() => onSelect(result.item.command)}
+            onClick={() => onSelect(result.item.type)}
             shouldScrollIntoView={i === scrollIntoViewIndex}
             resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
-            {...result.item}
           />
         ))}
       </div>
@@ -253,7 +169,9 @@ function ContextMenuItem({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {icon}
+      <ContextMenuIcon>
+        {icon}
+      </ContextMenuIcon>
       <div>
         <div className="text-sm">{title}</div>
         <div className="mt-0.5 text-xs text-gray-400">{label}</div>
@@ -270,103 +188,78 @@ function ContextMenuIcon({ children }: ContextMenuIconProps) {
   )
 }
 
-function TextIcon() {
-  return (
-    <ContextMenuIcon>
-      <div className="w-full h-full flex items-center justify-center font-serif text-xl text-gray-600">
-        Aa
-      </div>
-    </ContextMenuIcon>
-  )
-}
+// function TodoIcon() {
+//   return (
+//     <ContextMenuIcon>
+//       <div className="w-full h-full flex items-center justify-center gap-1">
+//         <div className="scale-[85%]">
+//           <Checkbox
+//             checked
+//             onCheck={() => {}}
+//           />
+//         </div>
+//         <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+//           <div className="border-b border-gray-300" />
+//           <div className="w-[50%] border-b border-gray-300" />
+//           <div className="w-[75%] border-b border-gray-300" />
+//         </div>
+//       </div>
+//     </ContextMenuIcon>
+//   )
+// }
 
-function HeadingIcon({ children }: ContextMenuIconProps) {
-  return (
-    <ContextMenuIcon>
-      <div className="font-serif text-gray-600">
-        {children}
-      </div>
-      <div className="w-full flex flex-col gap-1">
-        <div className="border-b border-gray-300" />
-        <div className="w-[75%] border-b border-gray-300" />
-        <div className="w-[50%] border-b border-gray-300" />
-      </div>
-    </ContextMenuIcon>
-  )
-}
+// function BulletedListIcon() {
+//   return (
+//     <ContextMenuIcon>
+//       <div className="w-full h-full flex items-center justify-center gap-1">
+//         <div className="-mt-1.5 text-4xl text-gray-600">
+//           •
+//         </div>
+//         <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+//           <div className="border-b border-gray-300" />
+//           <div className="w-[50%] border-b border-gray-300" />
+//           <div className="w-[75%] border-b border-gray-300" />
+//         </div>
+//       </div>
+//     </ContextMenuIcon>
+//   )
+// }
 
-function TodoIcon() {
-  return (
-    <ContextMenuIcon>
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <div className="scale-[85%]">
-          <Checkbox
-            checked
-            onCheck={() => {}}
-          />
-        </div>
-        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
-          <div className="border-b border-gray-300" />
-          <div className="w-[50%] border-b border-gray-300" />
-          <div className="w-[75%] border-b border-gray-300" />
-        </div>
-      </div>
-    </ContextMenuIcon>
-  )
-}
+// function NumberedListIcon() {
+//   return (
+//     <ContextMenuIcon>
+//       <div className="w-full h-full flex items-center justify-center gap-1">
+//         <div className="text-lg text-gray-600 font-mono">
+//           1
+//           <span className="font-sans">
+//             .
+//           </span>
+//         </div>
+//         <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
+//           <div className="border-b border-gray-300" />
+//           <div className="w-[50%] border-b border-gray-300" />
+//           <div className="w-[75%] border-b border-gray-300" />
+//         </div>
+//       </div>
+//     </ContextMenuIcon>
+//   )
+// }
 
-function BulletedListIcon() {
-  return (
-    <ContextMenuIcon>
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <div className="-mt-1.5 text-4xl text-gray-600">
-          •
-        </div>
-        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
-          <div className="border-b border-gray-300" />
-          <div className="w-[50%] border-b border-gray-300" />
-          <div className="w-[75%] border-b border-gray-300" />
-        </div>
-      </div>
-    </ContextMenuIcon>
-  )
-}
-
-function NumberedListIcon() {
-  return (
-    <ContextMenuIcon>
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <div className="text-lg text-gray-600 font-mono">
-          1
-          <span className="font-sans">
-            .
-          </span>
-        </div>
-        <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
-          <div className="border-b border-gray-300" />
-          <div className="w-[50%] border-b border-gray-300" />
-          <div className="w-[75%] border-b border-gray-300" />
-        </div>
-      </div>
-    </ContextMenuIcon>
-  )
-}
-
-function QuoteIcon() {
-  return (
-    <ContextMenuIcon>
-      <div className="w-full h-full flex items-center gap-1">
-        <div className="-ml-0.5 w-[1.5px] h-full bg-black" />
-        <div className="-mr-2 font-serif text-[0.7rem] text-gray-300 italic leading-none">
-          To be
-          <br />
-          or not
-          <br />
-          to be
-        </div>
-      </div>
-    </ContextMenuIcon>
-  )
-}
+// function QuoteIcon() {
+//   return (
+//     <ContextMenuIcon>
+//       <div className="w-full h-full flex items-center gap-1">
+//         <div className="-ml-0.5 w-[1.5px] h-full bg-black" />
+//         <div className="-mr-2 font-serif text-[0.7rem] text-gray-300 italic leading-none">
+//           To be
+//           <br />
+//           or not
+//           <br />
+//           to be
+//         </div>
+//       </div>
+//     </ContextMenuIcon>
+//   )
+// }
 
 export default ContextMenu

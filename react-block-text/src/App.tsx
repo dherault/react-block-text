@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react'
 
 import ReactBlockText from './components/ReactBlockText'
 
+import headerPlugin from './plugins/header'
+
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 const PADDINGS = [
   8,
@@ -59,6 +61,9 @@ function App() {
           onSave={handleSave}
           paddingLeft={padding}
           primaryColor={primaryColor}
+          plugins={[
+            ...headerPlugin(),
+          ]}
         />
       </div>
       {/* <div className="mt-8 px-2 bg-white w-full rounded">

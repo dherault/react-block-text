@@ -2,9 +2,7 @@ import { type CSSProperties, useCallback } from 'react'
 import type { XYCoord } from 'react-dnd'
 import { useDragLayer } from 'react-dnd'
 
-import type { BlockContentProps } from '../types'
-
-import blockContentComponents from '../blockContentComponents'
+import type { BlockContentProps, DragLayerProps } from '../types'
 
 const layerStyles: CSSProperties = {
   position: 'fixed',
@@ -37,7 +35,7 @@ function getItemStyles(
   }
 }
 
-function CustomDragLayer() {
+function DragLayer({ plugins }: DragLayerProps) {
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(monitor => ({
     isDragging: monitor.isDragging(),
     item: monitor.getItem() as BlockContentProps,
@@ -46,15 +44,19 @@ function CustomDragLayer() {
   }))
 
   const renderItem = useCallback(() => {
-    const BlockContentComponent = blockContentComponents[item.type]
+    const plugin = plugins.find(plugin => plugin.type === item.type)
+
+    if (!plugin) return null
+
+    const { BlockContent } = plugin
 
     return (
-      <BlockContentComponent
+      <BlockContent
         {...item}
         readOnly
       />
     )
-  }, [item])
+  }, [plugins, item])
 
   if (!isDragging) {
     return null
@@ -71,4 +73,4 @@ function CustomDragLayer() {
   )
 }
 
-export default CustomDragLayer
+export default DragLayer
