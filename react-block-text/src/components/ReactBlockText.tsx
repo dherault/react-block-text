@@ -12,10 +12,13 @@
 // - Write image plugin
 // - Write table plugin (may need to set editorStates as an array)
 // - Create inline menu and handle styling and block conversion
+// - Write color plugin (meta plugin)
 // - Handle block conversion on block menu
 // - Fix / and backspace bug
 // - Handle text conversion
-// - AI plugin
+// - AI plugin (meta plugin)
+// - Separate package from app
+// - Publish to npm
 
 import '../index.css'
 import {
