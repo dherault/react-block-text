@@ -1,3 +1,19 @@
+// TODO
+// - Rewrite for plugins
+// - Handle copy/paste
+// - Handle undo/redo
+// - Handle drag/drop of multiple blocks
+// - Handle mousedown event for start selection rect on root element, not in blocks
+// - Handle scroll selection
+// - Write header plugin
+// - Write quote plugin
+// - Write list plugin
+// - Write code plugin
+// - Write image plugin
+// - Write table plugin (may need to set editorStates as an array)
+// - Create inline menu and handle styling and block conversion
+// - Handle block conversion on block menu
+
 import '../index.css'
 import {
   type MouseEvent as ReactMouseEvent,
