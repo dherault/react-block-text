@@ -1,10 +1,10 @@
 import { useContext } from 'react'
 
-import type { SelectionRectData } from '../types'
+import type { SelectionRectProps } from '../types'
 
 import PrimaryColorContext from '../context/PrimaryColorContext'
 
-function SelectionRect(props: SelectionRectData) {
+function SelectionRect(props: SelectionRectProps) {
   const primaryColor = useContext(PrimaryColorContext)
 
   return (

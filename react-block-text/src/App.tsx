@@ -22,7 +22,7 @@ function App() {
 
   return (
     <div className="p-4 min-h-screen bg-gray-100">
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-64">
         <button
           type="button"
           onClick={() => setData('')}

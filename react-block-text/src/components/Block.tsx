@@ -52,10 +52,11 @@ const DRAG_INDICATOR_SIZE = 3
 
 function Block({
   children,
-  readOnly,
   id,
   type,
   index,
+  readOnly,
+  selected,
   hovered,
   isDraggingTop,
   paddingLeft,
@@ -183,8 +184,9 @@ function Block({
   return (
     <div
       ref={rootRef}
-      data-handler-id={handlerId}
+      id={id}
       data-react-block-text-id={id}
+      data-handler-id={handlerId}
       className="flex"
       onMouseDown={() => !menuPosition && !readOnly && onMouseDown()}
       onMouseMove={() => !menuPosition && !readOnly && onMouseMove()}

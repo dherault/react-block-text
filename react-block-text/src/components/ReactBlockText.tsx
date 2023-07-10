@@ -1,5 +1,5 @@
 import '../index.css'
-import { type MouseEvent as RectMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -22,6 +22,7 @@ import type {
   BlockProps,
   ContextMenuData,
   DragData,
+  EditorRefRegistry,
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextProps,
@@ -32,10 +33,8 @@ import type {
 import {
   ADD_ITEM_BUTTON_ID,
   COMMANDS,
-  CONTEXT_MENU_HEIGHT,
   DEFAULT_PRIMARY_COLOR,
   DRAG_ITEM_BUTTON_ID,
-  INLINE_STYLES,
   VERSION,
 } from '../constants'
 
@@ -43,7 +42,15 @@ import PrimaryColorContext from '../context/PrimaryColorContext'
 
 import usePrevious from '../hooks/usePrevious'
 
-import hasParentWithId from '../utils/hasParentWithId'
+import findParentWithId from '../utils/findParentWithId'
+import findAttributeInParents from '../utils/findAttributeInParents'
+import getRelativeMousePosition from '../utils/getRelativeMousePosition'
+import appendItemData from '../utils/appendItemData'
+import applyTodoStyle from '../utils/applyTodoStyle'
+import applyStyles from '../utils/applyStyles'
+import getContextMenuData from '../utils/getContextMenuData'
+import forceContentFocus from '../utils/forceContentFocus'
+import findSelectionRectIds from '../utils/findSelectionRectIds'
 
 import blockContentComponents from '../blockContentComponents'
 
@@ -62,7 +69,7 @@ const convertibleToTextTypes = ['todo', 'bulleted-list', 'numbered-list', 'quote
 
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
-const editorRefs: Record<string, Record<string, Editor | null>> = {}
+const editorRefs: Record<string, EditorRefRegistry> = {}
 
 // Not a state for performance reasons
 let isSelecting = false
@@ -70,16 +77,19 @@ let lastForceFocusTime = 0
 
 function ReactBlockText({
   value: rawValue,
+  onChange: rawOnChange,
   readOnly,
   paddingTop,
   paddingBottom,
   paddingLeft,
   primaryColor,
-  onChange: rawOnChange,
   onSave,
 }: ReactBlockTextProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
+  /* ---
+    VALUE PARSING
+  --- */
   const value = useMemo<ReactBlockTextDataItem[]>(() => {
     try {
       return JSON.parse(rawValue)
@@ -89,10 +99,16 @@ function ReactBlockText({
     }
   }, [rawValue])
 
+  /* ---
+    ONCHANGE VALUE STRINGIFICATION
+  --- */
   const onChange = useCallback((nextValue: ReactBlockTextDataItem[]) => {
     rawOnChange(JSON.stringify(nextValue))
   }, [rawOnChange])
 
+  /* ---
+    COMPONENT STATE
+  --- */
   const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
@@ -265,7 +281,7 @@ function ReactBlockText({
 
     // Toggle context menu with `/` command
     if (!contextMenuData && lastChar === '/') {
-      setContextMenuData(getContextMenuData(instanceId, id, rootRef.current!))
+      setContextMenuData(getContextMenuData(editorRefs[instanceId], id, rootRef.current!))
 
       return
     }
@@ -794,7 +810,7 @@ function ReactBlockText({
 
     if (!item) return
 
-    forceContentFocus(instanceId, item.id)
+    forceContentFocus(editorRefs[instanceId], item.id)
 
     if (!(atStart || atEnd)) return
 
@@ -1034,11 +1050,45 @@ function ReactBlockText({
     handleBlurAllContent()
   }, [handleBlurAllContent])
 
+  const handleRootMouseMove = useCallback((event: ReactMouseEvent) => {
+    if (!selectionRect) return
+
+    const { x, y } = getRelativeMousePosition(rootRef.current!, event)
+    const nextSelectionRect = {
+      ...selectionRect,
+      top: Math.min(selectionRect.anchorTop, y),
+      left: Math.min(selectionRect.anchorLeft, x),
+      width: Math.abs(x - selectionRect.anchorLeft),
+      height: Math.abs(y - selectionRect.anchorTop),
+    }
+
+    nextSelectionRect.selectedIds = findSelectionRectIds(editorRefs[instanceId], nextSelectionRect)
+
+    setSelectionRect(nextSelectionRect)
+  }, [selectionRect, instanceId])
+
   /* ---
-    MULTI BLOCK RECT SELECTION START
+    RECT SELECTION START
   --- */
-  const handleRectSelectionStart = useCallback((id: string, event: RectMouseEvent) => {
-    console.log('id, event', id, event)
+  const handleRectSelectionStart = useCallback((event: ReactMouseEvent) => {
+    const { x, y } = getRelativeMousePosition(rootRef.current!, event)
+
+    setSelectionRect({
+      anchorTop: y,
+      anchorLeft: x,
+      top: y,
+      left: x,
+      width: 0,
+      height: 0,
+      selectedIds: [],
+    })
+  }, [])
+
+  /* ---
+    RECT SELECTION END
+  --- */
+  const handleRectSelectionEnd = useCallback(() => {
+    setSelectionRect(null)
   }, [])
 
   /* ---
@@ -1152,6 +1202,8 @@ function ReactBlockText({
     If the selection is not empty, set the selected items
   --- */
   const handleMouseUp = useCallback((event: MouseEvent) => {
+    handleRectSelectionEnd()
+
     if (!isSelecting) return
 
     isSelecting = false
@@ -1179,7 +1231,7 @@ function ReactBlockText({
       // Force break a focus bug
       else {
         // Prevent force focus happening on block add button click
-        if (hasParentWithId(event.target as HTMLElement, ADD_ITEM_BUTTON_ID)) return
+        if (findParentWithId(event.target as HTMLElement, ADD_ITEM_BUTTON_ID)) return
 
         setForceFocusIndex(hoveredIndex)
       }
@@ -1187,7 +1239,7 @@ function ReactBlockText({
     catch (error) {
       //
     }
-  }, [handleMultiBlockTextSelectionEnd, hoveredIndex])
+  }, [hoveredIndex, handleRectSelectionEnd, handleMultiBlockTextSelectionEnd])
 
   /* ---
     KEYDOWN
@@ -1271,6 +1323,8 @@ function ReactBlockText({
       type: item.type,
       index,
       readOnly: !!readOnly,
+      selected: true,
+      // selected: selectionRect?.selectedIds.includes(item.id),
       hovered: !dragData && index === hoveredIndex,
       isDraggingTop: dragData?.index === index
         ? index === array.length - 1
@@ -1286,7 +1340,7 @@ function ReactBlockText({
       onMouseDown: handleBlockMouseDown,
       onMouseMove: () => !wasDragging && setHoveredIndex(index),
       onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
-      onRectSelectionMouseDown: event => handleRectSelectionStart(item.id, event),
+      onRectSelectionMouseDown: handleRectSelectionStart,
       onDragStart: () => setDragData({ index, isTop: null }),
       onDrag: handleDrag,
       onDragEnd: () => handleDragEnd(index),
@@ -1400,7 +1454,7 @@ function ReactBlockText({
     lastForceFocusTime = Date.now()
 
     setForceFocusIndex(-1)
-    forceContentFocus(instanceId, value[forceFocusIndex]?.id)
+    forceContentFocus(editorRefs[instanceId], value[forceFocusIndex]?.id)
   }, [value, readOnly, instanceId, forceFocusIndex, editorStates])
 
   /* ---
@@ -1458,7 +1512,7 @@ function ReactBlockText({
       // Start selection only if the mouse is down
       if (event.buttons !== 1) return
       // Prevent selection on drag
-      if (hasParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
+      if (findParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
 
       isSelecting = true
     }
@@ -1514,6 +1568,7 @@ function ReactBlockText({
         <div
           ref={rootRef}
           onBlur={handleRootBlur}
+          onMouseMove={handleRootMouseMove}
           className="relative"
         >
           <div
@@ -1533,9 +1588,14 @@ function ReactBlockText({
             />
           )}
           {!!selectionRect && (
-            <SelectionRect {...selectionRect} />
+            <SelectionRect
+              top={selectionRect.top}
+              left={selectionRect.left}
+              width={selectionRect.width}
+              height={selectionRect.height}
+            />
           )}
-          {isBlockMenuOpen && (
+          {(selectionRect || isBlockMenuOpen) && (
             <div className="absolute inset-0 z-10" />
           )}
           <div
@@ -1548,125 +1608,6 @@ function ReactBlockText({
       </PrimaryColorContext.Provider>
     </DndProvider>
   )
-}
-
-/* ---
-  GET CONTEXT MENU DATA
-  Get the context menu position based on the current selection
---- */
-function getContextMenuData(instanceId: string, id: string, rootElement: HTMLElement): ContextMenuData | null {
-  const range = window.getSelection()?.getRangeAt(0)?.cloneRange()
-
-  if (!range) return null
-
-  range.collapse(true)
-
-  const rects = range.getClientRects()
-  const rootRect = rootElement.getBoundingClientRect()
-
-  if (rects.length) {
-    return {
-      id,
-      query: '',
-      left: rects[0].right - rootRect.left - 6,
-      ...getContextMenuYPosition(rects[0], rootRect, rootElement.offsetTop, false),
-    }
-  }
-
-  const editorRef = editorRefs[instanceId][id]
-
-  if (!editorRef) return null
-
-  const editorRects = editorRef.editorContainer?.getClientRects()
-
-  if (!editorRects?.length) return null
-
-  return {
-    id,
-    query: '',
-    left: editorRects[0].left - rootRect.left - 2,
-    ...getContextMenuYPosition(editorRects[0], rootRect, rootElement.offsetTop, true),
-  }
-}
-
-function getContextMenuYPosition(rect: DOMRectReadOnly, rootRect: DOMRect, rootOffsetTop: number, isEditorRect: boolean) {
-  const top = (isEditorRect ? rect.top + 24 : rect.bottom + 4) - rootRect.top
-
-  if (top + rootOffsetTop + CONTEXT_MENU_HEIGHT < window.innerHeight) return { top }
-
-  const bottom = rootRect.height - rect.top + rootRect.top + 4
-
-  return { bottom }
-}
-
-/* ---
-  APPEND ITEM DATA
---- */
-function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: EditorState) {
-  return {
-    metadata: '',
-    ...item,
-    data: JSON.stringify(convertToRaw(editorState.getCurrentContent())),
-  } as ReactBlockTextDataItem
-}
-
-/* ---
-  FIND ATTRIBUTE IN PARENTS
---- */
-function findAttributeInParents(element: HTMLElement, attribute: string) {
-  if (element.hasAttribute(attribute)) return element.getAttribute(attribute)
-
-  if (!element.parentElement) return null
-
-  return findAttributeInParents(element.parentElement, attribute)
-}
-
-/* ---
-  APPLY TO-DO STYLE
---- */
-function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelection = false) {
-  let currentSelection = editorState.getSelection()
-  const contentState = editorState.getCurrentContent()
-  const firstBlock = contentState.getFirstBlock()
-  const lastBlock = contentState.getLastBlock()
-  const selection = SelectionState.createEmpty(firstBlock.getKey()).merge({
-    anchorKey: firstBlock.getKey(),
-    anchorOffset: 0,
-    focusKey: lastBlock.getKey(),
-    focusOffset: lastBlock.getText().length,
-  })
-  const modify = checked ? Modifier.applyInlineStyle : Modifier.removeInlineStyle
-  const nextContentState = modify(contentState, selection, INLINE_STYLES.TODO_CHECKED)
-  const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
-
-  if (skipSelection) return nextEditorState
-
-  if (currentSelection.getAnchorOffset() !== currentSelection.getFocusOffset()) {
-    currentSelection = currentSelection.merge({
-      anchorOffset: currentSelection.getFocusOffset(),
-    })
-  }
-
-  return EditorState.forceSelection(nextEditorState, currentSelection)
-}
-
-/* ---
-  APPLY ANY STYLE
---- */
-function applyStyles(item: ReactBlockTextDataItem, editorState: EditorState) {
-  if (item.type === 'todo') return applyTodoStyle(editorState, item.metadata === 'true', true)
-
-  return editorState
-}
-
-/* ---
-  FORCE CONTENT FOCUS
---- */
-function forceContentFocus(instanceId: string, id: string) {
-  if (!editorRefs[instanceId]?.[id]) return
-  if (editorRefs[instanceId][id]?.editorContainer?.contains(document.activeElement)) return
-
-  editorRefs[instanceId][id]?.focus()
 }
 
 export default ReactBlockText

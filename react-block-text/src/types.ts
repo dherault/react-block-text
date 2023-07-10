@@ -1,5 +1,5 @@
 import type { HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
-import type { DraftHandleValue, EditorState } from 'draft-js'
+import type { DraftHandleValue, Editor, EditorState } from 'draft-js'
 
 export type ReactBlockTextDataItemType = 'text'
   | 'heading1'
@@ -37,6 +37,7 @@ export type BlockProps = {
   type: ReactBlockTextDataItemType
   index: number
   readOnly: boolean
+  selected: boolean
   hovered: boolean
   paddingLeft?: number | string
   isDraggingTop: boolean | null
@@ -123,6 +124,13 @@ export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
   onCheck: (checked: boolean) => void
 }
 
+export type SelectionRectProps = {
+  top: number
+  left: number
+  width: number
+  height: number
+}
+
 export type ContextMenuData = {
   id: string
   query: string
@@ -141,11 +149,10 @@ export type SelectionData = {
   startId: string
 }
 
-export type SelectionRectData = {
-  top: number
-  left: number
-  width: number
-  height: number
+export type SelectionRectData = SelectionRectProps & {
+  anchorTop: number
+  anchorLeft: number
+  selectedIds: string[]
 }
 
 export type BlockContentListMetadata = {
@@ -157,3 +164,5 @@ export type DragData = {
   index: number
   isTop: boolean | null
 }
+
+export type EditorRefRegistry = Record<string, Editor | null>

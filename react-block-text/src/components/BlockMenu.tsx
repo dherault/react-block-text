@@ -4,7 +4,7 @@ import type { BlockMenuItemProps, BlockMenuProps } from '../types'
 
 import { DRAG_ITEM_BUTTON_ID } from '../constants'
 
-import hasParentWithId from '../utils/hasParentWithId'
+import findParentWithId from '../utils/findParentWithId'
 
 import TrashIcon from '../icons/Trash'
 import DuplicateIcon from '../icons/Duplicate'
@@ -32,7 +32,7 @@ function BlockMenu({ top, left, onDeleteItem, onDuplicateItem, onClose }: BlockM
     OUTSIDE CLICK
   --- */
   const handleOutsideClick = useCallback((event: MouseEvent) => {
-    if (hasParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
+    if (findParentWithId(event.target as HTMLElement, DRAG_ITEM_BUTTON_ID)) return
     if (!rootRef.current || rootRef.current.contains(event.target as Node)) return
 
     onClose()
