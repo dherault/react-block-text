@@ -1060,8 +1060,8 @@ function ReactBlockText({
     const { x, y } = getRelativeMousePosition(rootRef.current!, event)
     const nextSelectionRect = {
       ...selectionRect,
-      top: Math.min(selectionRect.anchorTop, y),
-      left: Math.min(selectionRect.anchorLeft, x),
+      top: Math.max(0, Math.min(selectionRect.anchorTop, y)),
+      left: Math.max(0, Math.min(selectionRect.anchorLeft, x)),
       width: Math.abs(x - selectionRect.anchorLeft),
       height: Math.abs(y - selectionRect.anchorTop),
     }
@@ -1070,6 +1070,15 @@ function ReactBlockText({
 
     setSelectionRect(nextSelectionRect)
   }, [selectionRect, instanceId])
+
+  /* ---
+    ROOT MOUSE LEAVE
+  --- */
+  const handleRootMouseLeave = useCallback(() => {
+    if (!(selectionRect && selectionRect.isSelecting)) return
+
+    window.getSelection()?.removeAllRanges()
+  }, [selectionRect])
 
   /* ---
     RECT SELECTION START
@@ -1591,6 +1600,7 @@ function ReactBlockText({
           ref={rootRef}
           onBlur={handleRootBlur}
           onMouseMove={handleRootMouseMove}
+          onMouseLeave={handleRootMouseLeave}
           className="relative"
         >
           <div
