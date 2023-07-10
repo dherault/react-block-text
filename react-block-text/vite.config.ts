@@ -9,7 +9,6 @@ export default defineConfig({
   plugins: [react(), dts()],
   optimizeDeps: {
     esbuildOptions: {
-      // Enable esbuild polyfill plugins
       plugins: [
         nodeModulesPolyfillPlugin({
           globals: {
