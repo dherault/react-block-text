@@ -1062,8 +1062,8 @@ function ReactBlockText({
       ...selectionRect,
       top: Math.max(0, Math.min(selectionRect.anchorTop, y)),
       left: Math.max(0, Math.min(selectionRect.anchorLeft, x)),
-      width: Math.abs(x - selectionRect.anchorLeft),
-      height: Math.abs(y - selectionRect.anchorTop),
+      width: Math.max(2, Math.abs(x - selectionRect.anchorLeft)),
+      height: Math.max(2, Math.abs(y - selectionRect.anchorTop)),
     }
 
     nextSelectionRect.selectedIds = findSelectionRectIds(editorRefs[instanceId], nextSelectionRect)
@@ -1605,6 +1605,7 @@ function ReactBlockText({
         >
           <div
             onClick={() => handleFocusContent(0)}
+            onMouseDown={handleRectSelectionStart}
             className="cursor-text"
             style={{ height: paddingTop ?? 0 }}
           />
@@ -1632,6 +1633,7 @@ function ReactBlockText({
           )}
           <div
             onClick={() => handleFocusContent(value.length - 1, false, true)}
+            onMouseDown={handleRectSelectionStart}
             className="cursor-text"
             style={{ height: paddingBottom ?? 0 }}
           />

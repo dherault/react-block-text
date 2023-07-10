@@ -206,6 +206,17 @@ function Block({
         style={{ width: paddingLeft }}
       />
       <div className="flex-grow flex items-start relative">
+        <div
+          className="absolute rounded-sm z-0 transition-opacity"
+          style={{
+            top: typeToPaddingTop[type] - 2,
+            bottom: typeToPaddingBottom[type] - 2,
+            left: (contentRef.current?.offsetLeft ?? 0) - 4,
+            right: 2,
+            backgroundColor: primaryColor,
+            opacity: !isEmpty && selected ? 0.15 : 0,
+          }}
+        />
         {!readOnly && (
           <div
             className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
@@ -277,17 +288,6 @@ function Block({
             }}
           />
         </div>
-        <div
-          className="absolute rounded-sm z-0 transition-opacity"
-          style={{
-            top: typeToPaddingTop[type] - 2,
-            bottom: typeToPaddingBottom[type] - 2,
-            left: (contentRef.current?.offsetLeft ?? 0) - 4,
-            right: 2,
-            backgroundColor: primaryColor,
-            opacity: !isEmpty && selected ? 0.15 : 0,
-          }}
-        />
         {!!menuPosition && (
           <BlockMenu
             onDeleteItem={onDeleteItem}
