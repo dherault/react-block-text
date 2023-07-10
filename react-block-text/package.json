@@ -23,7 +23,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "count-locs": "(cd src && ( find ./ -name '*.ts*' -print0 | xargs -0 cat ) | wc -l)"
   },
   "dependencies": {
     "clsx": "^1.2.1",
