@@ -15,6 +15,7 @@
 // - Handle block conversion on block menu
 // - Fix / and backspace bug
 // - Handle text conversion
+// - AI plugin
 
 import '../index.css'
 import {

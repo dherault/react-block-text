@@ -1,5 +1,7 @@
 import type { ReactBlockTextPlugins } from '../../types'
 
+import type { PluginOptions } from './types'
+
 import BlockContent from './components/BlockContent'
 import BulletedListIcon from './components/BulletedListIcon'
 import NumberedListIcon from './components/NumberedListIcon'
@@ -9,19 +11,43 @@ const TITLES = ['Bulleted list', 'Numbered list']
 const LABELS = ['Create a simple bulleted list.', 'Create a list with numbering.']
 const ICONS = [<BulletedListIcon />, <NumberedListIcon />]
 
-function listPlugin(): ReactBlockTextPlugins {
-  return TYPES.map((type, i) => () => ({
-    type,
-    title: TITLES[i],
-    label: LABELS[i],
-    icon: ICONS[i],
-    isConvertibleToText: true,
-    shortcuts: 'task',
-    paddingTop: 3,
-    paddingBottom: 3,
-    iconsPaddingTop: 0,
-    BlockContent,
-  }))
+function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
+  const bulleted = options?.bulleted ?? true
+  const numbered = options?.numbered ?? true
+
+  const plugins: ReactBlockTextPlugins = []
+
+  if (bulleted) {
+    plugins.push(() => ({
+      type: TYPES[0],
+      title: TITLES[0],
+      label: LABELS[0],
+      icon: ICONS[0],
+      isConvertibleToText: true,
+      shortcuts: 'task',
+      paddingTop: 3,
+      paddingBottom: 3,
+      iconsPaddingTop: 0,
+      BlockContent,
+    }))
+  }
+
+  if (numbered) {
+    plugins.push(() => ({
+      type: TYPES[1],
+      title: TITLES[1],
+      label: LABELS[1],
+      icon: ICONS[1],
+      isConvertibleToText: true,
+      shortcuts: 'task',
+      paddingTop: 3,
+      paddingBottom: 3,
+      iconsPaddingTop: 0,
+      BlockContent,
+    }))
+  }
+
+  return plugins
 }
 
 export default listPlugin

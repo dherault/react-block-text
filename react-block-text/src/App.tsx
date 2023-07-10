@@ -66,7 +66,7 @@ function App() {
           primaryColor={primaryColor}
           plugins={[
             ...headerPlugin(),
-            ...todoPlugin(primaryColor),
+            ...todoPlugin({ color: primaryColor }),
             ...listPlugin(),
             ...quotePlugin(),
           ]}

@@ -2,13 +2,17 @@ import type { ReactBlockTextPlugins } from '../../types'
 
 import { DEFAULT_PRIMARY_COLOR } from '../../constants'
 
+import type { PluginOptions } from './types'
+
 import { INLINE_STYLES } from './constants'
 
 import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
 import applyTodoStyle from './utils/applyTodoStyle'
 
-function todoPlugin(color: string | null | undefined): ReactBlockTextPlugins {
+function todoPlugin(options?: PluginOptions): ReactBlockTextPlugins {
+  const color = options?.color || DEFAULT_PRIMARY_COLOR
+
   return [
     ({ onChange }) => ({
       type: 'todo',
