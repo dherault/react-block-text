@@ -1,13 +1,13 @@
 // TODO
-// - Rewrite for plugins
+// x Rewrite for plugins
 // - Handle copy/paste
 // - Handle undo/redo
 // - Handle drag/drop of multiple blocks
 // - Handle mousedown event for start selection rect on root element, not in blocks
 // - Handle scroll selection
-// - Write header plugin
-// - Write quote plugin
-// - Write list plugin
+// x Write header plugin
+// x Write quote plugin
+// x Write list plugin
 // - Write code plugin
 // - Write image plugin
 // - Write table plugin (may need to set editorStates as an array)
