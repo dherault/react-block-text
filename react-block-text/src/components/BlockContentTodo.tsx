@@ -7,11 +7,19 @@ function BlockContentTodo(props: BlockContentProps) {
   const { metadata, onCheck } = props
 
   return (
-    <div className="flex items-start gap-2">
-      <Checkbox
-        checked={metadata === 'true'}
-        onCheck={onCheck}
-        style={{ marginTop: 6 }}
+    <div className="h-full flex">
+      <div className="flex items-start">
+        <Checkbox
+          checked={metadata === 'true'}
+          onCheck={onCheck}
+          className="flex-shrink-0"
+          style={{ marginTop: 6 }}
+        />
+      </div>
+      <div
+        onClick={props.focusContentAtStart}
+        onMouseDown={props.onRectSelectionMouseDown}
+        className="w-2 flex-shrink-0"
       />
       <div className="flex-grow">
         <BlockContentText {...props} />

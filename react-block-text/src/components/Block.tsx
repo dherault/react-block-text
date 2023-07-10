@@ -60,6 +60,7 @@ function Block({
   hovered,
   isDraggingTop,
   paddingLeft,
+  registerSelectionRef,
   onAddItem,
   onDeleteItem,
   onDuplicateItem,
@@ -199,14 +200,17 @@ function Block({
       onMouseEnter={() => !menuPosition && !readOnly && onMouseMove()}
       onMouseLeave={() => !menuPosition && !readOnly && onMouseLeave()}
     >
+      {/* padding left with click handler */}
       <div
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
         style={{ width: paddingLeft }}
       />
-      <div className="flex-grow flex items-start relative">
+      <div className="flex-grow flex relative">
+        {/* Selection background element */}
         <div
+          ref={registerSelectionRef}
           className="absolute rounded-sm z-0 transition-opacity"
           style={{
             top: typeToPaddingTop[type] - 2,
@@ -216,43 +220,59 @@ function Block({
             backgroundColor: primaryColor,
             opacity: !isEmpty && selected ? 0.15 : 0,
           }}
-        />
+        >
+          {/* Scroll into view offset element */}
+          <div className="absolute -bottom-[64px] left-0" />
+        </div>
+        {/* Add and drag icons */}
         {!readOnly && (
-          <div
-            className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
-            style={{
-              opacity: hovered ? 1 : 0,
-              marginTop: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type],
-            }}
-          >
+          <div className="flex-shrink-0 flex flex-col">
             <div
-              id={ADD_ITEM_BUTTON_ID}
-              className={_('p-1 hover:bg-gray-100 rounded cursor-pointer', {
-                'opacity-0': !!menuPosition,
-              })}
-              onClick={onAddItem}
+              onClick={focusContentAtStart}
+              onMouseDown={onRectSelectionMouseDown}
+              className="flex-shrink-0 cursor-text"
+              style={{ height: typeToPaddingTop[type] + typeToIconsExtraPaddingTop[type] }}
+            />
+            <div
+              className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
+              style={{ opacity: hovered ? 1 : 0 }}
             >
-              <AddIcon width={18} />
+              <div
+                id={ADD_ITEM_BUTTON_ID}
+                className={_('p-1 hover:bg-gray-100 rounded cursor-pointer', {
+                  'opacity-0': !!menuPosition,
+                })}
+                onClick={onAddItem}
+              >
+                <AddIcon width={18} />
+              </div>
+              <div
+                ref={dragRef}
+                id={DRAG_ITEM_BUTTON_ID}
+                onClick={handleDragClick}
+                onMouseDown={blurContent}
+                className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+              >
+                <DragIcon width={18} />
+              </div>
             </div>
             <div
-              ref={dragRef}
-              id={DRAG_ITEM_BUTTON_ID}
-              onClick={handleDragClick}
-              onMouseDown={blurContent}
-              className="py-1 hover:bg-gray-100 rounded cursor-pointer"
-            >
-              <DragIcon width={18} />
-            </div>
+              onClick={focusContentAtStart}
+              onMouseDown={onRectSelectionMouseDown}
+              className="flex-grow cursor-text"
+            />
           </div>
         )}
+        {/* Separator/margin with click handler */}
         <div
           onClick={focusContentAtStart}
           onMouseDown={onRectSelectionMouseDown}
-          className="w-1 h-full cursor-text"
+          className="w-1.5 h-full cursor-text z-10"
         />
+        {/* Content */}
         <div
           ref={contentRef}
-          className="flex-grow cursor-text"
+          className="flex-grow cursor-text z-10"
         >
           <div
             onClick={focusContent}
@@ -261,7 +281,7 @@ function Block({
             style={{
               height: DRAG_INDICATOR_SIZE,
               backgroundColor: primaryColor,
-              opacity: isDraggingTop ? 0.5 : 0,
+              opacity: isDraggingTop ? 0.4 : 0,
             }}
           />
           <div
@@ -284,10 +304,11 @@ function Block({
             style={{
               height: DRAG_INDICATOR_SIZE,
               backgroundColor: primaryColor,
-              opacity: isDraggingBottom ? 0.5 : 0,
+              opacity: isDraggingBottom ? 0.4 : 0,
             }}
           />
         </div>
+        {/* Block menu */}
         {!!menuPosition && (
           <BlockMenu
             onDeleteItem={onDeleteItem}

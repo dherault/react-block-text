@@ -1,5 +1,12 @@
 import '../index.css'
-import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { nanoid } from 'nanoid'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -70,6 +77,7 @@ const convertibleToTextTypes = ['todo', 'bulleted-list', 'numbered-list', 'quote
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
 const editorRefs: Record<string, EditorRefRegistry> = {}
+const selectionRefs: Record<string, Record<string, HTMLElement>> = {}
 
 // Not a state for performance reasons
 let isSelecting = false
@@ -114,6 +122,7 @@ function ReactBlockText({
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
+  const [scrollIntoViewId, setScrollIntoViewId] = useState<string | null>(null)
   const [dragData, setDragData] = useState<DragData | null>(null)
   const [wasDragging, setWasDragging] = useState(false)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
@@ -143,6 +152,19 @@ function ReactBlockText({
     }
 
     editorRefs[instanceId][id] = ref
+  }, [instanceId])
+
+  /* ---
+    REGISTER SELECTION REF
+    We associate each selection outline with an id so that we can access it later
+  --- */
+  const registerSelectionRef = useCallback((id: string, ref: HTMLElement) => {
+    if (!ref) return
+    if (!selectionRefs[instanceId]) {
+      selectionRefs[instanceId] = {}
+    }
+
+    selectionRefs[instanceId][id] = ref
   }, [instanceId])
 
   /* ---
@@ -177,6 +199,7 @@ function ReactBlockText({
     setHoveredIndex(index + 1)
     setFocusedIndex(index + 1)
     setForceFocusIndex(index + 1)
+    setScrollIntoViewId(item.id)
   }, [value, onChange, createTextItem])
 
   /* ---
@@ -515,6 +538,7 @@ function ReactBlockText({
     onChange(nextValue)
     setFocusedIndex(index + 1)
     setHoveredIndex(-1)
+    setScrollIntoViewId(secondItem.id)
 
     return 'handled'
   }, [value, editorStates, contextMenuData, onChange])
@@ -806,6 +830,7 @@ function ReactBlockText({
     FOCUS CONTENT
   --- */
   const handleFocusContent = useCallback((index: number, atStart = false, atEnd = false) => {
+    console.log('handleFocusContent')
     const item = value[index]
 
     if (!item) return
@@ -1066,9 +1091,11 @@ function ReactBlockText({
       height: Math.max(2, Math.abs(y - selectionRect.anchorTop)),
     }
 
-    nextSelectionRect.selectedIds = findSelectionRectIds(editorRefs[instanceId], nextSelectionRect)
+    nextSelectionRect.selectedIds = findSelectionRectIds(selectionRefs[instanceId], nextSelectionRect)
 
     setSelectionRect(nextSelectionRect)
+
+    window.getSelection()?.removeAllRanges()
   }, [selectionRect, instanceId])
 
   /* ---
@@ -1079,6 +1106,24 @@ function ReactBlockText({
 
     window.getSelection()?.removeAllRanges()
   }, [selectionRect])
+
+  /* ---
+    SINGLE BLOCK SELECTION
+  --- */
+  const handleSingleBlockSelection = useCallback((id: string) => {
+    setSelectionRect({
+      isSelecting: false,
+      anchorTop: 0,
+      anchorLeft: 0,
+      top: 0,
+      left: 0,
+      width: 0,
+      height: 0,
+      selectedIds: [id],
+    })
+
+    window.getSelection()?.removeAllRanges()
+  }, [])
 
   /* ---
     RECT SELECTION START
@@ -1102,7 +1147,6 @@ function ReactBlockText({
     RECT SELECTION END
   --- */
   const handleRectSelectionEnd = useCallback(() => {
-    console.log('selectionRect', selectionRect)
     if (!selectionRect) return
 
     if (selectionRect.selectedIds.length) {
@@ -1329,7 +1373,16 @@ function ReactBlockText({
   const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
     if (!editorStates[item.id]) return null
 
+    const commonProps = {
+      focusContent: () => handleFocusContent(index),
+      focusContentAtStart: () => handleFocusContent(index, true),
+      focusNextContent: () => handleFocusContent(index + 1),
+      blurContent: () => handleBlurContent(index),
+      onRectSelectionMouseDown: handleRectSelectionStart,
+    }
+
     const blockContentProps: BlockContentProps = {
+      ...commonProps,
       type: item.type,
       index,
       editorState: editorStates[item.id],
@@ -1347,9 +1400,11 @@ function ReactBlockText({
       onPaste: () => handlePaste(index),
       onCheck: checked => handleCheck(index, checked),
       onKeyCommand: command => handleKeyCommand(index, command),
+      onBlockSelection: () => handleSingleBlockSelection(item.id),
     }
 
     const blockProps: Omit<BlockProps, 'children'> = {
+      ...commonProps,
       id: item.id,
       type: item.type,
       index,
@@ -1364,22 +1419,18 @@ function ReactBlockText({
           ? true
           : null,
       paddingLeft,
+      registerSelectionRef: ref => registerSelectionRef(item.id, ref),
       onAddItem: () => handleAddItem(index),
       onDeleteItem: () => handleDeleteItem(index),
       onDuplicateItem: () => handleDuplicateItem(index),
       onMouseDown: handleBlockMouseDown,
       onMouseMove: () => !wasDragging && setHoveredIndex(index),
       onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
-      onRectSelectionMouseDown: handleRectSelectionStart,
       onDragStart: () => setDragData({ index, isTop: null }),
       onDrag: handleDrag,
       onDragEnd: () => handleDragEnd(index),
       onBlockMenuOpen: () => setIsBlockMenuOpen(true),
       onBlockMenuClose: handleBlockMenuClose,
-      focusContent: () => handleFocusContent(index),
-      focusContentAtStart: () => handleFocusContent(index, true),
-      focusNextContent: () => handleFocusContent(index + 1),
-      blurContent: () => handleBlurContent(index),
       blockContentProps, // Pass block content props to block for drag preview display
     }
 
@@ -1402,6 +1453,8 @@ function ReactBlockText({
     dragData,
     wasDragging,
     selectionRect,
+    registerRef,
+    registerSelectionRef,
     handleAddItem,
     handleDeleteItem,
     handleDuplicateItem,
@@ -1420,8 +1473,8 @@ function ReactBlockText({
     handleFocusContent,
     handleBlurContent,
     handleRectSelectionStart,
+    handleSingleBlockSelection,
     handleKeyCommand,
-    registerRef,
   ])
 
   /* ---
@@ -1504,6 +1557,26 @@ function ReactBlockText({
 
     editorRefs[instanceId][item.id]?.blur()
   }, [value, readOnly, instanceId, forceBlurIndex])
+
+  /* ---
+    SCROLL INTO VIEW
+    Handle scrolling a specific block into view
+  --- */
+  useEffect(() => {
+    if (!scrollIntoViewId) return
+
+    setScrollIntoViewId(null)
+
+    const element = selectionRefs[instanceId]?.[scrollIntoViewId]
+
+    if (!element) return
+
+    element.children[0].scrollIntoView({
+      behavior: 'instant',
+      inline: 'nearest',
+      block: 'nearest',
+    })
+  }, [instanceId, scrollIntoViewId])
 
   /* ---
     FORCE REFRESH
@@ -1628,7 +1701,10 @@ function ReactBlockText({
               height={selectionRect.height}
             />
           )}
-          {!!(selectionRect?.isSelecting || isBlockMenuOpen) && (
+          {!!(
+            (selectionRect?.isSelecting && selectionRect.width > 0 && selectionRect.height > 0)
+            || isBlockMenuOpen
+          ) && (
             <div className="absolute inset-0 z-10" />
           )}
           <div

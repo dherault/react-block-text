@@ -41,6 +41,7 @@ export type BlockProps = {
   hovered: boolean
   paddingLeft?: number | string
   isDraggingTop: boolean | null
+  registerSelectionRef: (ref: any) => void
   onAddItem: () => void
   onDeleteItem: () => void
   onDuplicateItem: () => void
@@ -78,6 +79,12 @@ export type BlockContentProps = {
   onBlur: () => void
   onPaste: () => DraftHandleValue
   onCheck: (checked: boolean) => void
+  onBlockSelection: () => void
+  onRectSelectionMouseDown: (event: ReactMouseEvent) => void
+  focusContent: () => void
+  focusContentAtStart: () => void
+  focusNextContent: () => void
+  blurContent: () => void
 }
 
 export type ContextMenuProps = {

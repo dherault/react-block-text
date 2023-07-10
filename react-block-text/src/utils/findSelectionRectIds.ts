@@ -1,24 +1,23 @@
-import type { EditorRefRegistry, SelectionRectData } from '../types'
-
-import findParentWithId from './findParentWithId'
+import type { SelectionRectData } from '../types'
 
 // Lookup the ids under the given selectionRect
-function findSelectionRectIds(editorRefs: EditorRefRegistry, selectionRect: SelectionRectData): string[] {
-  if (selectionRect.width === 0 || selectionRect.height === 0) return []
+function findSelectionRectIds(selectionRefs: Record<string, HTMLElement>, selectionRect: SelectionRectData): string[] {
+  if (!selectionRect.width || !selectionRect.height) return []
 
   const ids: string[] = []
 
-  Object.entries(editorRefs).forEach(([id, editorRef]) => {
-    if (!editorRef) return
+  Object.entries(selectionRefs).forEach(([id, element]) => {
+    if (!element) return
 
-    const blockElement = findParentWithId(editorRef.editorContainer!, id)
+    const contentElement = element.parentElement
 
-    if (!blockElement) return
+    if (!contentElement) return
+
     if (
-      selectionRect.left + selectionRect.width < blockElement.offsetLeft
-      || selectionRect.left > blockElement.offsetLeft + blockElement.offsetWidth
-      || selectionRect.top + selectionRect.height < blockElement.offsetTop
-      || selectionRect.top > blockElement.offsetTop + blockElement.offsetHeight
+      selectionRect.left + selectionRect.width < element.offsetLeft + contentElement.offsetLeft
+      || selectionRect.left > element.offsetLeft + element.offsetWidth + contentElement.offsetLeft
+      || selectionRect.top + selectionRect.height < element.offsetTop + contentElement.offsetTop
+      || selectionRect.top > element.offsetTop + element.offsetHeight + contentElement.offsetTop
     ) {
       return
     }
