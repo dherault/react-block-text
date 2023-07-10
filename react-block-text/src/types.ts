@@ -1,4 +1,4 @@
-import type { ComponentType, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
+import type { CSSProperties, ComponentType, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 import type { DraftHandleValue, Editor, EditorState } from 'draft-js'
 
 export type ReactBlockTextDataItemType = 'text' | string
@@ -13,7 +13,13 @@ export type ReactBlockTextDataItem = {
 
 export type ReactBlockTextData = ReactBlockTextDataItem[]
 
-export type ReactBlockTextPlugins = Array<{
+export type ReactBlockTextOnChange = (item: ReactBlockTextDataItem, editorState: EditorState) => void
+
+export type ReactBlockTextPluginOptions = {
+  onChange: ReactBlockTextOnChange
+}
+
+export type ReactBlockTextPluginData = {
   type: string
   title: string
   label: string
@@ -23,8 +29,12 @@ export type ReactBlockTextPlugins = Array<{
   paddingTop: number
   paddingBottom: number
   iconsPaddingTop: number
+  styleMap?: Record<string, CSSProperties>
+  applyStyles?: (item: ReactBlockTextDataItem, editorState: EditorState) => EditorState
   BlockContent: ComponentType<BlockContentProps>
-}>
+}
+
+export type ReactBlockTextPlugins = Array<(options: ReactBlockTextPluginOptions) => ReactBlockTextPluginData>
 
 export type ReactBlockTextProps = {
   value: string
@@ -40,7 +50,7 @@ export type ReactBlockTextProps = {
 
 export type BlockProps = {
   children: ReactNode
-  plugins: ReactBlockTextPlugins
+  plugins: ReactBlockTextPluginData[]
   id: string
   type: ReactBlockTextDataItemType
   index: number
@@ -71,8 +81,8 @@ export type BlockProps = {
 
 export type BlockContentProps = {
   BlockContentText: ComponentType<BlockContentProps>
-  plugins: ReactBlockTextPlugins
-  type: ReactBlockTextDataItemType
+  plugins: ReactBlockTextPluginData[]
+  item: ReactBlockTextDataItem
   index: number
   editorState: EditorState
   metadata: string
@@ -90,17 +100,17 @@ export type BlockContentProps = {
   onFocus: () => void
   onBlur: () => void
   onPaste: () => DraftHandleValue
-  onCheck: (checked: boolean) => void
   onBlockSelection: () => void
   onRectSelectionMouseDown: (event: ReactMouseEvent) => void
   focusContent: () => void
   focusContentAtStart: () => void
   focusNextContent: () => void
   blurContent: () => void
+  forceBlurContent: () => void
 }
 
 export type ContextMenuProps = {
-  plugins: ReactBlockTextPlugins
+  plugins: ReactBlockTextPluginData[]
   query: string
   top?: number
   bottom?: number
@@ -139,13 +149,8 @@ export type BlockMenuItemProps = {
   onClick: () => void
 }
 
-export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
-  checked: boolean
-  onCheck: (checked: boolean) => void
-}
-
 export type DragLayerProps = {
-  plugins: ReactBlockTextPlugins
+  plugins: ReactBlockTextPluginData[]
 }
 
 export type SelectionRectProps = {
@@ -178,11 +183,6 @@ export type SelectionRectData = SelectionRectProps & {
   anchorTop: number
   anchorLeft: number
   selectedIds: string[]
-}
-
-export type BlockContentListMetadata = {
-  label: string
-  depth: number
 }
 
 export type DragData = {

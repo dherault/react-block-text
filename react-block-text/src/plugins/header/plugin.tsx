@@ -1,7 +1,7 @@
 import type { ReactBlockTextPlugins } from '../../types'
 
-import Icon from './components/Icon'
 import BlockContent from './components/BlockContent'
+import Icon from './components/Icon'
 
 const TYPES = ['heading1', 'heading2', 'heading3']
 const TITLES = ['Heading 1', 'Heading 2', 'Heading 3']
@@ -11,7 +11,7 @@ const PADDING_BOTTOMS = [9, 9, 9]
 const ICONS_PADDING_TOPS = [6, 4, 1]
 
 function headerPlugin(): ReactBlockTextPlugins {
-  return TYPES.map((type, i) => ({
+  return TYPES.map((type, i) => () => ({
     type,
     title: TITLES[i],
     label: LABELS[i],

@@ -1,19 +1,12 @@
-import { KeyboardEvent } from 'react'
+import { KeyboardEvent, useMemo } from 'react'
 import { Editor, KeyBindingUtil, getDefaultKeyBinding } from 'draft-js'
 
 import type { BlockContentProps } from '../types'
 
-import { COMMANDS, INLINE_STYLES } from '../constants'
-
-const styleMap = {
-  [INLINE_STYLES.TODO_CHECKED]: {
-    color: '#9ca3af',
-    textDecoration: 'line-through',
-    textDecorationThickness: 'from-font',
-  },
-}
+import { COMMANDS } from '../constants'
 
 function BlockContentText({
+  plugins,
   readOnly,
   focused,
   isSelecting,
@@ -30,6 +23,10 @@ function BlockContentText({
   onBlur,
   onPaste,
 }: BlockContentProps) {
+  const styleMap = useMemo(() => (
+    plugins.reduce((acc, plugin) => ({ ...acc, ...(plugin.styleMap ?? {}) }), {})
+  ), [plugins])
+
   return (
     <Editor
       spellCheck

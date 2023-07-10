@@ -3,6 +3,9 @@ import { useCallback, useState } from 'react'
 import ReactBlockText from './components/ReactBlockText'
 
 import headerPlugin from './plugins/header'
+import todoPlugin from './plugins/todo'
+import listPlugin from './plugins/list'
+import quotePlugin from './plugins/quote'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 const PADDINGS = [
@@ -63,6 +66,9 @@ function App() {
           primaryColor={primaryColor}
           plugins={[
             ...headerPlugin(),
+            ...todoPlugin(primaryColor),
+            ...listPlugin(),
+            ...quotePlugin(),
           ]}
         />
       </div>

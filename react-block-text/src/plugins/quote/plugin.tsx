@@ -3,21 +3,21 @@ import type { ReactBlockTextPlugins } from '../../types'
 import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
 
-function textPlugin(): ReactBlockTextPlugins {
+function quotePlugin(): ReactBlockTextPlugins {
   return [
     () => ({
-      type: 'text',
-      title: 'Text',
-      label: 'Just start writing with plain text.',
-      shortcuts: 'txt',
+      type: 'quote',
+      title: 'Quote',
+      label: 'Capture a quote.',
+      shortcuts: 'citation',
       icon: <Icon />,
       isConvertibleToText: true,
-      paddingTop: 3,
-      paddingBottom: 3,
+      paddingTop: 5,
+      paddingBottom: 5,
       iconsPaddingTop: 0,
       BlockContent,
     }),
   ]
 }
 
-export default textPlugin
+export default quotePlugin

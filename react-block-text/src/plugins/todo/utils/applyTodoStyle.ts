@@ -1,8 +1,10 @@
 import { EditorState, Modifier, SelectionState } from 'draft-js'
 
+import { ReactBlockTextDataItem } from '../../../types'
+
 import { INLINE_STYLES } from '../constants'
 
-function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelection = false) {
+function applyTodoStyle(item: ReactBlockTextDataItem, editorState: EditorState, skipSelection = true) {
   let currentSelection = editorState.getSelection()
   const contentState = editorState.getCurrentContent()
   const firstBlock = contentState.getFirstBlock()
@@ -13,11 +15,11 @@ function applyTodoStyle(editorState: EditorState, checked: boolean, skipSelectio
     focusKey: lastBlock.getKey(),
     focusOffset: lastBlock.getText().length,
   })
-  const modify = checked ? Modifier.applyInlineStyle : Modifier.removeInlineStyle
+  const modify = item.metadata === 'true' ? Modifier.applyInlineStyle : Modifier.removeInlineStyle
   const nextContentState = modify(contentState, selection, INLINE_STYLES.TODO_CHECKED)
   const nextEditorState = EditorState.push(editorState, nextContentState, 'change-inline-style')
 
-  if (skipSelection) return nextEditorState
+  if (skipSelection) return EditorState.forceSelection(nextEditorState, currentSelection)
 
   if (currentSelection.getAnchorOffset() !== currentSelection.getFocusOffset()) {
     currentSelection = currentSelection.merge({

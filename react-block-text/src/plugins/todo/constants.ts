@@ -1,0 +1,3 @@
+export const INLINE_STYLES = {
+  TODO_CHECKED: 'TODO_CHECKED',
+}

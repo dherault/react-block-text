@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 
-import type { BlockContentListMetadata, BlockContentProps } from '../types'
-
-import BlockContentText from './BlockContentText'
+import type { BlockContentProps } from '../../../types'
+import type { BlockContentListMetadata } from '../types'
 
 const depthToBullet = [
   '•',
@@ -11,9 +10,11 @@ const depthToBullet = [
 ]
 
 function BlockContentList(props: BlockContentProps) {
+  const { metadata, onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
+
   const { label, depth } = useMemo<BlockContentListMetadata>(() => {
     try {
-      const { label, depth } = JSON.parse(props.metadata)
+      const { label, depth } = JSON.parse(metadata)
 
       return { label, depth }
     }
@@ -25,13 +26,13 @@ function BlockContentList(props: BlockContentProps) {
       label: '',
       depth: 0,
     }
-  }, [props.metadata])
+  }, [metadata])
 
   return (
     <div className="flex">
       <div
-        onClick={props.onBlockSelection}
-        onMouseDown={props.onRectSelectionMouseDown}
+        onClick={onBlockSelection}
+        onMouseDown={onRectSelectionMouseDown}
         className="flex-shrink-0"
       >
         <div className="-mt-[2px] ml-2 scale-[200%]  select-none">
@@ -39,8 +40,8 @@ function BlockContentList(props: BlockContentProps) {
         </div>
       </div>
       <div
-        onClick={props.onBlockSelection}
-        onMouseDown={props.onRectSelectionMouseDown}
+        onClick={onBlockSelection}
+        onMouseDown={onRectSelectionMouseDown}
         className="w-3 flex-shrink-0"
       />
       <div className="flex-grow">

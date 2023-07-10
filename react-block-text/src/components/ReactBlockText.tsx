@@ -44,18 +44,18 @@ import ignoreWarnings from 'ignore-warnings'
 
 import textPlugin from '../plugins/text/plugin'
 
-import {
-  type BlockContentProps,
-  type BlockProps,
-  type ContextMenuData,
-  type DragData,
-  type EditorRefRegistry,
-  type ReactBlockTextDataItem,
-  type ReactBlockTextDataItemType,
-  ReactBlockTextPlugins,
-  type ReactBlockTextProps,
-  type SelectionData,
-  type SelectionRectData,
+import type {
+  BlockContentProps,
+  BlockProps,
+  ContextMenuData,
+  DragData,
+  EditorRefRegistry,
+  ReactBlockTextDataItem,
+  ReactBlockTextDataItemType,
+  ReactBlockTextPluginOptions,
+  ReactBlockTextProps,
+  SelectionData,
+  SelectionRectData,
 } from '../types'
 
 import {
@@ -74,8 +74,6 @@ import findParentWithId from '../utils/findParentWithId'
 import findAttributeInParents from '../utils/findAttributeInParents'
 import getRelativeMousePosition from '../utils/getRelativeMousePosition'
 import appendItemData from '../utils/appendItemData'
-import applyTodoStyle from '../utils/applyTodoStyle'
-import applyStyles from '../utils/applyStyles'
 import getContextMenuData from '../utils/getContextMenuData'
 import forceContentFocus from '../utils/forceContentFocus'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
@@ -114,7 +112,7 @@ function ReactBlockText({
   primaryColor,
   onSave,
 }: ReactBlockTextProps) {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
 
   /* ---
     VALUE PARSING
@@ -136,17 +134,44 @@ function ReactBlockText({
   }, [rawOnChange])
 
   /* ---
-    PLUGINS MERGING
+    HANDLE PLUGIN CHANGE
   --- */
-  const plugins = useMemo<ReactBlockTextPlugins>(() => [
-    ...textPlugin(),
-    ...rawPlugins,
-  ], [rawPlugins])
+  const handlePluginChange = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
+    if (readOnly) return
+    if (!(item && editorState)) return
+
+    const index = value.findIndex(x => x.id === item?.id)
+
+    if (index === -1) return
+
+    setEditorStates(x => ({ ...x, [item.id]: editorState }))
+
+    const nextValue = [...value]
+
+    nextValue[index] = item
+
+    onChange(nextValue)
+  }, [readOnly, value, onChange])
+
+  const pluginOptions = useMemo<ReactBlockTextPluginOptions>(() => ({
+    onChange: handlePluginChange,
+  }), [handlePluginChange])
 
   /* ---
-    COMPONENT STATE
+    PLUGINS MERGING
   --- */
-  const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
+  const plugins = useMemo(() => (
+    [
+      ...textPlugin(),
+      ...rawPlugins,
+    ]
+    .map(x => x(pluginOptions))
+  ), [rawPlugins, pluginOptions])
+
+  /* ---
+    STATE
+  --- */
+  const rootRef = useRef<HTMLDivElement>(null)
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
@@ -195,6 +220,15 @@ function ReactBlockText({
 
     selectionRefs[instanceId][id] = ref
   }, [instanceId])
+
+  /* ---
+    APPLY STYLES
+  --- */
+  const applyStyles = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
+    const plugin = plugins.find(x => x.type === item.type)
+
+    return plugin?.applyStyles?.(item, editorState) ?? editorState
+  }, [plugins])
 
   /* ---
     CREATE TEXT ITEM
@@ -306,11 +340,7 @@ function ReactBlockText({
       return
     }
 
-    let nextEditorState = editorState
-
-    if (item.type === 'todo') {
-      nextEditorState = applyTodoStyle(nextEditorState, item.metadata === 'true')
-    }
+    const nextEditorState = applyStyles(item, editorState)
 
     setEditorStates(x => ({ ...x, [id]: nextEditorState }))
 
@@ -349,35 +379,7 @@ function ReactBlockText({
 
       setContextMenuData(x => x ? ({ ...x, query }) : null) // Due to side effects the ternary is mandatory here
     }
-  }, [value, instanceId, contextMenuData, onChange])
-
-  /* ---
-    TO-DO CHECK
-  --- */
-  const handleCheck = useCallback((index: number, checked: boolean) => {
-    if (readOnly) return
-
-    const item = value[index]
-
-    if (!item) return
-
-    const editorState = editorStates[item.id]
-
-    if (!editorState) return
-
-    const nextEditorState = applyTodoStyle(editorState, checked)
-
-    setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
-
-    const nextValue = [...value]
-
-    nextValue[index] = { ...nextValue[index], metadata: checked ? 'true' : 'false' }
-
-    onChange(nextValue)
-
-    // Blur the to-do on next render
-    setForceBlurIndex(index)
-  }, [value, readOnly, editorStates, onChange])
+  }, [value, instanceId, contextMenuData, onChange, applyStyles])
 
   /* ---
     UP ARROW
@@ -553,9 +555,7 @@ function ReactBlockText({
       secondEditorState
     )
 
-    if (secondItem.type === 'todo') {
-      secondEditorState = applyTodoStyle(secondEditorState, secondItem.metadata === 'true')
-    }
+    secondEditorState = applyStyles(item, editorState)
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
 
@@ -570,7 +570,7 @@ function ReactBlockText({
     setScrollIntoViewId(secondItem.id)
 
     return 'handled'
-  }, [value, editorStates, contextMenuData, onChange])
+  }, [value, editorStates, contextMenuData, onChange, applyStyles])
 
   /* ---
     BACKSPACE
@@ -636,10 +636,7 @@ function ReactBlockText({
     ])
     previousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
     previousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
-
-    if (previousItem.type === 'todo') {
-      previousEditorState = applyTodoStyle(previousEditorState, previousItem.metadata === 'true')
-    }
+    previousEditorState = applyStyles(item, editorState)
 
     setEditorStates(x => {
       const nextEditorStates = { ...x }
@@ -665,7 +662,7 @@ function ReactBlockText({
     setHoveredIndex(-1)
 
     return 'handled'
-  }, [value, editorStates, onChange])
+  }, [value, editorStates, onChange, applyStyles])
 
   /* ---
     META BACKSPACE
@@ -901,6 +898,10 @@ function ReactBlockText({
 
     editorRefs[instanceId][item.id]?.blur()
   }, [value, instanceId])
+
+  const handleForceBlurContent = useCallback((index: number) => {
+    setForceBlurIndex(index)
+  }, [])
 
   /* ---
     BLUR ALL CONTENT
@@ -1417,7 +1418,7 @@ function ReactBlockText({
     const blockContentProps: BlockContentProps = {
       ...commonProps,
       BlockContentText,
-      type: item.type,
+      item,
       index,
       editorState: editorStates[item.id],
       metadata: item.metadata,
@@ -1434,9 +1435,9 @@ function ReactBlockText({
       onFocus: () => handleFocus(index),
       onBlur: handleBlur,
       onPaste: () => handlePaste(index),
-      onCheck: checked => handleCheck(index, checked),
       onKeyCommand: command => handleKeyCommand(index, command),
       onBlockSelection: () => handleSingleBlockSelection(item.id),
+      forceBlurContent: () => handleForceBlurContent(index),
     }
 
     const blockProps: Omit<BlockProps, 'children'> = {
@@ -1502,13 +1503,13 @@ function ReactBlockText({
     handleFocus,
     handleBlur,
     handlePaste,
-    handleCheck,
     handleDrag,
     handleDragEnd,
     handleBlockMenuClose,
     handleBlockMouseDown,
     handleFocusContent,
     handleBlurContent,
+    handleForceBlurContent,
     handleRectSelectionStart,
     handleSingleBlockSelection,
     handleKeyCommand,
