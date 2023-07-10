@@ -38,7 +38,10 @@ function BlockContent(props: BlockContentProps) {
         className="w-2 flex-shrink-0"
       />
       <div className="flex-grow">
-        <BlockContentText {...props} />
+        <BlockContentText
+          {...props}
+          fallbackPlaceholder="To-do"
+        />
       </div>
     </div>
   )

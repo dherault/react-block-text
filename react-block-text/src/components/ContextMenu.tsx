@@ -132,7 +132,6 @@ function ContextMenu({ plugins, query, top, bottom, left, onSelect, onClose }: C
 
 /* ---
   CONTEXT MENU ITEM
-  And icons
 --- */
 function ContextMenuItem({
   title,
@@ -180,6 +179,9 @@ function ContextMenuItem({
   )
 }
 
+/* ---
+  CONTEXT MENU ICON
+--- */
 function ContextMenuIcon({ children }: ContextMenuIconProps) {
   return (
     <div className="px-2 py-1 bg-white border rounded w-12 h-12 border-gray-300">
