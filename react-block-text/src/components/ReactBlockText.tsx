@@ -8,6 +8,7 @@
 // x Write header plugin
 // x Write quote plugin
 // x Write list plugin
+// - Complete list plugin
 // - Write code plugin
 // - Write image plugin
 // - Write table plugin (may need to set editorStates as an array)
@@ -17,8 +18,9 @@
 // - Fix / and backspace bug
 // - Handle text conversion
 // - AI plugin (meta plugin)
-// - Separate package from app
-// - Publish to npm
+// x Separate package from app
+// x Publish to npm
+// - Fix multiline enter bug
 
 import '../index.css'
 import {

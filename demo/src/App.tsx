@@ -1,14 +1,9 @@
 import { useCallback, useState } from 'react'
 
 import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
-import 'react-block-text/dist/style.css'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
-const PADDINGS = [
-  8,
-  32,
-  128,
-]
+const PADDINGS = [8, 32, 128]
 
 function App() {
   const savedData = localStorage.getItem(LOCAL_STORAGE_KEY) ?? ''
@@ -58,6 +53,8 @@ function App() {
           value={data}
           onChange={setData}
           onSave={handleSave}
+          paddingTop={32}
+          paddingBottom={32}
           paddingLeft={padding}
           primaryColor={primaryColor}
           plugins={[
