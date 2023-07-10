@@ -34,7 +34,9 @@ export type ReactBlockTextPluginData = {
   BlockContent: ComponentType<BlockContentProps>
 }
 
-export type ReactBlockTextPlugins = Array<(options: ReactBlockTextPluginOptions) => ReactBlockTextPluginData>
+export type ReactBlockTextPlugin = (options: ReactBlockTextPluginOptions) => ReactBlockTextPluginData
+
+export type ReactBlockTextPlugins = ReactBlockTextPlugin[]
 
 export type ReactBlockTextProps = {
   value: string
@@ -44,7 +46,7 @@ export type ReactBlockTextProps = {
   paddingBottom?: number | string
   paddingLeft?: number | string
   primaryColor?: string | null
-  onChange: (value: string) => void
+  onChange?: (value: string) => void
   onSave?: () => void
 }
 

@@ -1,3 +1,5 @@
+import './index.css'
+
 import ReactBlockText from './components/ReactBlockText'
 
 import headerPlugin from './plugins/header'
@@ -13,6 +15,7 @@ export type {
   ReactBlockTextPluginData,
   ReactBlockTextPluginOptions,
   ReactBlockTextPlugins,
+  ReactBlockTextPlugin,
   ReactBlockTextProps,
 } from './types'
 

@@ -22,7 +22,6 @@
 // x Publish to npm
 // - Fix multiline enter bug
 
-import '../index.css'
 import {
   type MouseEvent as ReactMouseEvent,
   useCallback,
@@ -136,7 +135,7 @@ function ReactBlockText({
     ONCHANGE VALUE STRINGIFICATION
   --- */
   const onChange = useCallback((nextValue: ReactBlockTextDataItem[]) => {
-    rawOnChange(JSON.stringify(nextValue))
+    rawOnChange?.(JSON.stringify(nextValue))
   }, [rawOnChange])
 
   /* ---
@@ -1402,126 +1401,6 @@ function ReactBlockText({
   }, [onSave, handleBackspace, handleDelete])
 
   /* ---
-    RENDER EDITOR
-    Render the editor for each item of value
-  --- */
-  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
-    if (!editorStates[item.id]) return null
-
-    const plugin = plugins.find(plugin => plugin.type === item.type)
-
-    if (!plugin) return null
-
-    const commonProps = {
-      plugins,
-      focusContent: () => handleFocusContent(index),
-      focusContentAtStart: () => handleFocusContent(index, true),
-      focusNextContent: () => handleFocusContent(index + 1),
-      blurContent: () => handleBlurContent(index),
-      onRectSelectionMouseDown: handleRectSelectionStart,
-    }
-
-    const blockContentProps: BlockContentProps = {
-      ...commonProps,
-      BlockContentText,
-      item,
-      index,
-      editorState: editorStates[item.id],
-      metadata: item.metadata,
-      readOnly: isSelecting || !!readOnly,
-      focused: !dragData && index === focusedIndex,
-      isSelecting,
-      placeholder: "Start typing or press '/' for commands",
-      fallbackPlaceholder: '',
-      registerRef: ref => registerRef(item.id, ref),
-      onChange: editorState => handleChange(item.id, editorState),
-      onReturn: event => handleReturn(index, event),
-      onUpArrow: event => handleUpArrow(index, event),
-      onDownArrow: event => handleDownArrow(index, event),
-      onFocus: () => handleFocus(index),
-      onBlur: handleBlur,
-      onPaste: () => handlePaste(index),
-      onKeyCommand: command => handleKeyCommand(index, command),
-      onBlockSelection: () => handleSingleBlockSelection(item.id),
-      forceBlurContent: () => handleForceBlurContent(index),
-    }
-
-    const blockProps: Omit<BlockProps, 'children'> = {
-      ...commonProps,
-      id: item.id,
-      type: item.type,
-      index,
-      readOnly: !!readOnly,
-      selected: !!selectionRect?.selectedIds.includes(item.id),
-      hovered: !dragData && index === hoveredIndex,
-      isDraggingTop: dragData?.index === index
-        ? index === array.length - 1
-          ? dragData.isTop
-          : dragData.isTop || null
-        : dragData?.index === index - 1 && dragData.isTop === false
-          ? true
-          : null,
-      paddingLeft,
-      registerSelectionRef: ref => registerSelectionRef(item.id, ref),
-      onAddItem: () => handleAddItem(index),
-      onDeleteItem: () => handleDeleteItem(index),
-      onDuplicateItem: () => handleDuplicateItem(index),
-      onMouseDown: handleBlockMouseDown,
-      onMouseMove: () => !wasDragging && setHoveredIndex(index),
-      onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
-      onDragStart: () => setDragData({ index, isTop: null }),
-      onDrag: handleDrag,
-      onDragEnd: () => handleDragEnd(index),
-      onBlockMenuOpen: () => setIsBlockMenuOpen(true),
-      onBlockMenuClose: handleBlockMenuClose,
-      blockContentProps, // Pass block content props to block for drag preview display
-    }
-
-    const { BlockContent } = plugin
-
-    return (
-      <Block
-        key={item.id}
-        {...blockProps}
-      >
-        <BlockContent {...blockContentProps} />
-      </Block>
-    )
-  }, [
-    readOnly,
-    paddingLeft,
-    plugins,
-    editorStates,
-    hoveredIndex,
-    focusedIndex,
-    dragData,
-    wasDragging,
-    selectionRect,
-    registerRef,
-    registerSelectionRef,
-    handleAddItem,
-    handleDeleteItem,
-    handleDuplicateItem,
-    handleChange,
-    handleReturn,
-    handleUpArrow,
-    handleDownArrow,
-    handleFocus,
-    handleBlur,
-    handlePaste,
-    handleDrag,
-    handleDragEnd,
-    handleBlockMenuClose,
-    handleBlockMouseDown,
-    handleFocusContent,
-    handleBlurContent,
-    handleForceBlurContent,
-    handleRectSelectionStart,
-    handleSingleBlockSelection,
-    handleKeyCommand,
-  ])
-
-  /* ---
     INITIAL VALUE POPULATION
   --- */
   useEffect(() => {
@@ -1704,6 +1583,126 @@ function ReactBlockText({
       window.removeEventListener('copy', handleWindowCopy)
     }
   }, [handleWindowCopy])
+
+  /* ---
+    RENDER EDITOR
+    Render the editor for each item of value
+  --- */
+  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
+    if (!editorStates[item.id]) return null
+
+    const plugin = plugins.find(plugin => plugin.type === item.type)
+
+    if (!plugin) return null
+
+    const commonProps = {
+      plugins,
+      focusContent: () => handleFocusContent(index),
+      focusContentAtStart: () => handleFocusContent(index, true),
+      focusNextContent: () => handleFocusContent(index + 1),
+      blurContent: () => handleBlurContent(index),
+      onRectSelectionMouseDown: handleRectSelectionStart,
+    }
+
+    const blockContentProps: BlockContentProps = {
+      ...commonProps,
+      BlockContentText,
+      item,
+      index,
+      editorState: editorStates[item.id],
+      metadata: item.metadata,
+      readOnly: isSelecting || !!readOnly,
+      focused: !dragData && index === focusedIndex,
+      isSelecting,
+      placeholder: "Start typing or press '/' for commands",
+      fallbackPlaceholder: '',
+      registerRef: ref => registerRef(item.id, ref),
+      onChange: editorState => handleChange(item.id, editorState),
+      onReturn: event => handleReturn(index, event),
+      onUpArrow: event => handleUpArrow(index, event),
+      onDownArrow: event => handleDownArrow(index, event),
+      onFocus: () => handleFocus(index),
+      onBlur: handleBlur,
+      onPaste: () => handlePaste(index),
+      onKeyCommand: command => handleKeyCommand(index, command),
+      onBlockSelection: () => handleSingleBlockSelection(item.id),
+      forceBlurContent: () => handleForceBlurContent(index),
+    }
+
+    const blockProps: Omit<BlockProps, 'children'> = {
+      ...commonProps,
+      id: item.id,
+      type: item.type,
+      index,
+      readOnly: !!readOnly,
+      selected: !!selectionRect?.selectedIds.includes(item.id),
+      hovered: !dragData && index === hoveredIndex,
+      isDraggingTop: dragData?.index === index
+        ? index === array.length - 1
+          ? dragData.isTop
+          : dragData.isTop || null
+        : dragData?.index === index - 1 && dragData.isTop === false
+          ? true
+          : null,
+      paddingLeft,
+      registerSelectionRef: ref => registerSelectionRef(item.id, ref),
+      onAddItem: () => handleAddItem(index),
+      onDeleteItem: () => handleDeleteItem(index),
+      onDuplicateItem: () => handleDuplicateItem(index),
+      onMouseDown: handleBlockMouseDown,
+      onMouseMove: () => !wasDragging && setHoveredIndex(index),
+      onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
+      onDragStart: () => setDragData({ index, isTop: null }),
+      onDrag: handleDrag,
+      onDragEnd: () => handleDragEnd(index),
+      onBlockMenuOpen: () => setIsBlockMenuOpen(true),
+      onBlockMenuClose: handleBlockMenuClose,
+      blockContentProps, // Pass block content props to block for drag preview display
+    }
+
+    const { BlockContent } = plugin
+
+    return (
+      <Block
+        key={item.id}
+        {...blockProps}
+      >
+        <BlockContent {...blockContentProps} />
+      </Block>
+    )
+  }, [
+    readOnly,
+    paddingLeft,
+    plugins,
+    editorStates,
+    hoveredIndex,
+    focusedIndex,
+    dragData,
+    wasDragging,
+    selectionRect,
+    registerRef,
+    registerSelectionRef,
+    handleAddItem,
+    handleDeleteItem,
+    handleDuplicateItem,
+    handleChange,
+    handleReturn,
+    handleUpArrow,
+    handleDownArrow,
+    handleFocus,
+    handleBlur,
+    handlePaste,
+    handleDrag,
+    handleDragEnd,
+    handleBlockMenuClose,
+    handleBlockMouseDown,
+    handleFocusContent,
+    handleBlurContent,
+    handleForceBlurContent,
+    handleRectSelectionStart,
+    handleSingleBlockSelection,
+    handleKeyCommand,
+  ])
 
   /* ---
     MAIN RETURN STATEMENT
