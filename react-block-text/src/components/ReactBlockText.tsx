@@ -1050,8 +1050,12 @@ function ReactBlockText({
     handleBlurAllContent()
   }, [handleBlurAllContent])
 
+  /* ---
+    ROOT MOUSE MOVE
+    Set selection react if selecting
+  --- */
   const handleRootMouseMove = useCallback((event: ReactMouseEvent) => {
-    if (!selectionRect) return
+    if (!(selectionRect && selectionRect.isSelecting)) return
 
     const { x, y } = getRelativeMousePosition(rootRef.current!, event)
     const nextSelectionRect = {
@@ -1074,6 +1078,7 @@ function ReactBlockText({
     const { x, y } = getRelativeMousePosition(rootRef.current!, event)
 
     setSelectionRect({
+      isSelecting: true,
       anchorTop: y,
       anchorLeft: x,
       top: y,
@@ -1088,8 +1093,20 @@ function ReactBlockText({
     RECT SELECTION END
   --- */
   const handleRectSelectionEnd = useCallback(() => {
+    console.log('selectionRect', selectionRect)
+    if (!selectionRect) return
+
+    if (selectionRect.selectedIds.length) {
+      setSelectionRect({
+        ...selectionRect,
+        isSelecting: false,
+      })
+
+      return
+    }
+
     setSelectionRect(null)
-  }, [])
+  }, [selectionRect])
 
   /* ---
     MULTI BLOCK TEXT SELECTION END
@@ -1202,7 +1219,12 @@ function ReactBlockText({
     If the selection is not empty, set the selected items
   --- */
   const handleMouseUp = useCallback((event: MouseEvent) => {
-    handleRectSelectionEnd()
+    if (selectionRect?.isSelecting) {
+      handleRectSelectionEnd()
+    }
+    else {
+      setSelectionRect(null)
+    }
 
     if (!isSelecting) return
 
@@ -1239,7 +1261,7 @@ function ReactBlockText({
     catch (error) {
       //
     }
-  }, [hoveredIndex, handleRectSelectionEnd, handleMultiBlockTextSelectionEnd])
+  }, [hoveredIndex, selectionRect, handleRectSelectionEnd, handleMultiBlockTextSelectionEnd])
 
   /* ---
     KEYDOWN
@@ -1323,8 +1345,7 @@ function ReactBlockText({
       type: item.type,
       index,
       readOnly: !!readOnly,
-      selected: true,
-      // selected: selectionRect?.selectedIds.includes(item.id),
+      selected: !!selectionRect?.selectedIds.includes(item.id),
       hovered: !dragData && index === hoveredIndex,
       isDraggingTop: dragData?.index === index
         ? index === array.length - 1
@@ -1371,6 +1392,7 @@ function ReactBlockText({
     focusedIndex,
     dragData,
     wasDragging,
+    selectionRect,
     handleAddItem,
     handleDeleteItem,
     handleDuplicateItem,
@@ -1587,7 +1609,7 @@ function ReactBlockText({
               onSelect={handleContextMenuSelect}
             />
           )}
-          {!!selectionRect && (
+          {!!selectionRect?.isSelecting && (
             <SelectionRect
               top={selectionRect.top}
               left={selectionRect.left}
@@ -1595,7 +1617,7 @@ function ReactBlockText({
               height={selectionRect.height}
             />
           )}
-          {(selectionRect || isBlockMenuOpen) && (
+          {!!(selectionRect?.isSelecting || isBlockMenuOpen) && (
             <div className="absolute inset-0 z-10" />
           )}
           <div

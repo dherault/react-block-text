@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import _ from 'clsx'
@@ -80,8 +80,14 @@ function Block({
 }: BlockProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const primaryColor = useContext(PrimaryColorContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
+
+  const isEmpty = useMemo(() => (
+    type === 'text'
+    && !blockContentProps.editorState.getCurrentContent().getPlainText().length
+  ), [type, blockContentProps.editorState])
 
   /* ---
     DRAG AND DROP
@@ -231,9 +237,12 @@ function Block({
         <div
           onClick={focusContentAtStart}
           onMouseDown={onRectSelectionMouseDown}
-          className="w-1 cursor-text"
+          className="w-1 h-full cursor-text"
         />
-        <div className="flex-grow cursor-text">
+        <div
+          ref={contentRef}
+          className="flex-grow cursor-text"
+        >
           <div
             onClick={focusContent}
             onMouseDown={onRectSelectionMouseDown}
@@ -268,6 +277,17 @@ function Block({
             }}
           />
         </div>
+        <div
+          className="absolute rounded-sm z-0 transition-opacity"
+          style={{
+            top: typeToPaddingTop[type] - 2,
+            bottom: typeToPaddingBottom[type] - 2,
+            left: (contentRef.current?.offsetLeft ?? 0) - 4,
+            right: 2,
+            backgroundColor: primaryColor,
+            opacity: !isEmpty && selected ? 0.15 : 0,
+          }}
+        />
         {!!menuPosition && (
           <BlockMenu
             onDeleteItem={onDeleteItem}

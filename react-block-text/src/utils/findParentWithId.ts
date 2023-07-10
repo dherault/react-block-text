@@ -1,4 +1,5 @@
 function findParentWithId(element: HTMLElement, id: string) {
+  if (!element) return
   if (element.id === id) return element
   if (!element.parentElement) return null
 

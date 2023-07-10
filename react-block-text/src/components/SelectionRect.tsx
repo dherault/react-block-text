@@ -9,9 +9,10 @@ function SelectionRect(props: SelectionRectProps) {
 
   return (
     <div
-      className="absolute opacity-25"
+      className="absolute"
       style={{
         backgroundColor: primaryColor,
+        opacity: 0.15,
         ...props,
       }}
     />

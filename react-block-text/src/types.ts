@@ -150,6 +150,7 @@ export type SelectionData = {
 }
 
 export type SelectionRectData = SelectionRectProps & {
+  isSelecting: boolean
   anchorTop: number
   anchorLeft: number
   selectedIds: string[]
