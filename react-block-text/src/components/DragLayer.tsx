@@ -44,7 +44,7 @@ function DragLayer({ plugins }: DragLayerProps) {
   }))
 
   const renderItem = useCallback(() => {
-    const plugin = plugins.find(plugin => plugin.type === item.type)
+    const plugin = plugins.find(plugin => plugin.type === item.item.type)
 
     if (!plugin) return null
 
