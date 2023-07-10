@@ -33,6 +33,13 @@ export default defineConfig({
       plugins: [
         rollupNodePolyFill(),
       ],
+      output: {
+        exports: 'named',
+        globals: {
+          react: 'React',
+          'react-dom': 'ReactDOM',
+        },
+      },
     },
   },
 })

@@ -22,7 +22,7 @@
     "url": "git+https://github.com/dherault/react-block-text.git"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "nodemon --watch src --ext ts,tsx,css --exec \"npm run build\"",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -45,6 +45,7 @@
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
     "esbuild-plugins-node-modules-polyfill": "^1.2.0",
+    "nodemon": "^3.0.1",
     "postcss": "^8.4.24",
     "rollup-plugin-polyfill-node": "^0.12.0",
     "tailwindcss": "^3.3.2",

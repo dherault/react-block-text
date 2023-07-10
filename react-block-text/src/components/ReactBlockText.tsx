@@ -21,6 +21,8 @@
 // x Separate package from app
 // x Publish to npm
 // - Fix multiline enter bug
+// - Remove convertibleToTextTypes
+// - Add isNextItemOfSameType to plugin API
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -545,6 +547,7 @@ function ReactBlockText({
     // Then we focus it
     const nextFirstContentState = Modifier.removeRange(contentState, selectionToRemove, 'forward')
     const nextSecondContentState = Modifier.removeRange(contentState, selectionToKeep, 'forward')
+    console.log('nextSecondContentState', nextSecondContentState.getPlainText())
     const nextEditorState = EditorState.push(editorState, nextFirstContentState, 'change-block-data')
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
@@ -560,7 +563,7 @@ function ReactBlockText({
       secondEditorState
     )
 
-    secondEditorState = applyStyles(item, editorState)
+    secondEditorState = applyStyles(item, secondEditorState)
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
 
@@ -641,7 +644,7 @@ function ReactBlockText({
     ])
     previousEditorState = EditorState.push(previousEditorState, previousContent, 'change-block-data')
     previousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
-    previousEditorState = applyStyles(item, editorState)
+    previousEditorState = applyStyles(item, previousEditorState)
 
     setEditorStates(x => {
       const nextEditorStates = { ...x }
