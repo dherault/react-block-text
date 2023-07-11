@@ -11,9 +11,6 @@ function textPlugin(): ReactBlockTextPlugins {
       label: 'Just start writing with plain text.',
       shortcuts: 'txt',
       icon: <Icon />,
-      paddingTop: 3,
-      paddingBottom: 3,
-      iconsPaddingTop: 0,
       BlockContent,
     }),
   ]

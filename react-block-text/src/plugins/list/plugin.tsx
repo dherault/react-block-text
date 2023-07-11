@@ -26,9 +26,6 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       shortcuts: 'task',
-      paddingTop: 3,
-      paddingBottom: 3,
-      iconsPaddingTop: 0,
       BlockContent,
     }))
   }

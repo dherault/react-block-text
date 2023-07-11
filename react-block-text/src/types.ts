@@ -27,9 +27,9 @@ export type ReactBlockTextPluginData = {
   icon: ReactNode
   isConvertibleToText?: boolean
   isNewItemOfSameType?: boolean
-  paddingTop: number
-  paddingBottom: number
-  iconsPaddingTop: number
+  paddingTop?: number
+  paddingBottom?: number
+  iconsPaddingTop?: number
   styleMap?: Record<string, CSSProperties>
   applyStyles?: (item: ReactBlockTextDataItem, editorState: EditorState) => EditorState
   BlockContent: ComponentType<BlockContentProps>

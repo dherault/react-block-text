@@ -14,7 +14,6 @@ function quotePlugin(): ReactBlockTextPlugins {
       isConvertibleToText: true,
       paddingTop: 5,
       paddingBottom: 5,
-      iconsPaddingTop: 0,
       BlockContent,
     }),
   ]

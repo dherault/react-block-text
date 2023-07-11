@@ -24,7 +24,6 @@ function todoPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isNewItemOfSameType: true,
       paddingTop: 5,
       paddingBottom: 5,
-      iconsPaddingTop: 0,
       styleMap: {
         [INLINE_STYLES.TODO_CHECKED]: {
           color: '#9ca3af',
