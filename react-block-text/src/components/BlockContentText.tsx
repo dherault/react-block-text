@@ -6,7 +6,7 @@ import type { BlockContentProps } from '../types'
 import { COMMANDS } from '../constants'
 
 function BlockContentText({
-  plugins,
+  pluginsData,
   readOnly,
   focused,
   isSelecting,
@@ -24,8 +24,8 @@ function BlockContentText({
   onPaste,
 }: BlockContentProps) {
   const styleMap = useMemo(() => (
-    plugins.reduce((acc, plugin) => ({ ...acc, ...(plugin.styleMap ?? {}) }), {})
-  ), [plugins])
+    pluginsData.reduce((acc, plugin) => ({ ...acc, ...(plugin.styleMap ?? {}) }), {})
+  ), [pluginsData])
 
   return (
     <Editor

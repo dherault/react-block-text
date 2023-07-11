@@ -15,44 +15,11 @@ import DragIcon from '../icons/Drag'
 
 import BlockMenu from './BlockMenu'
 
-// const plugin(?.paddingTop ?? 3){
-//   text: 3,
-//   heading1: 24,
-//   heading2: 18,
-//   heading3: 12,
-//   todo: 3,
-//   'bulleted-list': 3,
-//   'numbered-list': 3,
-//   quote: 5,
-// } as const
-
-// const typeToPaddingBottom = {
-//   text: 3,
-//   heading1: 9,
-//   heading2: 9,
-//   heading3: 9,
-//   todo: 3,
-//   'bulleted-list': 3,
-//   'numbered-list': 3,
-//   quote: 5,
-// } as const
-
-// const typeToIconsExtraPaddingTop = {
-//   text: 0,
-//   heading1: 6,
-//   heading2: 4,
-//   heading3: 1,
-//   todo: 0,
-//   'bulleted-list': 0,
-//   'numbered-list': 0,
-//   quote: 0,
-// } as const
-
 const DRAG_INDICATOR_SIZE = 3
 
 function Block({
   children,
-  plugins,
+  pluginsData,
   id,
   type,
   index,
@@ -86,7 +53,7 @@ function Block({
   const primaryColor = useContext(PrimaryColorContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
-  const plugin = useMemo(() => plugins.find(plugin => plugin.type === type), [plugins, type])
+  const plugin = useMemo(() => pluginsData.find(plugin => plugin.type === type), [pluginsData, type])
   const isEmpty = useMemo(() => (
     type === 'text'
     && !blockContentProps.editorState.getCurrentContent().getPlainText().length

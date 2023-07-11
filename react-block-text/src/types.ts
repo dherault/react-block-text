@@ -25,7 +25,8 @@ export type ReactBlockTextPluginData = {
   label: string
   shortcuts: string
   icon: ReactNode
-  isConvertibleToText: boolean
+  isConvertibleToText?: boolean
+  isNewItemOfSameType?: boolean
   paddingTop: number
   paddingBottom: number
   iconsPaddingTop: number
@@ -52,7 +53,7 @@ export type ReactBlockTextProps = {
 
 export type BlockProps = {
   children: ReactNode
-  plugins: ReactBlockTextPluginData[]
+  pluginsData: ReactBlockTextPluginData[]
   id: string
   type: ReactBlockTextDataItemType
   index: number
@@ -83,7 +84,7 @@ export type BlockProps = {
 
 export type BlockContentProps = {
   BlockContentText: ComponentType<BlockContentProps>
-  plugins: ReactBlockTextPluginData[]
+  pluginsData: ReactBlockTextPluginData[]
   item: ReactBlockTextDataItem
   index: number
   editorState: EditorState
@@ -112,7 +113,7 @@ export type BlockContentProps = {
 }
 
 export type ContextMenuProps = {
-  plugins: ReactBlockTextPluginData[]
+  pluginsData: ReactBlockTextPluginData[]
   query: string
   top?: number
   bottom?: number
@@ -152,7 +153,7 @@ export type BlockMenuItemProps = {
 }
 
 export type DragLayerProps = {
-  plugins: ReactBlockTextPluginData[]
+  pluginsData: ReactBlockTextPluginData[]
 }
 
 export type SelectionRectProps = {

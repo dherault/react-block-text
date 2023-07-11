@@ -20,7 +20,7 @@
 // - AI plugin (meta plugin)
 // x Separate package from app
 // x Publish to npm
-// - Fix multiline enter bug
+// x Fix multiline enter bug
 // - Remove convertibleToTextTypes
 // - Add isNextItemOfSameType to plugin API
 
@@ -97,8 +97,6 @@ ignoreWarnings([
   'Supplying an `onDownArrow`',
 ])
 
-const convertibleToTextTypes = ['todo', 'bulleted-list', 'numbered-list', 'quote']
-
 // Not a state to avoid infinite render loops
 // instanceId -> itemId -> editorRef
 const editorRefs: Record<string, EditorRefRegistry> = {}
@@ -167,7 +165,7 @@ function ReactBlockText({
   /* ---
     PLUGINS MERGING
   --- */
-  const plugins = useMemo(() => (
+  const pluginsData = useMemo(() => (
     [
       ...textPlugin(),
       ...rawPlugins,
@@ -232,10 +230,10 @@ function ReactBlockText({
     APPLY STYLES
   --- */
   const applyStyles = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
-    const plugin = plugins.find(x => x.type === item.type)
+    const plugin = pluginsData.find(x => x.type === item.type)
 
     return plugin?.applyStyles?.(item, editorState) ?? editorState
-  }, [plugins])
+  }, [pluginsData])
 
   /* ---
     CREATE TEXT ITEM
@@ -515,6 +513,10 @@ function ReactBlockText({
 
     if (!editorState) return 'not-handled'
 
+    const pluginData = pluginsData.find(x => x.type === item.type)
+
+    if (!pluginData) return 'not-handled'
+
     // We want to split the block into two
     const selection = editorState.getSelection()
     let contentState = editorState.getCurrentContent()
@@ -547,7 +549,6 @@ function ReactBlockText({
     // Then we focus it
     const nextFirstContentState = Modifier.removeRange(contentState, selectionToRemove, 'forward')
     const nextSecondContentState = Modifier.removeRange(contentState, selectionToKeep, 'forward')
-    console.log('nextSecondContentState', nextSecondContentState.getPlainText())
     const nextEditorState = EditorState.push(editorState, nextFirstContentState, 'change-block-data')
 
     const emptySelection = SelectionState.createEmpty(nextSecondContentState.getFirstBlock().getKey())
@@ -556,9 +557,7 @@ function ReactBlockText({
       {
         reactBlockTextVersion: VERSION,
         id: nanoid(),
-        type: item.type === 'todo' || item.type === 'bulleted-list' || item.type === 'numbered-list'
-          ? item.type // Create a todo after a todo, same for lists
-          : 'text',
+        type: pluginData.isNewItemOfSameType ? item.type : 'text',
       },
       secondEditorState
     )
@@ -578,7 +577,7 @@ function ReactBlockText({
     setScrollIntoViewId(secondItem.id)
 
     return 'handled'
-  }, [value, editorStates, contextMenuData, onChange, applyStyles])
+  }, [value, editorStates, contextMenuData, pluginsData, onChange, applyStyles])
 
   /* ---
     BACKSPACE
@@ -593,6 +592,10 @@ function ReactBlockText({
 
     if (!editorState) return 'not-handled'
 
+    const pluginData = pluginsData.find(x => x.type === item.type)
+
+    if (!pluginData) return 'not-handled'
+
     const contentState = editorState.getCurrentContent()
     const firstBlockKey = contentState.getFirstBlock().getKey()
     const selection = editorState.getSelection()
@@ -600,8 +603,8 @@ function ReactBlockText({
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
-    // If the item is a todo, a quote or a list, we convert it to a text item
-    if (convertibleToTextTypes.includes(item.type)) {
+    // If the item is convertible to text, we convert it to a text item
+    if (pluginData.isConvertibleToText) {
       const nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
@@ -670,7 +673,7 @@ function ReactBlockText({
     setHoveredIndex(-1)
 
     return 'handled'
-  }, [value, editorStates, onChange, applyStyles])
+  }, [value, editorStates, pluginsData, onChange, applyStyles])
 
   /* ---
     META BACKSPACE
@@ -682,6 +685,10 @@ function ReactBlockText({
     const item = value[focusedIndex]
 
     if (!item) return
+
+    const pluginData = pluginsData.find(x => x.type === item.type)
+
+    if (!pluginData) return
 
     // If in the previous state the first block is not empty, we don't delete the current item
     // Because it means that the user has deleted a block
@@ -708,8 +715,8 @@ function ReactBlockText({
       }
     }
 
-    // If the item is a todo, a quote or a list, we convert it to a text item
-    if (convertibleToTextTypes.includes(item.type)) {
+    // If the item is convertible to text, we convert it to a text item
+    if (pluginData.isConvertibleToText) {
       const nextValue = [...value]
 
       nextValue[focusedIndex] = { ...nextValue[focusedIndex], type: 'text', metadata: '' }
@@ -753,7 +760,7 @@ function ReactBlockText({
     nextPreviousEditorState = EditorState.forceSelection(nextPreviousEditorState, nextPreviousSelection)
 
     setEditorStates(x => ({ ...x, [previousItem.id]: nextPreviousEditorState }))
-  }, [value, editorStates, previousEditorStates, focusedIndex, handleBackspace, handleDeleteItem, onChange])
+  }, [value, editorStates, previousEditorStates, pluginsData, focusedIndex, handleBackspace, handleDeleteItem, onChange])
 
   /* ---
     DELETE
@@ -1594,12 +1601,12 @@ function ReactBlockText({
   const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
     if (!editorStates[item.id]) return null
 
-    const plugin = plugins.find(plugin => plugin.type === item.type)
+    const plugin = pluginsData.find(plugin => plugin.type === item.type)
 
     if (!plugin) return null
 
     const commonProps = {
-      plugins,
+      pluginsData,
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
       focusNextContent: () => handleFocusContent(index + 1),
@@ -1676,7 +1683,7 @@ function ReactBlockText({
   }, [
     readOnly,
     paddingLeft,
-    plugins,
+    pluginsData,
     editorStates,
     hoveredIndex,
     focusedIndex,
@@ -1731,7 +1738,7 @@ function ReactBlockText({
           {value.map(renderEditor)}
           {!!contextMenuData && (
             <ContextMenu
-              plugins={plugins}
+              pluginsData={pluginsData}
               query={contextMenuData.query}
               top={contextMenuData.top}
               bottom={contextMenuData.bottom}
@@ -1761,7 +1768,7 @@ function ReactBlockText({
             style={{ height: paddingBottom ?? 0 }}
           />
         </div>
-        <DragLayer plugins={plugins} />
+        <DragLayer pluginsData={pluginsData} />
       </PrimaryColorContext.Provider>
     </DndProvider>
   )

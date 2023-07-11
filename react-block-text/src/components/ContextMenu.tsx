@@ -11,13 +11,13 @@ const fuseOptions = {
   threshold: 0.3,
 }
 
-function ContextMenu({ plugins, query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
+function ContextMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [scrollIntoViewIndex, setScrollIntoViewIndex] = useState(-1)
   const [isHovering, setIsHovering] = useState(false)
-  const fuse = useMemo(() => new Fuse(plugins, fuseOptions), [plugins])
-  const results = useMemo(() => query ? fuse.search(query) : plugins.map(item => ({ item })), [plugins, query, fuse])
+  const fuse = useMemo(() => new Fuse(pluginsData, fuseOptions), [pluginsData])
+  const results = useMemo(() => query ? fuse.search(query) : pluginsData.map(item => ({ item })), [pluginsData, query, fuse])
 
   /* ---
     ARROW UP, DOWN, ENTER, ESCAPE HANDLERS

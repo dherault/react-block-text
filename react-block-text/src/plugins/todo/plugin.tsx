@@ -21,6 +21,7 @@ function todoPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       shortcuts: 'todo',
       icon: <Icon color={color || DEFAULT_PRIMARY_COLOR} />,
       isConvertibleToText: true,
+      isNewItemOfSameType: true,
       paddingTop: 5,
       paddingBottom: 5,
       iconsPaddingTop: 0,

@@ -35,7 +35,7 @@ function getItemStyles(
   }
 }
 
-function DragLayer({ plugins }: DragLayerProps) {
+function DragLayer({ pluginsData }: DragLayerProps) {
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(monitor => ({
     isDragging: monitor.isDragging(),
     item: monitor.getItem() as BlockContentProps,
@@ -44,7 +44,7 @@ function DragLayer({ plugins }: DragLayerProps) {
   }))
 
   const renderItem = useCallback(() => {
-    const plugin = plugins.find(plugin => plugin.type === item.item.type)
+    const plugin = pluginsData.find(plugin => plugin.type === item.item.type)
 
     if (!plugin) return null
 
@@ -56,7 +56,7 @@ function DragLayer({ plugins }: DragLayerProps) {
         readOnly
       />
     )
-  }, [plugins, item])
+  }, [pluginsData, item])
 
   if (!isDragging) {
     return null
