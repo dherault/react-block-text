@@ -2,6 +2,8 @@ import type { ReactBlockTextPlugins } from '../../types'
 
 import type { PluginOptions } from './types'
 
+import applyMetadatas from './utils/applyMetadata'
+
 import BlockContent from './components/BlockContent'
 import BulletedListIcon from './components/BulletedListIcon'
 import NumberedListIcon from './components/NumberedListIcon'
@@ -26,6 +28,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       shortcuts: 'task',
+      applyMetadatas,
       BlockContent,
     }))
   }
@@ -39,9 +42,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       shortcuts: 'task',
-      paddingTop: 3,
-      paddingBottom: 3,
-      iconsPaddingTop: 0,
+      applyMetadatas,
       BlockContent,
     }))
   }

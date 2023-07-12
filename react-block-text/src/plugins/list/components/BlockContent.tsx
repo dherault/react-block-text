@@ -33,11 +33,22 @@ function BlockContentList(props: BlockContentProps) {
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="flex-shrink-0"
+        className="flex-shrink-0 select-none"
       >
-        <div className="-mt-[2px] ml-2 scale-[200%]  select-none">
-          {label || depthToBullet[depth & depthToBullet.length]}
-        </div>
+        {label ? (
+          <div
+            className="ml-2"
+            style={{
+              width: 6 * label.length,
+            }}
+          >
+            {label}
+          </div>
+        ) : (
+          <div className="-mt-[2px] ml-2 scale-[200%]">
+            {depthToBullet[depth & depthToBullet.length]}
+          </div>
+        )}
       </div>
       <div
         onClick={onBlockSelection}

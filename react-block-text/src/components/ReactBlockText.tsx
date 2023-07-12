@@ -16,13 +16,13 @@
 // - Write color plugin (meta plugin)
 // - Handle block conversion on block menu
 // - Fix / and backspace bug
-// - Handle text conversion
+// x Handle text conversion
 // - AI plugin (meta plugin)
 // x Separate package from app
 // x Publish to npm
 // x Fix multiline enter bug
-// - Remove convertibleToTextTypes
-// - Add isNextItemOfSameType to plugin API
+// x Remove convertibleToTextTypes
+// x Add isNextItemOfSameType to plugin API
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -59,6 +59,7 @@ import type {
   EditorRefRegistry,
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
+  ReactBlockTextEditorStates,
   ReactBlockTextPluginOptions,
   ReactBlockTextProps,
   SelectionData,
@@ -117,7 +118,7 @@ function ReactBlockText({
   primaryColor,
   onSave,
 }: ReactBlockTextProps) {
-  const [editorStates, setEditorStates] = useState<Record<string, EditorState>>({})
+  const [editorStates, setEditorStates] = useState<ReactBlockTextEditorStates>({})
 
   /* ---
     VALUE PARSING
@@ -174,6 +175,28 @@ function ReactBlockText({
   ), [rawPlugins, pluginOptions])
 
   /* ---
+    APPLY STYLES
+  --- */
+  const applyStyles = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
+    const plugin = pluginsData.find(x => x.type === item.type)
+
+    return plugin?.applyStyles?.(item, editorState) ?? editorState
+  }, [pluginsData])
+
+  /* ---
+    APPLY METADATA
+  --- */
+  const applyMetadatas = useCallback((index: number, value: ReactBlockTextDataItem[], editorStates: ReactBlockTextEditorStates) => {
+    let nextValue = [...value]
+
+    pluginsData.forEach(plugin => {
+      nextValue = plugin?.applyMetadatas?.(index, nextValue, editorStates) ?? nextValue
+    })
+
+    return nextValue
+  }, [pluginsData])
+
+  /* ---
     STATE
   --- */
   const rootRef = useRef<HTMLDivElement>(null)
@@ -227,15 +250,6 @@ function ReactBlockText({
   }, [instanceId])
 
   /* ---
-    APPLY STYLES
-  --- */
-  const applyStyles = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
-    const plugin = pluginsData.find(x => x.type === item.type)
-
-    return plugin?.applyStyles?.(item, editorState) ?? editorState
-  }, [pluginsData])
-
-  /* ---
     CREATE TEXT ITEM
   --- */
   const createTextItem = useCallback(() => {
@@ -258,17 +272,21 @@ function ReactBlockText({
   --- */
   const handleAddItem = useCallback((index: number) => {
     const { editorState, item } = createTextItem()
-    const nextValue = [...value]
+    let nextValue = [...value]
 
     nextValue.splice(index + 1, 0, item)
 
-    setEditorStates(x => ({ ...x, [item.id]: editorState }))
+    const nextEditorStates = { ...editorStates, [item.id]: editorState }
+
+    nextValue = applyMetadatas(index + 1, nextValue, nextEditorStates)
+
     onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setHoveredIndex(index + 1)
     setFocusedIndex(index + 1)
     setForceFocusIndex(index + 1)
     setScrollIntoViewId(item.id)
-  }, [value, onChange, createTextItem])
+  }, [value, editorStates, onChange, createTextItem, applyMetadatas])
 
   /* ---
     DELETE ITEM
@@ -283,27 +301,28 @@ function ReactBlockText({
       // Prevent flickering due to key change
       item.id = itemId
 
-      setEditorStates({ [item.id]: editorState })
-      onChange([item])
+      const nextEditorStates = { [item.id]: editorState }
+      const nextValue = applyMetadatas(index, [item], nextEditorStates)
+
+      onChange(nextValue)
+      setEditorStates(nextEditorStates)
 
       return
     }
 
     // Delete any item
-    const nextValue = [...value]
-
+    let nextValue = [...value]
     const [item] = nextValue.splice(index, 1)
+    const nextEditorStates = { ...editorStates }
+
+    delete nextEditorStates[item.id]
+
+    nextValue = applyMetadatas(index, nextValue, nextEditorStates)
 
     onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setHoveredIndex(-1)
-    setEditorStates(x => {
-      const nextEditorStates = { ...x }
-
-      delete nextEditorStates[item.id]
-
-      return nextEditorStates
-    })
-  }, [value, onChange, createTextItem])
+  }, [value, editorStates, onChange, createTextItem, applyMetadatas])
 
   /* ---
     DUPLICATE ITEM
@@ -317,15 +336,20 @@ function ReactBlockText({
 
     if (!editorState) return
 
+    let nextValue = [...value]
     const nextItem = { ...item, id: nanoid() }
 
-    value.splice(index + 1, 0, nextItem)
+    nextValue.splice(index + 1, 0, nextItem)
 
-    onChange(value)
-    setEditorStates(x => ({ ...x, [nextItem.id]: editorState }))
+    const nextEditorStates = { ...editorStates, [nextItem.id]: editorState }
+
+    nextValue = applyMetadatas(index + 1, nextValue, nextEditorStates)
+
+    onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setHoveredIndex(index + 1)
     setFocusedIndex(index + 1)
-  }, [value, editorStates, onChange])
+  }, [value, editorStates, onChange, applyMetadatas])
 
   /* ---
     CHANGE
@@ -346,16 +370,18 @@ function ReactBlockText({
     }
 
     const nextEditorState = applyStyles(item, editorState)
+    const nextEditorStates = { ...editorStates, [id]: nextEditorState }
 
-    setEditorStates(x => ({ ...x, [id]: nextEditorState }))
+    setEditorStates(nextEditorStates)
 
     data = JSON.stringify(convertToRaw(nextEditorState.getCurrentContent()))
 
     if (data === item.data) return
 
-    const nextValue = [...value]
+    let nextValue = [...value]
 
     nextValue[index] = { ...nextValue[index], data }
+    nextValue = applyMetadatas(index, nextValue, nextEditorStates)
 
     onChange(nextValue)
 
@@ -384,7 +410,7 @@ function ReactBlockText({
 
       setContextMenuData(x => x ? ({ ...x, query }) : null) // Due to side effects the ternary is mandatory here
     }
-  }, [value, instanceId, contextMenuData, onChange, applyStyles])
+  }, [value, editorStates, instanceId, contextMenuData, onChange, applyStyles, applyMetadatas])
 
   /* ---
     UP ARROW
@@ -564,20 +590,22 @@ function ReactBlockText({
 
     secondEditorState = applyStyles(item, secondEditorState)
 
-    setEditorStates(x => ({ ...x, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }))
-
-    const nextValue = [...value]
+    const nextEditorStates = { ...editorStates, [item.id]: nextEditorState, [secondItem.id]: secondEditorState }
+    let nextValue = [...value]
 
     nextValue[index] = appendItemData(item, nextEditorState)
     nextValue.splice(index + 1, 0, secondItem)
 
+    nextValue = applyMetadatas(index, nextValue, nextEditorStates)
+
     onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setFocusedIndex(index + 1)
     setHoveredIndex(-1)
     setScrollIntoViewId(secondItem.id)
 
     return 'handled'
-  }, [value, editorStates, contextMenuData, pluginsData, onChange, applyStyles])
+  }, [value, editorStates, contextMenuData, pluginsData, onChange, applyStyles, applyMetadatas])
 
   /* ---
     BACKSPACE
@@ -649,31 +677,26 @@ function ReactBlockText({
     previousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
     previousEditorState = applyStyles(item, previousEditorState)
 
-    setEditorStates(x => {
-      const nextEditorStates = { ...x }
+    const nextEditorStates = { ...editorStates, [previousItem.id]: previousEditorState }
 
-      // Update the previous item's editor state
-      nextEditorStates[previousItem.id] = previousEditorState
+    delete nextEditorStates[item.id]
 
-      // Delete the current item's editor state
-      delete nextEditorStates[item.id]
-
-      return nextEditorStates
-    })
-
-    const nextValue = [...value]
+    let nextValue = [...value]
 
     // Update the previous item
     nextValue[index - 1] = appendItemData(previousItem, previousEditorState)
     // Delete the current item
     nextValue.splice(index, 1)
+    // Update metadatas
+    nextValue = applyMetadatas(index - 1, nextValue, nextEditorStates)
 
     onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setFocusedIndex(index - 1)
     setHoveredIndex(-1)
 
     return 'handled'
-  }, [value, editorStates, pluginsData, onChange, applyStyles])
+  }, [value, editorStates, pluginsData, onChange, applyStyles, applyMetadatas])
 
   /* ---
     META BACKSPACE
@@ -817,19 +840,11 @@ function ReactBlockText({
     nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
     nextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
 
-    setEditorStates(x => {
-      const nextEditorStates = { ...x }
+    const nextEditorStates = { ...editorStates, [nextItem.id]: nextEditorState }
 
-      // Update the next item's editor state
-      nextEditorStates[nextItem.id] = nextEditorState
+    delete nextEditorStates[item.id]
 
-      // Delete the current item's editor state
-      delete nextEditorStates[item.id]
-
-      return nextEditorStates
-    })
-
-    const nextValue = [...value]
+    let nextValue = [...value]
 
     // Update the next item
     nextValue[index + 1] = appendItemData(nextItem, nextEditorState)
@@ -837,13 +852,16 @@ function ReactBlockText({
     nextValue[index + 1].type = item.type
     // Delete the current item
     nextValue.splice(index, 1)
+    // Update metadatas
+    nextValue = applyMetadatas(index, nextValue, nextEditorStates)
 
     onChange(nextValue)
+    setEditorStates(nextEditorStates)
     setFocusedIndex(index)
     setHoveredIndex(-1)
 
     return 'handled'
-  }, [value, editorStates, onChange])
+  }, [value, editorStates, onChange, applyMetadatas])
 
   /* ---
     BLOCK MOUSE DOWN
@@ -957,7 +975,7 @@ function ReactBlockText({
     if (dragIndex === index) return
 
     const finalIndex = isTop ? index : index + 1
-    const nextValue = [...value]
+    let nextValue = [...value]
     let hoveredIndex = finalIndex
 
     if (dragIndex > finalIndex) {
@@ -970,9 +988,11 @@ function ReactBlockText({
       hoveredIndex--
     }
 
+    nextValue = applyMetadatas(finalIndex, nextValue, editorStates)
+
     onChange(nextValue)
     setHoveredIndex(hoveredIndex)
-  }, [value, dragData, onChange, handleBlurAllContent])
+  }, [value, editorStates, dragData, onChange, applyMetadatas, handleBlurAllContent])
 
   /* ---
     COPY
@@ -1003,12 +1023,14 @@ function ReactBlockText({
 
     setEditorStates(x => ({ ...x, [item.id]: nextEditorState }))
 
-    const nextValue = [...value]
+    let nextValue = [...value]
 
     nextValue.splice(index, 1, appendItemData(item, nextEditorState))
 
+    nextValue = applyMetadatas(index, nextValue, editorStates)
+
     onChange(nextValue)
-  }, [value, editorStates, onChange])
+  }, [value, editorStates, onChange, applyMetadatas])
 
   const handlePasteItems = useCallback((index: number, items: ReactBlockTextDataItem[]) => {
     console.log('handlePasteItems', index, items)
@@ -1099,17 +1121,19 @@ function ReactBlockText({
 
     nextEditorState = EditorState.forceSelection(nextEditorState, selectionStateToApply)
 
-    setEditorStates(x => ({ ...x, [id]: nextEditorState }))
+    const nextEditorStates = { ...editorStates, [id]: nextEditorState }
 
-    const nextValue = [...value]
+    let nextValue = [...value]
+    const index = nextValue.indexOf(item)
+    nextValue.splice(index, 1, appendItemData({ ...item, type: command }, nextEditorState))
 
-    nextValue.splice(nextValue.indexOf(item), 1, appendItemData({ ...item, type: command }, nextEditorState))
+    nextValue = applyMetadatas(index, nextValue, editorStates)
 
     onChange(nextValue)
-
+    setEditorStates(nextEditorStates)
     // Update previousEditorState to clear the command query from them
     setShouldTriggerRefresh(true)
-  }, [value, editorStates, contextMenuData, onChange])
+  }, [value, editorStates, contextMenuData, onChange, applyMetadatas])
 
   /* ---
     CONTEXT MENU CLOSE
@@ -1368,8 +1392,8 @@ function ReactBlockText({
       handleMetaBackspace()
     }
 
+    // TODO: remove this if necessary
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      console.log('arrow')
       setShouldTriggerRefresh(true)
 
       setTimeout(() => {

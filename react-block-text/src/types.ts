@@ -32,12 +32,15 @@ export type ReactBlockTextPluginData = {
   iconsPaddingTop?: number
   styleMap?: Record<string, CSSProperties>
   applyStyles?: (item: ReactBlockTextDataItem, editorState: EditorState) => EditorState
+  applyMetadatas?: (index: number, value: ReactBlockTextDataItem[], editorStates: ReactBlockTextEditorStates) => ReactBlockTextDataItem[]
   BlockContent: ComponentType<BlockContentProps>
 }
 
 export type ReactBlockTextPlugin = (options: ReactBlockTextPluginOptions) => ReactBlockTextPluginData
 
 export type ReactBlockTextPlugins = ReactBlockTextPlugin[]
+
+export type ReactBlockTextEditorStates = Record<string, EditorState>
 
 export type ReactBlockTextProps = {
   value: string
