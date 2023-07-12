@@ -2,7 +2,7 @@ import { type EditorState, convertToRaw } from 'draft-js'
 
 import type { ReactBlockTextDataItem } from '../types'
 
-function appendItemData(item: Partial<ReactBlockTextDataItem>, editorState: EditorState) {
+function appendItemData(item: Omit<ReactBlockTextDataItem, 'data' | 'metadata'>, editorState: EditorState) {
   return {
     metadata: '',
     ...item,

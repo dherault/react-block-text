@@ -9,6 +9,7 @@ export type ReactBlockTextDataItem = {
   type: ReactBlockTextDataItemType
   data: string
   metadata: string
+  indent: number
 }
 
 export type ReactBlockTextData = ReactBlockTextDataItem[]
@@ -27,9 +28,10 @@ export type ReactBlockTextPluginData = {
   icon: ReactNode
   isConvertibleToText?: boolean
   isNewItemOfSameType?: boolean
-  paddingTop?: number
-  paddingBottom?: number
-  iconsPaddingTop?: number
+  maxIndent?: number // default: 1
+  paddingTop?: number // default: 3
+  paddingBottom?: number // default: 3
+  iconsPaddingTop?: number // default: 0
   styleMap?: Record<string, CSSProperties>
   applyStyles?: (item: ReactBlockTextDataItem, editorState: EditorState) => EditorState
   applyMetadatas?: (index: number, value: ReactBlockTextDataItem[], editorStates: ReactBlockTextEditorStates) => ReactBlockTextDataItem[]
@@ -46,9 +48,9 @@ export type ReactBlockTextProps = {
   value: string
   plugins?: ReactBlockTextPlugins
   readOnly?: boolean
-  paddingTop?: number | string
-  paddingBottom?: number | string
-  paddingLeft?: number | string
+  paddingTop?: number
+  paddingBottom?: number
+  paddingLeft?: number
   primaryColor?: string | null
   onChange?: (value: string) => void
   onSave?: () => void
@@ -57,13 +59,12 @@ export type ReactBlockTextProps = {
 export type BlockProps = {
   children: ReactNode
   pluginsData: ReactBlockTextPluginData[]
-  id: string
-  type: ReactBlockTextDataItemType
+  item: ReactBlockTextDataItem
   index: number
   readOnly: boolean
   selected: boolean
   hovered: boolean
-  paddingLeft?: number | string
+  paddingLeft?: number
   isDraggingTop: boolean | null
   registerSelectionRef: (ref: any) => void
   onAddItem: () => void
@@ -91,7 +92,6 @@ export type BlockContentProps = {
   item: ReactBlockTextDataItem
   index: number
   editorState: EditorState
-  metadata: string
   readOnly: boolean
   focused: boolean
   isSelecting: boolean

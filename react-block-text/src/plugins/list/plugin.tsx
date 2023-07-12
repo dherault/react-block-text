@@ -28,6 +28,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       shortcuts: 'task',
+      maxIndent: 5,
       applyMetadatas,
       BlockContent,
     }))
@@ -42,6 +43,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       shortcuts: 'task',
+      maxIndent: 5,
       applyMetadatas,
       BlockContent,
     }))

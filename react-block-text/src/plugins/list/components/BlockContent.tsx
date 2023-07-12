@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
+import { toRoman } from 'roman-numerals'
+import { toAbc } from 'abc-list'
 
 import type { BlockContentProps } from '../../../types'
-import type { BlockContentListMetadata } from '../types'
 
 const depthToBullet = [
   '•',
@@ -10,23 +11,27 @@ const depthToBullet = [
 ]
 
 function BlockContentList(props: BlockContentProps) {
-  const { metadata, onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
+  const { item, onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
 
-  const { label, depth } = useMemo<BlockContentListMetadata>(() => {
+  const { index, depth } = useMemo(() => {
     try {
-      const { label, depth } = JSON.parse(metadata)
+      const { index, depth } = JSON.parse(item.metadata)
 
-      return { label, depth }
+      return { index, depth }
     }
     catch {
-     //
+      return { index: 0, depth: 0 }
     }
+  }, [item.metadata])
 
-    return {
-      label: '',
-      depth: 0,
-    }
-  }, [metadata])
+  const label = useMemo(() => {
+    const cycledDepth = depth % 3
+
+    if (cycledDepth === 0) return `${index + 1}`
+    if (cycledDepth === 1) return toAbc(index)
+
+    return toRoman(index + 1).toLowerCase()
+  }, [index, depth])
 
   return (
     <div className="flex">
@@ -35,7 +40,7 @@ function BlockContentList(props: BlockContentProps) {
         onMouseDown={onRectSelectionMouseDown}
         className="flex-shrink-0 select-none"
       >
-        {label ? (
+        {item.metadata.length ? (
           <div
             className="ml-2"
             style={{
@@ -43,10 +48,11 @@ function BlockContentList(props: BlockContentProps) {
             }}
           >
             {label}
+            .
           </div>
         ) : (
           <div className="-mt-[2px] ml-2 scale-[200%]">
-            {depthToBullet[depth & depthToBullet.length]}
+            {depthToBullet[item.indent & depthToBullet.length]}
           </div>
         )}
       </div>

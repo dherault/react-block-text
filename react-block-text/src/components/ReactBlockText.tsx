@@ -259,6 +259,7 @@ function ReactBlockText({
         reactBlockTextVersion: VERSION,
         id: nanoid(),
         type: 'text',
+        indent: 0,
       },
       editorState
     )
@@ -584,6 +585,7 @@ function ReactBlockText({
         reactBlockTextVersion: VERSION,
         id: nanoid(),
         type: pluginData.isNewItemOfSameType ? item.type : 'text',
+        indent: item.indent,
       },
       secondEditorState
     )
@@ -631,11 +633,24 @@ function ReactBlockText({
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
 
+    // If the item is indented, we unindent it
+    if (item.indent > 0) {
+      let nextValue = [...value]
+
+      nextValue[index] = { ...nextValue[index], indent: item.indent - 1 }
+      nextValue = applyMetadatas(index, nextValue, editorStates)
+
+      onChange(nextValue)
+
+      return 'handled'
+    }
+
     // If the item is convertible to text, we convert it to a text item
     if (pluginData.isConvertibleToText) {
-      const nextValue = [...value]
+      let nextValue = [...value]
 
       nextValue[index] = { ...nextValue[index], type: 'text', metadata: '' }
+      nextValue = applyMetadatas(index, nextValue, editorStates)
 
       onChange(nextValue)
 
@@ -738,11 +753,24 @@ function ReactBlockText({
       }
     }
 
+    // If the item is indented, we unindent it
+    if (item.indent > 0) {
+      let nextValue = [...value]
+
+      nextValue[focusedIndex] = { ...nextValue[focusedIndex], indent: item.indent - 1 }
+      nextValue = applyMetadatas(focusedIndex, nextValue, editorStates)
+
+      onChange(nextValue)
+
+      return 'handled'
+    }
+
     // If the item is convertible to text, we convert it to a text item
     if (pluginData.isConvertibleToText) {
-      const nextValue = [...value]
+      let nextValue = [...value]
 
       nextValue[focusedIndex] = { ...nextValue[focusedIndex], type: 'text', metadata: '' }
+      nextValue = applyMetadatas(focusedIndex, nextValue, editorStates)
 
       onChange(nextValue)
 
@@ -783,7 +811,7 @@ function ReactBlockText({
     nextPreviousEditorState = EditorState.forceSelection(nextPreviousEditorState, nextPreviousSelection)
 
     setEditorStates(x => ({ ...x, [previousItem.id]: nextPreviousEditorState }))
-  }, [value, editorStates, previousEditorStates, pluginsData, focusedIndex, handleBackspace, handleDeleteItem, onChange])
+  }, [value, editorStates, previousEditorStates, pluginsData, focusedIndex, handleBackspace, handleDeleteItem, onChange, applyMetadatas])
 
   /* ---
     DELETE
@@ -862,6 +890,39 @@ function ReactBlockText({
 
     return 'handled'
   }, [value, editorStates, onChange, applyMetadatas])
+
+  /* ---
+    INDENT AND OUTDENT
+  --- */
+  const handleIndent = useCallback((index: number, isIndent: boolean) => {
+    const item = value[index]
+
+    if (!item) return 'not-handled'
+
+    const pluginData = pluginsData.find(x => x.type === item.type)
+
+    if (!pluginData) return 'not-handled'
+
+    const previousItem = value[index - 1]
+    let nextValue = [...value]
+
+    nextValue[index] = {
+      ...item,
+      indent: Math.max(
+        0,
+        Math.min(
+          pluginData?.maxIndent ?? 1,
+          isIndent ? item.indent + 1 : item.indent - 1,
+          (previousItem?.indent ?? 0) + 1
+        )
+      ),
+    }
+    nextValue = applyMetadatas(index, nextValue, editorStates)
+
+    onChange(nextValue)
+
+    return 'handled'
+  }, [value, editorStates, pluginsData, onChange, applyMetadatas])
 
   /* ---
     BLOCK MOUSE DOWN
@@ -1431,8 +1492,14 @@ function ReactBlockText({
       return handleDelete(index)
     }
 
+    if (command === COMMANDS.INDENT || command === COMMANDS.OUTDENT) {
+      return handleIndent(index, command === COMMANDS.INDENT)
+    }
+
+    console.log('command not handled', command)
+
     return 'not-handled'
-  }, [onSave, handleBackspace, handleDelete])
+  }, [onSave, handleBackspace, handleDelete, handleIndent])
 
   /* ---
     INITIAL VALUE POPULATION
@@ -1630,6 +1697,8 @@ function ReactBlockText({
     if (!plugin) return null
 
     const commonProps = {
+      item,
+      index,
       pluginsData,
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
@@ -1641,10 +1710,7 @@ function ReactBlockText({
     const blockContentProps: BlockContentProps = {
       ...commonProps,
       BlockContentText,
-      item,
-      index,
       editorState: editorStates[item.id],
-      metadata: item.metadata,
       readOnly: isSelecting || !!readOnly,
       focused: !dragData && index === focusedIndex,
       isSelecting,
@@ -1665,9 +1731,6 @@ function ReactBlockText({
 
     const blockProps: Omit<BlockProps, 'children'> = {
       ...commonProps,
-      id: item.id,
-      type: item.type,
-      index,
       readOnly: !!readOnly,
       selected: !!selectionRect?.selectedIds.includes(item.id),
       hovered: !dragData && index === hoveredIndex,

@@ -3,7 +3,7 @@ export type PluginOptions = {
   numbered?: boolean
 }
 
-export type BlockContentListMetadata = {
-  label: string
+export type NumberedListMetada = {
+  index: number
   depth: number
 }

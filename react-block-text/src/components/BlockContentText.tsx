@@ -52,6 +52,12 @@ function BlockContentText({
   BIND KEYBOARD SHORTCUTS
 --- */
 function bindKey(event: KeyboardEvent): string | null {
+  if (event.key === 'Tab') {
+    event.preventDefault()
+
+    return event.shiftKey ? COMMANDS.OUTDENT : COMMANDS.INDENT
+  }
+
   if (event.key === 's' && KeyBindingUtil.hasCommandModifier(event)) {
     return COMMANDS.SAVE
   }

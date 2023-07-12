@@ -4,7 +4,11 @@ export const COMMANDS = {
   SAVE: 'SAVE',
   ARROW_UP: 'ARROW_UP',
   ARROW_DOWN: 'ARROW_DOWN',
+  INDENT: 'INDENT',
+  OUTDENT: 'OUTDENT',
 }
+
+export const INDENT_SIZE = 24
 
 export const ADD_ITEM_BUTTON_ID = 'react-block-text-add-item-button'
 

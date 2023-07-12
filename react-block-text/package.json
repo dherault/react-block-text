@@ -29,6 +29,7 @@
     "count-locs": "(cd src && ( find ./ -name '*.ts*' -print0 | xargs -0 cat ) | wc -l)"
   },
   "dependencies": {
+    "abc-list": "^1.0.2",
     "clsx": "^1.2.1",
     "draft-js": "^0.11.7",
     "fuse.js": "^6.6.2",
@@ -36,12 +37,14 @@
     "nanoid": "^4.0.2",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "roman-numerals": "^0.3.2"
   },
   "devDependencies": {
     "@types/draft-js": "^0.11.12",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
+    "@types/roman-numerals": "^0.3.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
     "esbuild-plugins-node-modules-polyfill": "^1.2.0",

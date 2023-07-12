@@ -6,7 +6,7 @@ import type { XYCoord } from 'react-dnd'
 
 import type { BlockContentProps, BlockProps, TopLeft } from '../types'
 
-import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID } from '../constants'
+import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
 
 import PrimaryColorContext from '../context/PrimaryColorContext'
 
@@ -20,8 +20,7 @@ const DRAG_INDICATOR_SIZE = 3
 function Block({
   children,
   pluginsData,
-  id,
-  type,
+  item,
   index,
   readOnly,
   selected,
@@ -53,11 +52,11 @@ function Block({
   const primaryColor = useContext(PrimaryColorContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
-  const plugin = useMemo(() => pluginsData.find(plugin => plugin.type === type), [pluginsData, type])
+  const plugin = useMemo(() => pluginsData.find(plugin => plugin.type === item.type), [pluginsData, item])
   const isEmpty = useMemo(() => (
-    type === 'text'
+    item.type === 'text'
     && !blockContentProps.editorState.getCurrentContent().getPlainText().length
-  ), [type, blockContentProps.editorState])
+  ), [item, blockContentProps.editorState])
 
   /* ---
     DRAG AND DROP
@@ -73,10 +72,10 @@ function Block({
         handlerId: monitor.getHandlerId(),
       }
     },
-    hover(item: BlockContentProps, monitor) {
+    hover(dragItem: BlockContentProps, monitor) {
       if (!dragRef.current) return
 
-      const dragIndex = item.index
+      const dragIndex = dragItem.index
       const hoverIndex = index
 
       // Determine rectangle on screen
@@ -160,8 +159,8 @@ function Block({
   return (
     <div
       ref={rootRef}
-      id={id}
-      data-react-block-text-id={id}
+      id={item.id}
+      data-react-block-text-id={item.id}
       data-handler-id={handlerId}
       className="flex"
       onMouseDown={() => !menuPosition && !readOnly && onMouseDown()}
@@ -174,7 +173,7 @@ function Block({
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
-        style={{ width: paddingLeft }}
+        style={{ width: (paddingLeft ?? 0) + item.indent * INDENT_SIZE }}
       />
       <div className="flex-grow flex relative">
         {/* Selection background element */}
