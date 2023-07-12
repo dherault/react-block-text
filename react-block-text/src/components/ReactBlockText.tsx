@@ -547,6 +547,22 @@ function ReactBlockText({
     // We want to split the block into two
     const selection = editorState.getSelection()
     let contentState = editorState.getCurrentContent()
+
+    // If the block is empty and the plugin is convertible to text, we convert it
+    if (contentState.getPlainText() === '' && pluginData?.isConvertibleToText) {
+      const nextEditorStates = { ...editorStates }
+      let nextValue = [...value]
+
+      nextValue[index].type = 'text'
+      nextValue[index].indent = Math.max(0, Math.min(nextValue[index].indent, 1))
+      nextValue = applyMetadatas(index, nextValue, nextEditorStates)
+
+      onChange(nextValue)
+      setEditorStates(nextEditorStates)
+
+      return 'handled'
+    }
+
     const firstBlock = contentState.getFirstBlock()
     const lastBlock = contentState.getLastBlock()
     const isBackward = selection.getIsBackward()
