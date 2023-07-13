@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { ReactNode, useCallback, useState } from 'react'
 
 import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
@@ -11,10 +11,27 @@ function App() {
   const [data, setData] = useState(savedData)
   const [primaryColor, setPrimaryColor] = useState<string | null>(null)
   const [padding, setPadding] = useState(PADDINGS[0])
+  const [isContained, setIsContained] = useState(false)
 
   const handleSave = useCallback(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, data)
   }, [data])
+
+  const renderContainer = useCallback((children: ReactNode) => {
+    if (!isContained) return children
+
+    return (
+      <div
+        className="mx-auto border shadow-xl overflow-auto rounded"
+        style={{
+          maxWidth: 640,
+          maxHeight: 256,
+        }}
+      >
+        {children}
+      </div>
+    )
+  }, [isContained])
 
   return (
     <div className="p-4 min-h-screen bg-gray-100">
@@ -47,23 +64,34 @@ function App() {
         >
           Change padding left
         </button>
+        <button
+          type="button"
+          onClick={() => setIsContained(x => !x)}
+          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+        >
+          Toggle container
+        </button>
       </div>
-      <div className="mt-4 bg-white w-full rounded">
-        <ReactBlockText
-          value={data}
-          onChange={setData}
-          onSave={handleSave}
-          paddingTop={32}
-          paddingBottom={32}
-          paddingLeft={padding}
-          primaryColor={primaryColor}
-          plugins={[
-            ...headerPlugin(),
-            ...todoPlugin({ color: primaryColor }),
-            ...listPlugin(),
-            ...quotePlugin(),
-          ]}
-        />
+      <div className="mt-4">
+        {renderContainer(
+          <div className="bg-white rounded">
+            <ReactBlockText
+              value={data}
+              onChange={setData}
+              onSave={handleSave}
+              paddingTop={32}
+              paddingBottom={32}
+              paddingLeft={padding}
+              primaryColor={primaryColor}
+              plugins={[
+                ...headerPlugin(),
+                ...todoPlugin({ color: primaryColor }),
+                ...listPlugin(),
+                ...quotePlugin(),
+              ]}
+            />
+          </div>
+        )}
       </div>
       {/* <div className="mt-8 px-2 bg-white w-full rounded">
         <ReactBlockText
