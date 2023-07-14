@@ -28,7 +28,10 @@ function App() {
           maxHeight: 256 + 64 + 16 + 4,
         }}
       >
-        {children}
+        <div className="h-3 bg-blue-100" />
+        <div className="pt-3">
+          {children}
+        </div>
       </div>
     )
   }, [isContained])

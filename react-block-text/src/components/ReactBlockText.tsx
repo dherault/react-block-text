@@ -64,7 +64,7 @@ import type {
   ReactBlockTextProps,
   SelectionData,
   SelectionRectData,
-  // XY,
+  XY,
 } from '../types'
 
 import {
@@ -88,8 +88,6 @@ import appendItemData from '../utils/appendItemData'
 import getContextMenuData from '../utils/getContextMenuData'
 import forceContentFocus from '../utils/forceContentFocus'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
-// import findScrollParent from '../utils/findScrollParent'
-
 import findScrollParent from '../utils/findScrollParent'
 
 import Block from './Block'
@@ -112,9 +110,8 @@ const selectionRefs: Record<string, Record<string, HTMLElement>> = {}
 // Not a state for performance reasons
 let isSelecting = false
 let lastForceFocusTime = 0
-// let lastScrollTime = 0
-// let lastRelativeMousePosition: XY = { x: 0, y: 0 }
-let scrollFrame = -1
+let lastRelativeMousePosition: XY = { x: 0, y: 0 }
+let scrollParentFrame = -1
 
 function ReactBlockText({
   value: rawValue,
@@ -1237,12 +1234,35 @@ function ReactBlockText({
   }, [value, editorStates, contextMenuData, onChange, applyMetadatas])
 
   /* ---
-    CONTEXT MENU CLOSE
+    BLOCK MENU CLOSE
   --- */
   const handleBlockMenuClose = useCallback(() => {
     setIsBlockMenuOpen(false)
     handleBlurAllContent()
   }, [handleBlurAllContent])
+
+   /* ---
+    SELECTION RECT CHANGE
+  --- */
+  const handleSelectionRect = useCallback((x: number, y: number) => {
+    setSelectionRect(r => {
+      if (!r) return null
+
+      const nextSelectionRect = {
+        ...r,
+        top: Math.max(0, Math.min(r.anchorTop, y)),
+        left: Math.max(0, Math.min(r.anchorLeft, x)),
+        width: Math.max(2, Math.abs(x - r.anchorLeft)),
+        height: Math.max(2, Math.abs(y - r.anchorTop)),
+      }
+
+      nextSelectionRect.selectedIds = findSelectionRectIds(selectionRefs[instanceId], nextSelectionRect)
+
+      return nextSelectionRect
+    })
+
+    window.getSelection()?.removeAllRanges()
+  }, [instanceId])
 
   /* ---
     SCROLL SPEED
@@ -1252,17 +1272,20 @@ function ReactBlockText({
     if (!rootRef.current) return
 
     const scrollParent = findScrollParent(rootRef.current)
-    const { height } = scrollParent.getBoundingClientRect()
-    const diff = y - scrollParent.scrollTop - height
+    const { height: parentHeight, top: parentTop } = scrollParent.getBoundingClientRect()
+    const { top: childTop } = rootRef.current.getBoundingClientRect()
+    const relativeY = y + childTop - parentTop
 
-    if (diff > -SELECTION_RECT_SCROLL_OFFSET) {
-      setScrollSpeed(BASE_SCROLL_SPEED * (diff + SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
+    // const finalHeight = Math.min(parentHeight, window.innerHeight)
+    console.log('relativeY', relativeY, parentHeight,)
+    if (relativeY < SELECTION_RECT_SCROLL_OFFSET) {
+      setScrollSpeed(BASE_SCROLL_SPEED * (relativeY - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
       return
     }
 
-    if (height + diff < SELECTION_RECT_SCROLL_OFFSET) {
-      setScrollSpeed(BASE_SCROLL_SPEED * (diff + height - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
+    if (parentHeight - relativeY < SELECTION_RECT_SCROLL_OFFSET) {
+      setScrollSpeed(BASE_SCROLL_SPEED * (relativeY - parentHeight + SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
       return
     }
@@ -1271,31 +1294,35 @@ function ReactBlockText({
   }, [])
 
   /* ---
+    PARENT SCROLL
+  --- */
+  const handleParentScroll = useCallback(() => {
+    console.log('parentScroll')
+    if (!(selectionRect && selectionRect.isSelecting)) return
+
+    if (!rootRef.current) return
+
+    // const scrollParent = findScrollParent(rootRef.current)
+
+    // console.log('scrollParent.scrollTop', scrollParent.scrollTop)
+
+    handleSelectionRect(lastRelativeMousePosition.x, lastRelativeMousePosition.y)
+  }, [selectionRect, handleSelectionRect])
+
+  /* ---
     ROOT MOUSE MOVE
-    Set selection react if selecting
+    Set selection rect if selecting
   --- */
   const handleRootMouseMove = useCallback((event: ReactMouseEvent) => {
-    // remove me
     if (!(selectionRect && selectionRect.isSelecting)) return
 
     const { x, y } = getRelativeMousePosition(rootRef.current!, event)
 
+    lastRelativeMousePosition = { x, y }
+
     handleScrollSpeed(x, y)
-
-    const nextSelectionRect = {
-      ...selectionRect,
-      top: Math.max(0, Math.min(selectionRect.anchorTop, y)),
-      left: Math.max(0, Math.min(selectionRect.anchorLeft, x)),
-      width: Math.max(2, Math.abs(x - selectionRect.anchorLeft)),
-      height: Math.max(2, Math.abs(y - selectionRect.anchorTop)),
-    }
-
-    nextSelectionRect.selectedIds = findSelectionRectIds(selectionRefs[instanceId], nextSelectionRect)
-
-    setSelectionRect(nextSelectionRect)
-
-    window.getSelection()?.removeAllRanges()
-  }, [selectionRect, instanceId, handleScrollSpeed])
+    handleSelectionRect(x, y)
+  }, [selectionRect, handleScrollSpeed, handleSelectionRect])
 
   /* ---
     ROOT MOUSE LEAVE
@@ -1575,6 +1602,7 @@ function ReactBlockText({
 
   /* ---
     INITIAL VALUE POPULATION
+    To create the editorStates and apply styles
   --- */
   useEffect(() => {
     if (!(Array.isArray(value) && value.length)) return
@@ -1655,6 +1683,69 @@ function ReactBlockText({
   }, [value, readOnly, instanceId, forceBlurIndex])
 
   /* ---
+    FORCE REFRESH
+  --- */
+  useEffect(() => {
+    if (!shouldTriggerRefresh) return
+
+    forceRefresh(x => !x)
+  }, [shouldTriggerRefresh])
+
+  /* ---
+    SCROLL PARENT WHEN SELECTION RECT
+  --- */
+  useEffect(() => {
+    cancelAnimationFrame(scrollParentFrame)
+
+    if (!scrollSpeed) return
+
+    const rootElement = rootRef.current
+
+    if (!rootElement) return
+
+    const scrollParent = findScrollParent(rootElement)
+    console.log('scrollSpeed', scrollSpeed, scrollParent === document.documentElement)
+
+    const loop = () => {
+      scrollParentFrame = requestAnimationFrame(() => {
+        scrollParent.scrollBy({
+          top: scrollSpeed,
+          behavior: 'auto',
+        })
+        loop()
+      })
+    }
+
+    loop()
+  }, [scrollSpeed])
+
+  /* ---
+    SCROLL PARENT TO UPDATE SELECTION RECT
+  --- */
+  useEffect(() => {
+    if (!rootRef.current) return
+
+    const scrollParent = findScrollParent(rootRef.current)
+
+    scrollParent.addEventListener('scroll', handleParentScroll, { passive: true })
+
+    return () => {
+      scrollParent.removeEventListener('scroll', handleParentScroll)
+    }
+  }, [handleParentScroll])
+
+  /* ---
+    SCROLL WINDOW TO UPDATE SELECTION RECT
+  --- */
+  useEffect(() => {
+    window.addEventListener('scroll', handleParentScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleParentScroll)
+    }
+  }, [handleParentScroll])
+
+  /* ---
     SCROLL INTO VIEW
     Handle scrolling a specific block into view
   --- */
@@ -1673,132 +1764,6 @@ function ReactBlockText({
       block: 'nearest',
     })
   }, [instanceId, scrollIntoViewId])
-
-  /* ---
-    SCROLL ROOT INTO VIEW WHEN SELECTION RECT
-  --- */
-  // const handleParentScroll = useCallback(() => {
-  //   // setRefreshScroll(x => x + 1)
-  // }, [])
-
-  // // const handleRootMouseDown = useCallback((event: ReactMouseEvent) => {
-  // //   console.log('event', event)
-  // // }, [])
-
-  // useEffect(() => {
-  //   const rootElement = rootRef.current
-
-  //   if (!rootElement) return
-
-  //   const scrollParent = findScrollParent(rootElement)
-
-  //   scrollParent.addEventListener('scrollend', handleParentScroll)
-
-  //   return () => {
-  //     scrollParent.removeEventListener('scrollend', handleParentScroll)
-  //   }
-  // }, [handleParentScroll])
-
-  useEffect(() => {
-    cancelAnimationFrame(scrollFrame)
-
-    if (!scrollSpeed) return
-
-    const rootElement = rootRef.current
-
-    if (!rootElement) return
-
-    const scrollParent = findScrollParent(rootElement)
-
-    const loop = () => {
-      scrollFrame = requestAnimationFrame(() => {
-        scrollParent.scrollBy({
-          top: scrollSpeed,
-          behavior: 'auto',
-        })
-        loop()
-      })
-    }
-
-    loop()
-  }, [scrollSpeed])
-
-  // useEffect(() => {
-  //   console.log('call')
-  //   if (!(selectionRect && selectionRect.isSelecting)) return
-
-  //   const rootElement = rootRef.current
-
-  //   if (!rootElement) return
-
-  //   if (lastScrollTime + 16 > Date.now()) return
-
-  //   lastScrollTime = Date.now()
-
-  //   const { top, height } = selectionRect
-  //   const { height: rootHeight } = rootElement.getBoundingClientRect()
-
-  //   const scrollParent = findScrollParent(rootElement)
-
-  //   if (rootHeight - scrollParent.scrollTop - scrollParent.offsetHeight <= 0) {
-  //     console.log('max')
-
-  //     return
-  //   }
-
-  //   if (top && scrollParent.offsetHeight + scrollParent.scrollTop - top - height < SELECTION_RECT_SCROLL_OFFSET) {
-  //     scrollParent.scrollBy({
-  //       top: 5,
-  //       behavior: 'smooth',
-  //     })
-  //     // lastRelativeMousePosition.y += 5
-  //     console.log('set')
-  //   }
-  // }, [selectionRect])
-  // useEffect(() => {
-  //   if (!selectionRect) return
-
-  //   const rootElement = rootRef.current
-
-  //   if (!rootElement) return
-
-  //   const { top, height } = selectionRect
-  //   // const { top: rootTop } = rootElement.getBoundingClientRect()
-
-  //   const scrollParent = findScrollParent(rootElement)
-
-  //   const { height: rootHeight } = rootElement.getBoundingClientRect()
-
-  //   // console.log('scrollParent', scrollParent.scrollTop, scrollParent.offsetHeight)
-  //   // console.log('xxx', rootElement.offsetHeight, rootHeight, scrollParent.scrollTop)
-  //   console.log('xxx', rootHeight - scrollParent.scrollTop - scrollParent.offsetHeight, scrollParentIntervalId)
-  //   // if (rootHeight - scrollParent.scrollTop - scrollParent.offsetHeight <= 0) {
-  //   //   console.log('clearing interval')
-  //   //   if (scrollParentIntervalId !== null) {
-  //   //     clearInterval(scrollParentIntervalId)
-
-  //   //     scrollParentIntervalId = null
-  //   //   }
-
-  //   //   return
-  //   // }
-
-  //   if (top && scrollParent.offsetHeight + scrollParent.scrollTop - top - height < SELECTION_RECT_SCROLL_OFFSET) {
-  //     scrollParent.scrollTop += 0.5
-  //   }
-  //   // if (top + SELECTION_RECT_SCROLL_OFFSET < rootTop) {
-  //   //   rootElement.scrollTop -= 2
-  //   // }
-  // }, [selectionRect])
-
-  /* ---
-    FORCE REFRESH
-  --- */
-  useEffect(() => {
-    if (!shouldTriggerRefresh) return
-
-    forceRefresh(x => !x)
-  }, [shouldTriggerRefresh])
 
   /* ---
     DRAG SIDE EFFECT

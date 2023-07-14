@@ -1,20 +1,28 @@
 // https://stackoverflow.com/questions/35939886/find-first-scrollable-parent
-function findScrollParent(element: HTMLElement, includeHidden = true) {
-  let style = getComputedStyle(element)
-  const excludeStaticParent = style.position === 'absolute'
-  const overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/
+const properties = ['overflow', 'overflow-x', 'overflow-y']
 
-  if (style.position === 'fixed') return document.body
+const isScrollable = (node: Element) => {
+  if (!(node instanceof HTMLElement || node instanceof SVGElement)) return false
 
-  // eslint-disable-next-line no-cond-assign
-  for (let parent = element; parent = parent.parentElement as HTMLElement;) {
-    style = getComputedStyle(parent)
+  const style = getComputedStyle(node)
 
-    if (excludeStaticParent && style.position === 'static') continue
-    if (overflowRegex.test(style.overflow + style.overflowY + style.overflowX)) return parent
+  return properties.some(propertyName => {
+    const value = style.getPropertyValue(propertyName)
+
+    return value === 'auto' || value === 'scroll'
+  })
+}
+
+export const findScrollParent = (node: Element): HTMLElement => {
+  let currentParent = node.parentElement
+
+  while (currentParent) {
+    if (isScrollable(currentParent)) return currentParent
+
+    currentParent = currentParent.parentElement
   }
 
-  return document.body
+  return (document.scrollingElement as HTMLElement) || document.documentElement
 }
 
 export default findScrollParent

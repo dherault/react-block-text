@@ -197,3 +197,8 @@ export type DragData = {
 }
 
 export type EditorRefRegistry = Record<string, Editor | null>
+
+export type XY = {
+  x: number
+  y: number
+}
