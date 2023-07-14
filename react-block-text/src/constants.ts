@@ -17,3 +17,7 @@ export const DRAG_ITEM_BUTTON_ID = 'react-block-text-drag-item-button'
 export const DEFAULT_PRIMARY_COLOR = '#3b82f6'
 
 export const CONTEXT_MENU_HEIGHT = 322
+
+export const SELECTION_RECT_SCROLL_OFFSET = 64
+
+export const BASE_SCROLL_SPEED = 7

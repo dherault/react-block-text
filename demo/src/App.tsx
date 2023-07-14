@@ -10,8 +10,8 @@ function App() {
 
   const [data, setData] = useState(savedData)
   const [primaryColor, setPrimaryColor] = useState<string | null>(null)
-  const [padding, setPadding] = useState(PADDINGS[0])
-  const [isContained, setIsContained] = useState(false)
+  const [padding, setPadding] = useState(PADDINGS[1])
+  const [isContained, setIsContained] = useState(true)
 
   const handleSave = useCallback(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, data)
@@ -25,7 +25,7 @@ function App() {
         className="mx-auto border shadow-xl overflow-auto rounded"
         style={{
           maxWidth: 640,
-          maxHeight: 256,
+          maxHeight: 256 + 64 + 16 + 4,
         }}
       >
         {children}
