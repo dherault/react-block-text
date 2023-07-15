@@ -20,4 +20,4 @@ export const CONTEXT_MENU_HEIGHT = 322
 
 export const SELECTION_RECT_SCROLL_OFFSET = 64
 
-export const BASE_SCROLL_SPEED = 7
+export const BASE_SCROLL_SPEED = 8

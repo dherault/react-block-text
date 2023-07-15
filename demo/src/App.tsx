@@ -11,7 +11,7 @@ function App() {
   const [data, setData] = useState(savedData)
   const [primaryColor, setPrimaryColor] = useState<string | null>(null)
   const [padding, setPadding] = useState(PADDINGS[1])
-  const [isContained, setIsContained] = useState(true)
+  const [isContained, setIsContained] = useState(false)
 
   const handleSave = useCallback(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY, data)

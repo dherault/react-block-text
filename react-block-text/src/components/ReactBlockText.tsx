@@ -1271,21 +1271,22 @@ function ReactBlockText({
   const handleScrollSpeed = useCallback((_x: number, y: number) => {
     if (!rootRef.current) return
 
-    const scrollParent = findScrollParent(rootRef.current)
-    const { height: parentHeight, top: parentTop } = scrollParent.getBoundingClientRect()
-    const { top: childTop } = rootRef.current.getBoundingClientRect()
-    const relativeY = y + childTop - parentTop
+    const parent = findScrollParent(rootRef.current)
+    const { height: parentHeight } = parent.getBoundingClientRect()
+    const relativeTop = rootRef.current.offsetTop - parent.offsetTop
+    const relativeY = y - parent.scrollTop + relativeTop
+    const finalHeight = Math.min(parentHeight, window.innerHeight)
 
-    // const finalHeight = Math.min(parentHeight, window.innerHeight)
-    console.log('relativeY', relativeY, parentHeight,)
-    if (relativeY < SELECTION_RECT_SCROLL_OFFSET) {
+    // Scroll top only if child's top is not visible
+    if (parent.scrollTop > relativeTop && relativeY < SELECTION_RECT_SCROLL_OFFSET) {
       setScrollSpeed(BASE_SCROLL_SPEED * (relativeY - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
       return
     }
 
-    if (parentHeight - relativeY < SELECTION_RECT_SCROLL_OFFSET) {
-      setScrollSpeed(BASE_SCROLL_SPEED * (relativeY - parentHeight + SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
+    // TODO scroll bottom only if child's bottom is not visible
+    if (relativeY > finalHeight - SELECTION_RECT_SCROLL_OFFSET) {
+      setScrollSpeed(-BASE_SCROLL_SPEED * (finalHeight - relativeY - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
       return
     }
@@ -1297,14 +1298,8 @@ function ReactBlockText({
     PARENT SCROLL
   --- */
   const handleParentScroll = useCallback(() => {
-    console.log('parentScroll')
     if (!(selectionRect && selectionRect.isSelecting)) return
-
     if (!rootRef.current) return
-
-    // const scrollParent = findScrollParent(rootRef.current)
-
-    // console.log('scrollParent.scrollTop', scrollParent.scrollTop)
 
     handleSelectionRect(lastRelativeMousePosition.x, lastRelativeMousePosition.y)
   }, [selectionRect, handleSelectionRect])
@@ -1704,10 +1699,15 @@ function ReactBlockText({
     if (!rootElement) return
 
     const scrollParent = findScrollParent(rootElement)
-    console.log('scrollSpeed', scrollSpeed, scrollParent === document.documentElement)
 
     const loop = () => {
       scrollParentFrame = requestAnimationFrame(() => {
+        // Don't overscroll top
+        if (scrollSpeed < 0 && scrollParent.scrollTop < rootElement.offsetTop - scrollParent.offsetTop) return
+
+        // Don't overscroll bottom
+        // TODO
+
         scrollParent.scrollBy({
           top: scrollSpeed,
           behavior: 'auto',
