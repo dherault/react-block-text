@@ -22,13 +22,14 @@ function App() {
 
     return (
       <div
-        className="mx-auto border shadow-xl overflow-auto rounded"
+        className="mx-auto border shadow-xl overflow-auto rounded bg-white"
         style={{
           maxWidth: 640,
           maxHeight: 256 + 64 + 16 + 4,
         }}
       >
-        <div className="h-3 bg-blue-100" />
+        {/* for testing purposes  */}
+        <div className="h-3" />
         <div className="pt-3">
           {children}
         </div>
@@ -37,7 +38,10 @@ function App() {
   }, [isContained])
 
   return (
-    <div className="p-4 pb-64 min-h-screen bg-gray-100">
+    <div
+      className="p-4 pb-64 min-h-screen"
+      style={{ backgroundColor: '#fbfbfa' }}
+    >
       <div className="flex gap-2">
         <button
           type="button"

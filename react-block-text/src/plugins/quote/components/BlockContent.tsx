@@ -4,11 +4,11 @@ function BlockContent(props: BlockContentProps) {
   const { onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
 
   return (
-    <div className="flex h-full">
+    <div className="flex">
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="w-[3px] bg-black flex-shrink-0"
+        className="w-[3px] bg-current flex-shrink-0"
       />
       <div
         onClick={onBlockSelection}

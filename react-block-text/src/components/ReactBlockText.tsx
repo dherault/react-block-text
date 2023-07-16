@@ -23,9 +23,10 @@
 // x Fix multiline enter bug
 // x Remove convertibleToTextTypes
 // x Add isNextItemOfSameType to plugin API
-// - Host demo
-// - Add CI for demo hosting
+// x Host demo
+// x Add CI for demo hosting
 // - Write documentation
+// - Write demo default editor text
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -76,6 +77,7 @@ import {
   COMMANDS,
   DEFAULT_PRIMARY_COLOR,
   DRAG_ITEM_BUTTON_ID,
+  ROOT_STYLE,
   SELECTION_RECT_SCROLL_OFFSET,
   VERSION,
 } from '../constants'
@@ -2193,6 +2195,7 @@ function ReactBlockText({
           onMouseMove={handleRootMouseMove}
           onMouseLeave={handleRootMouseLeave}
           className="relative"
+          style={ROOT_STYLE}
         >
           <div
             onClick={() => handleFocusContent(0)}

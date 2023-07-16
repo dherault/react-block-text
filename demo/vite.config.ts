@@ -11,4 +11,7 @@ export default defineConfig({
   //     'react-block-text': path.resolve(__dirname, '../react-block-text'),
   //   },
   // },
+  optimizeDeps: {
+    exclude: ['react-block-text'],
+  },
 })
