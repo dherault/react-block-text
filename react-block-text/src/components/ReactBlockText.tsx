@@ -4,7 +4,7 @@
 // - Handle undo/redo
 // - Handle drag/drop of multiple blocks
 // - Handle mousedown event for start selection rect on root element, not in blocks
-// - Handle scroll selection
+// x Handle scroll selection
 // x Write header plugin
 // x Write quote plugin
 // x Write list plugin
@@ -62,8 +62,8 @@ import type {
   ReactBlockTextEditorStates,
   ReactBlockTextPluginOptions,
   ReactBlockTextProps,
-  SelectionData,
   SelectionRectData,
+  SelectionTextData,
   XY,
 } from '../types'
 
@@ -206,20 +206,20 @@ function ReactBlockText({
     STATE
   --- */
   const rootRef = useRef<HTMLDivElement>(null)
+  const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
   const [forceBlurIndex, setForceBlurIndex] = useState(-1)
-  const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [scrollIntoViewId, setScrollIntoViewId] = useState<string | null>(null)
   const [dragData, setDragData] = useState<DragData | null>(null)
   const [wasDragging, setWasDragging] = useState(false)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selectionRect, setSelectionRect] = useState<SelectionRectData | null>(null)
-  const [selectionData, setSelectionData] = useState<SelectionData | null>(null)
-  const [refresh, forceRefresh] = useState(false)
-  const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
+  const [selectionText, setSelectionText] = useState<SelectionTextData | null>(null)
   const [scrollSpeed, setScrollSpeed] = useState(0)
+  const [refresh, setRefresh] = useState(false)
+  const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
 
   const previousEditorStates = usePrevious(editorStates, refresh || shouldTriggerRefresh)
 
@@ -769,7 +769,7 @@ function ReactBlockText({
 
       if (previousFirstBlock.getText().length > 0) {
         // We refresh to update previousEditorStates
-        forceRefresh(x => !x)
+        setRefresh(x => !x)
 
         // But we can merge it with the previous one
         const previousSelection = previousEditorState.getSelection()
@@ -965,7 +965,7 @@ function ReactBlockText({
     BLOCK MOUSE DOWN
   --- */
   const handleBlockMouseDown = useCallback(() => {
-    setSelectionData(null)
+    setSelectionText(null)
   }, [])
 
   /* ---
@@ -973,14 +973,14 @@ function ReactBlockText({
   --- */
   const handleFocus = useCallback((index: number) => {
     setFocusedIndex(index)
-    setSelectionData(null)
+    setSelectionText(null)
   }, [])
 
   /* ---
     BLUR
   --- */
   const handleBlur = useCallback(() => {
-    setSelectionData(null)
+    setSelectionText(null)
   }, [])
 
   /* ---
@@ -1047,7 +1047,7 @@ function ReactBlockText({
     ROOT DIV BLUR
   --- */
   const handleRootBlur = useCallback(() => {
-    setSelectionData(null)
+    setSelectionText(null)
   }, [])
 
   /* ---
@@ -1097,10 +1097,10 @@ function ReactBlockText({
     Write selected items to clipboard
   --- */
   const handleWindowCopy = useCallback(() => {
-    if (!(selectionData && selectionData.items.length)) return
+    if (!(selectionText && selectionText.items.length)) return
 
-    navigator.clipboard.writeText(JSON.stringify(selectionData.items))
-  }, [selectionData])
+    navigator.clipboard.writeText(JSON.stringify(selectionText.items))
+  }, [selectionText])
 
   /* ---
     PASTE
@@ -1494,7 +1494,7 @@ function ReactBlockText({
       selected.push(appendItemData(item, nextEditorState))
     })
 
-    setSelectionData({
+    setSelectionText({
       items: selected,
       startId: id,
     })
@@ -1517,7 +1517,7 @@ function ReactBlockText({
 
     isSelecting = false
 
-    forceRefresh(x => !x)
+    setRefresh(x => !x)
 
     try {
       const range = window.getSelection()?.getRangeAt(0)
@@ -1694,7 +1694,7 @@ function ReactBlockText({
   useEffect(() => {
     if (!shouldTriggerRefresh) return
 
-    forceRefresh(x => !x)
+    setRefresh(x => !x)
   }, [shouldTriggerRefresh])
 
   /* ---

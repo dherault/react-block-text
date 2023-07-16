@@ -179,7 +179,7 @@ export type TopLeft = {
   left: number
 }
 
-export type SelectionData = {
+export type SelectionTextData = {
   items: ReactBlockTextDataItem[]
   startId: string
 }
