@@ -1131,12 +1131,12 @@ function ReactBlockText({
   /* ---
     DRAG START
   --- */
-  const handleDragStart = useCallback((index: number) => {
-    setDragData({ index, isTop: null })
+  const handleDragStart = useCallback((dropIndex: number) => {
+    setDragData({ dropIndex, dragIndex: dropIndex, isTop: null })
 
     const selectedIndexes = getSelectionRectIndexes()
 
-    if (selectedIndexes.includes(index)) return
+    if (selectedIndexes.includes(dropIndex)) return
 
     setSelectionRect(null)
   }, [getSelectionRectIndexes])
@@ -1144,8 +1144,8 @@ function ReactBlockText({
   /* ---
     DRAG
   --- */
-  const handleDrag = useCallback((index: number, isTop: boolean | null) => {
-    setDragData({ index, isTop })
+  const handleDrag = useCallback((dropIndex: number, isTop: boolean | null) => {
+    setDragData(x => x ? ({ ...x, dropIndex, isTop }) : null)
   }, [])
 
   /* ---
@@ -1160,26 +1160,27 @@ function ReactBlockText({
     if (!dragData) return
 
     // Actually the drop data: `index` is the drop index
-    const { index, isTop } = dragData
+    const { dropIndex, isTop } = dragData
     const selectedIndexes = getSelectionRectIndexes()
     const dragIndexes = selectedIndexes.length ? selectedIndexes : [singleDragIndex]
 
-    if (dragIndexes.includes(index)) return
+    if (dragIndexes.includes(dropIndex)) return
 
-    const dropIndex = isTop ? index : index + 1
-    const hoveredIndex = dragIndexes.some(i => i <= dropIndex) ? dropIndex - 1 : dropIndex
+    const finalDropIndex = isTop ? dropIndex : dropIndex + 1
+    const isDropAfter = dragIndexes.some(i => i > finalDropIndex)
+    const hoveredIndex = isDropAfter ? finalDropIndex : finalDropIndex - 1
     let nextValue = [...value]
 
-    if (dragIndexes.some(i => i > dropIndex)) {
-      nextValue.splice(dropIndex, 0, ...dragIndexes.map(i => value[i]))
+    if (isDropAfter) {
+      nextValue.splice(finalDropIndex, 0, ...dragIndexes.map(i => value[i]))
       nextValue.splice(dragIndexes[0] + dragIndexes.length, dragIndexes.length)
     }
     else {
-      nextValue.splice(dropIndex, 0, ...dragIndexes.map(i => value[i]))
+      nextValue.splice(finalDropIndex, 0, ...dragIndexes.map(i => value[i]))
       nextValue.splice(dragIndexes[0], dragIndexes.length)
     }
 
-    nextValue = applyMetadatas(dropIndex, nextValue, editorStates)
+    nextValue = applyMetadatas(finalDropIndex, nextValue, editorStates)
 
     onChange(nextValue)
     setHoveredIndex(hoveredIndex)
@@ -2006,11 +2007,11 @@ function ReactBlockText({
 
     return selectedIndexes.includes(index)
       ? null
-      : dragData?.index === index
+      : dragData?.dropIndex === index
         ? index === value.length - 1
           ? dragData.isTop
           : dragData.isTop || null
-        : (dragData?.index === index - 1 && dragData.isTop === false) || null
+        : (dragData?.dropIndex === index - 1 && dragData.isTop === false) || null
   }, [value, dragData, getSelectionRectIndexes])
 
   /* ---
@@ -2161,15 +2162,21 @@ function ReactBlockText({
     SELECTED BLOCK PROPS
     For the drag layer to render a preview of the selected blocks on drag
   */
-  const selectedBlockProps = useMemo(() => {
-    if (!(selectionRect && selectionRect.selectedIds.length)) return null
+  const selectedBlockProps = useMemo(() => (
+    getSelectionRectIndexes().map(index => getBlockProps(value[index], index))
+  ), [value, getBlockProps, getSelectionRectIndexes])
 
-    return selectionRect.selectedIds.map(id => {
-      const index = value.findIndex(item => item.id === id)
+  /*
+    DRAG LAYER DRAG INDEX
+    Among the selected blocks, the index of the block being dragged
+  */
+  const offsetDragIndex = useMemo(() => {
+    const selectedIndexes = getSelectionRectIndexes()
 
-      return getBlockProps(value[index], index)
-    })
-  }, [value, selectionRect, getBlockProps])
+    if (!selectedIndexes.length || !dragData) return 0
+
+    return selectedIndexes.indexOf(dragData.dragIndex)
+  }, [dragData, getSelectionRectIndexes])
 
   /* ---
     MAIN RETURN STATEMENT
@@ -2226,6 +2233,7 @@ function ReactBlockText({
         <DragLayer
           pluginsData={pluginsData}
           blockProps={selectedBlockProps}
+          dragIndex={offsetDragIndex}
         />
       </PrimaryColorContext.Provider>
     </DndProvider>

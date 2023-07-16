@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback } from 'react'
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 import type { XYCoord } from 'react-dnd'
 import { useDragLayer } from 'react-dnd'
 
@@ -19,24 +19,36 @@ const layerStyle: CSSProperties = {
 function getPreviewStyle(
   initialOffset: XYCoord | null,
   currentOffset: XYCoord | null,
+  previewElement: HTMLDivElement | null,
+  dragElement: HTMLDivElement | null,
 ) {
-  if (!initialOffset || !currentOffset) {
+  if (!initialOffset || !currentOffset || !previewElement || !dragElement) {
     return {
-      display: 'none',
+      opacity: 0,
+      transition: 'opacity 150ms linear',
     }
   }
 
+  // `previewTop` and `dragTop` allow offseting the preview by the top of the dragged block
+  // In case multiple blocks are dragged, so that the preview stays aligned with the drag handle
+  const { top: previewTop } = previewElement.getBoundingClientRect()
+  const { top: dragTop } = dragElement.getBoundingClientRect()
   const { x, y } = currentOffset
-  const transform = `translate(${x + 19}px, ${y - 3}px)`
+  const transform = `translate(${x + 19}px, ${y - dragTop + previewTop - 3}px)`
 
   return {
     transform,
     WebkitTransform: transform,
     opacity: 0.4,
+    transition: 'opacity 150ms linear',
   }
 }
 
-function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
+function DragLayer({ pluginsData, blockProps, dragIndex }: DragLayerProps) {
+  const previewRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<HTMLDivElement>(null)
+  const [, forceRefresh] = useState(false)
+
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(monitor => ({
     isDragging: monitor.isDragging(),
     item: monitor.getItem() as BlockProps,
@@ -44,7 +56,7 @@ function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
     currentOffset: monitor.getSourceClientOffset(),
   }))
 
-  const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>, noPadding = false) => {
+  const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>, index: number, noPadding = false) => {
     const plugin = pluginsData.find(plugin => plugin.type === props.item.type)
 
     if (!plugin) return null
@@ -52,35 +64,48 @@ function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
     const { BlockContent } = plugin
 
     return (
-      <Block
-        {...props}
+      <div
         key={props.item.id}
-        readOnly
-        selected={false}
-        paddingLeft={0}
-        noPadding={noPadding}
-        isDraggingTop={null}
+        ref={index === dragIndex ? dragRef : null}
       >
-        <BlockContent
-          {...props.blockContentProps}
+        <Block
+          {...props}
           readOnly
-        />
-      </Block>
+          selected={false}
+          paddingLeft={0}
+          noPadding={noPadding}
+          isDraggingTop={null}
+        >
+          <BlockContent
+            {...props.blockContentProps}
+            readOnly
+          />
+        </Block>
+      </div>
     )
-  }, [pluginsData])
+  }, [pluginsData, dragIndex])
 
   const renderPreview = useCallback(() => {
-    if (!blockProps) return renderSingleItem(item, true)
+    if (!blockProps.length) return renderSingleItem(item, 0, true)
 
-    return blockProps.map(props => renderSingleItem(props))
+    return blockProps.map((props, i) => renderSingleItem(props, i))
   }, [blockProps, item, renderSingleItem])
+
+  useEffect(() => {
+    if (!isDragging) return
+
+    setTimeout(() => {
+      forceRefresh(x => !x)
+    }, 0)
+  }, [isDragging])
 
   if (!isDragging) return null
 
   return (
     <div style={layerStyle}>
       <div
-        style={getPreviewStyle(initialOffset, currentOffset)}
+        ref={previewRef}
+        style={getPreviewStyle(initialOffset, currentOffset, previewRef.current, dragRef.current)}
       >
         {renderPreview()}
       </div>

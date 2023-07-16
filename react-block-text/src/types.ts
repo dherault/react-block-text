@@ -163,7 +163,8 @@ export type BlockMenuItemProps = {
 
 export type DragLayerProps = {
   pluginsData: ReactBlockTextPluginData[]
-  blockProps: Omit<BlockProps, 'children'>[] | null
+  blockProps: Omit<BlockProps, 'children'>[]
+  dragIndex: number
 }
 
 export type SelectionRectProps = {
@@ -199,7 +200,8 @@ export type SelectionRectData = SelectionRectProps & {
 }
 
 export type DragData = {
-  index: number
+  dragIndex: number
+  dropIndex: number
   isTop: boolean | null
 }
 
