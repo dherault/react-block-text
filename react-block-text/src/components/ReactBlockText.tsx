@@ -2,7 +2,7 @@
 // x Rewrite for plugins
 // - Handle copy/paste
 // - Handle undo/redo
-// - Handle drag/drop of multiple blocks
+// x Handle drag/drop of multiple blocks
 // - Handle mousedown event for start selection rect on root element, not in blocks
 // x Handle scroll selection
 // x Write header plugin
@@ -23,6 +23,8 @@
 // x Fix multiline enter bug
 // x Remove convertibleToTextTypes
 // x Add isNextItemOfSameType to plugin API
+// - Host demo
+// - Add CI for demo hosting
 
 import {
   type MouseEvent as ReactMouseEvent,
