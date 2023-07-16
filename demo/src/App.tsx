@@ -48,6 +48,9 @@ function App() {
       style={{ backgroundColor: '#fbfbfa' }}
     >
       <div className="w-[192px] flex-shrink-0">
+        <h1 className="py-1 px-2 font-semibold">
+          React Block Text
+        </h1>
         <div
           onClick={() => setData('')}
           className="py-1 px-2 hover:bg-gray-100 cursor-pointer"

@@ -32,6 +32,7 @@
 // - Fix arrow up/down bug on long text
 // x Fix long text selection offset
 // - Fix selection rect bg bug
+// - Remove indent on text, header, ...
 
 import {
   type MouseEvent as ReactMouseEvent,
