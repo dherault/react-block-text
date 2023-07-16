@@ -25,6 +25,7 @@
 // x Add isNextItemOfSameType to plugin API
 // - Host demo
 // - Add CI for demo hosting
+// - Write documentation
 
 import {
   type MouseEvent as ReactMouseEvent,
