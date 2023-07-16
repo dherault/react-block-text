@@ -100,13 +100,18 @@ function App() {
           </div>
         )}
       </div>
-      {/* <div className="mt-8 px-2 bg-white w-full rounded">
+      <div className="mt-8 bg-white w-full rounded">
         <ReactBlockText
           readOnly
           value={data}
-          onChange={setData}
+          plugins={[
+            ...headerPlugin(),
+            ...todoPlugin(),
+            ...listPlugin(),
+            ...quotePlugin(),
+          ]}
         />
-      </div> */}
+      </div>
       {/* <div className="mt-8 p-2 bg-white w-full rounded">
         {JSON.stringify(data, null, 2)}
       </div> */}

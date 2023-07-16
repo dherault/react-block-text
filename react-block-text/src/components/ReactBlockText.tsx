@@ -3,12 +3,11 @@
 // - Handle copy/paste
 // - Handle undo/redo
 // x Handle drag/drop of multiple blocks
-// - Handle mousedown event for start selection rect on root element, not in blocks
 // x Handle scroll selection
 // x Write header plugin
 // x Write quote plugin
 // x Write list plugin
-// - Complete list plugin
+// - Complete list plugin (it's buggy)
 // - Write code plugin
 // - Write image plugin
 // - Write table plugin (may need to set editorStates as an array)
@@ -28,6 +27,7 @@
 // - Write documentation
 // - Write demo default editor text
 // - Investigate Checkbox opacity transition
+// - Handle meta backspace bug
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -53,8 +53,6 @@ import {
 import 'draft-js/dist/Draft.css'
 // @ts-expect-error
 import ignoreWarnings from 'ignore-warnings'
-
-import textPlugin from '../plugins/text/plugin'
 
 import type {
   BlockCommonProps,
@@ -82,6 +80,8 @@ import {
   SELECTION_RECT_SCROLL_OFFSET,
   VERSION,
 } from '../constants'
+
+import textPlugin from '../plugins/text/plugin'
 
 import PrimaryColorContext from '../context/PrimaryColorContext'
 
@@ -250,12 +250,8 @@ function ReactBlockText({
 
   const previousEditorStates = usePrevious(editorStates, refresh || shouldTriggerRefresh)
 
-  // A unique instance id for the sake of editorRefs, so multiple instances can be used on the same page
+  // A unique instance id for the sake of keeping refs, so multiple instances can be used on the same page
   const instanceId = useMemo(() => nanoid(), [])
-
-  // TODO
-  // const last = Object.values(previousEditorStates).pop()
-  // console.log(last?.getSelection().getFocusOffset(), refresh)
 
   /*
     ██╗   ██╗████████╗██╗██╗     ███████╗
@@ -1473,6 +1469,8 @@ function ReactBlockText({
     SINGLE BLOCK SELECTION
   --- */
   const handleSingleBlockSelection = useCallback((id: string) => {
+    if (readOnly) return
+
     setSelectionRect({
       isSelecting: false,
       anchorTop: 0,
@@ -1485,12 +1483,14 @@ function ReactBlockText({
     })
 
     window.getSelection()?.removeAllRanges()
-  }, [])
+  }, [readOnly])
 
   /* ---
     RECT SELECTION START
   --- */
   const handleRectSelectionStart = useCallback((event: ReactMouseEvent) => {
+    if (readOnly) return
+
     lastMousePosition = {
       x: event.clientX,
       y: event.clientY,
@@ -1508,7 +1508,7 @@ function ReactBlockText({
       height: 0,
       selectedIds: [],
     })
-  }, [])
+  }, [readOnly])
 
   /* ---
     RECT SELECTION END
