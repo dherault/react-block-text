@@ -28,7 +28,8 @@ function Block(props: BlockProps) {
     selected,
     hovered,
     isDraggingTop,
-    paddingLeft,
+    paddingLeft: rawPaddingLeft,
+    noPadding = false,
     registerSelectionRef,
     onAddItem,
     onDeleteItem,
@@ -59,6 +60,9 @@ function Block(props: BlockProps) {
     item.type === 'text'
     && !blockContentProps.editorState.getCurrentContent().getPlainText().length
   ), [item, blockContentProps.editorState])
+  const paddingTop = useMemo(() => noPadding ? 0 : plugin?.paddingTop ?? 3, [noPadding, plugin])
+  const paddingBottom = useMemo(() => noPadding ? 0 : plugin?.paddingBottom ?? 3, [noPadding, plugin])
+  const paddingLeft = useMemo(() => noPadding ? 0 : rawPaddingLeft ?? 0, [noPadding, rawPaddingLeft])
 
   /* ---
     DRAG AND DROP
@@ -186,8 +190,8 @@ function Block(props: BlockProps) {
           ref={registerSelectionRef}
           className="absolute rounded-sm z-0 transition-opacity"
           style={{
-            top: (plugin?.paddingTop || 3) - 2,
-            bottom: (plugin?.paddingBottom || 3) - 2,
+            top: paddingTop - 2,
+            bottom: paddingBottom - 2,
             left: (contentRef.current?.offsetLeft || 0) - 4,
             right: 2,
             backgroundColor: primaryColor,
@@ -204,7 +208,7 @@ function Block(props: BlockProps) {
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
               className="flex-shrink-0 cursor-text"
-              style={{ height: (plugin?.paddingTop || 3) + (plugin?.iconsPaddingTop || 0) }}
+              style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) }}
             />
             <div
               className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
@@ -247,39 +251,47 @@ function Block(props: BlockProps) {
           ref={contentRef}
           className="flex-grow cursor-text z-10"
         >
-          <div
-            onClick={focusContent}
-            onMouseDown={onRectSelectionMouseDown}
-            className="transition-opacity duration-300"
-            style={{
-              height: DRAG_INDICATOR_SIZE,
-              backgroundColor: primaryColor,
-              opacity: isDraggingTop ? 0.4 : 0,
-            }}
-          />
-          <div
-            onClick={focusContent}
-            onMouseDown={onRectSelectionMouseDown}
-            style={{ height: (plugin?.paddingTop || 3) - DRAG_INDICATOR_SIZE }}
-          />
-          <div style={{ height: `calc(100% - ${(plugin?.paddingTop || 3) + (plugin?.paddingBottom || 3)}px)` }}>
+          {!noPadding && (
+            <>
+              <div
+                onClick={focusContent}
+                onMouseDown={onRectSelectionMouseDown}
+                className="transition-opacity duration-300"
+                style={{
+                  height: DRAG_INDICATOR_SIZE,
+                  backgroundColor: primaryColor,
+                  opacity: isDraggingTop ? 0.4 : 0,
+                }}
+              />
+              <div
+                onClick={focusContent}
+                onMouseDown={onRectSelectionMouseDown}
+                style={{ height: paddingTop - DRAG_INDICATOR_SIZE }}
+              />
+            </>
+          )}
+          <div style={{ height: `calc(100% - ${paddingTop + paddingBottom}px)` }}>
             {children}
           </div>
-          <div
-            onClick={focusNextContent}
-            onMouseDown={onRectSelectionMouseDown}
-            style={{ height: (plugin?.paddingBottom || 3) - DRAG_INDICATOR_SIZE }}
-          />
-          <div
-            onClick={focusNextContent}
-            onMouseDown={onRectSelectionMouseDown}
-            className="transition-opacity duration-200"
-            style={{
-              height: DRAG_INDICATOR_SIZE,
-              backgroundColor: primaryColor,
-              opacity: isDraggingTop === false ? 0.4 : 0,
-            }}
-          />
+          {!noPadding && (
+            <>
+              <div
+                onClick={focusNextContent}
+                onMouseDown={onRectSelectionMouseDown}
+                style={{ height: paddingBottom - DRAG_INDICATOR_SIZE }}
+              />
+              <div
+                onClick={focusNextContent}
+                onMouseDown={onRectSelectionMouseDown}
+                className="transition-opacity duration-200"
+                style={{
+                  height: DRAG_INDICATOR_SIZE,
+                  backgroundColor: primaryColor,
+                  opacity: isDraggingTop === false ? 0.4 : 0,
+                }}
+              />
+            </>
+          )}
         </div>
         {/* Block menu */}
         {!!menuPosition && (

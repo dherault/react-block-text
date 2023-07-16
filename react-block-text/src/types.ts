@@ -65,8 +65,9 @@ export type BlockProps = {
   readOnly: boolean
   selected: boolean
   hovered: boolean
-  paddingLeft?: number
   isDraggingTop: boolean | null
+  paddingLeft?: number
+  noPadding?: boolean
   registerSelectionRef: (ref: any) => void
   onAddItem: () => void
   onDeleteItem: () => void

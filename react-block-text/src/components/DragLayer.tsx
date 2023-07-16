@@ -27,7 +27,7 @@ function getPreviewStyle(
   }
 
   const { x, y } = currentOffset
-  const transform = `translate(${x + 19}px, ${y - 2}px)`
+  const transform = `translate(${x + 19}px, ${y - 3}px)`
 
   return {
     transform,
@@ -44,7 +44,7 @@ function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
     currentOffset: monitor.getSourceClientOffset(),
   }))
 
-  const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>) => {
+  const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>, noPadding = false) => {
     const plugin = pluginsData.find(plugin => plugin.type === props.item.type)
 
     if (!plugin) return null
@@ -58,6 +58,7 @@ function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
         readOnly
         selected={false}
         paddingLeft={0}
+        noPadding={noPadding}
         isDraggingTop={null}
       >
         <BlockContent
@@ -69,9 +70,9 @@ function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
   }, [pluginsData])
 
   const renderPreview = useCallback(() => {
-    if (!blockProps) return renderSingleItem(item)
+    if (!blockProps) return renderSingleItem(item, true)
 
-    return blockProps.map(renderSingleItem)
+    return blockProps.map(props => renderSingleItem(props))
   }, [blockProps, item, renderSingleItem])
 
   if (!isDragging) return null

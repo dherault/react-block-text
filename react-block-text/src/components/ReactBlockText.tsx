@@ -61,7 +61,6 @@ import type {
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextEditorStates,
-  ReactBlockTextPluginOptions,
   ReactBlockTextProps,
   SelectionRectData,
   SelectionTextData,
@@ -149,7 +148,16 @@ function ReactBlockText({
   /* ---
     PRIMARY COLOR
   --- */
-  const primaryColor = useMemo(() => rawPrimaryColor ?? DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
+  const primaryColor = useMemo(() => rawPrimaryColor || DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
+
+  /*
+    ██████╗ ██╗     ██╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
+    ██╔══██╗██║     ██║   ██║██╔════╝ ██║████╗  ██║██╔════╝
+    ██████╔╝██║     ██║   ██║██║  ███╗██║██╔██╗ ██║███████╗
+    ██╔═══╝ ██║     ██║   ██║██║   ██║██║██║╚██╗██║╚════██║
+    ██║     ███████╗╚██████╔╝╚██████╔╝██║██║ ╚████║███████║
+    ╚═╝     ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝╚═╝  ╚═══╝╚══════╝
+  */
 
   /* ---
     HANDLE PLUGIN CHANGE
@@ -171,21 +179,21 @@ function ReactBlockText({
     onChange(nextValue)
   }, [readOnly, value, onChange])
 
-  const pluginOptions = useMemo<ReactBlockTextPluginOptions>(() => ({
-    primaryColor,
-    onChange: handlePluginChange,
-  }), [handlePluginChange, primaryColor])
-
   /* ---
     PLUGINS MERGING
   --- */
-  const pluginsData = useMemo(() => (
-    [
+  const pluginsData = useMemo(() => {
+    const options = {
+      primaryColor,
+      onChange: handlePluginChange,
+    }
+
+    return [
       ...textPlugin(),
       ...plugins,
     ]
-    .map(x => x(pluginOptions))
-  ), [plugins, pluginOptions])
+    .map(x => x(options))
+  }, [plugins, primaryColor, handlePluginChange])
 
   /* ---
     APPLY STYLES
@@ -209,9 +217,15 @@ function ReactBlockText({
     return nextValue
   }, [pluginsData])
 
-  /* ---
-    STATE
-  --- */
+  /*
+    ███████╗████████╗ █████╗ ████████╗███████╗
+    ██╔════╝╚══██╔══╝██╔══██╗╚══██╔══╝██╔════╝
+    ███████╗   ██║   ███████║   ██║   █████╗
+    ╚════██║   ██║   ██╔══██║   ██║   ██╔══╝
+    ███████║   ██║   ██║  ██║   ██║   ███████╗
+    ╚══════╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝   ╚══════╝
+  */
+
   const rootRef = useRef<HTMLDivElement>(null)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
@@ -236,6 +250,26 @@ function ReactBlockText({
   // TODO
   // const last = Object.values(previousEditorStates).pop()
   // console.log(last?.getSelection().getFocusOffset(), refresh)
+
+  /*
+    ██╗   ██╗████████╗██╗██╗     ███████╗
+    ██║   ██║╚══██╔══╝██║██║     ██╔════╝
+    ██║   ██║   ██║   ██║██║     ███████╗
+    ██║   ██║   ██║   ██║██║     ╚════██║
+    ╚██████╔╝   ██║   ██║███████╗███████║
+     ╚═════╝    ╚═╝   ╚═╝╚══════╝╚══════╝
+  */
+
+  /* ---
+    GET SELECTION RECT INDEXES
+  --- */
+  const getSelectionRectIndexes = useCallback(() => {
+    const selectedIds = selectionRect?.selectedIds ?? []
+
+    return value.map((item, index) => ({ item, index }))
+      .filter(({ item }) => selectedIds.includes(item.id))
+      .map(({ index }) => index)
+  }, [value, selectionRect])
 
   /* ---
     REGISTER REF
@@ -1076,7 +1110,7 @@ function ReactBlockText({
   }, [])
 
   /* ---
-    OUTSIDE CLICK
+    ROOT OUTSIDE CLICK
   --- */
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
@@ -1095,6 +1129,19 @@ function ReactBlockText({
   */
 
   /* ---
+    DRAG START
+  --- */
+  const handleDragStart = useCallback((index: number) => {
+    setDragData({ index, isTop: null })
+
+    const selectedIndexes = getSelectionRectIndexes()
+
+    if (selectedIndexes.includes(index)) return
+
+    setSelectionRect(null)
+  }, [getSelectionRectIndexes])
+
+  /* ---
     DRAG
   --- */
   const handleDrag = useCallback((index: number, isTop: boolean | null) => {
@@ -1105,36 +1152,46 @@ function ReactBlockText({
     DRAG END
     Move items at the end of a drag session
   --- */
-  const handleDragEnd = useCallback((dragIndex: number) => {
+  const handleDragEnd = useCallback((singleDragIndex: number) => {
     setDragData(null)
     setFocusedIndex(-1)
     handleBlurAllContent()
 
     if (!dragData) return
 
+    // Actually the drop data: `index` is the drop index
     const { index, isTop } = dragData
+    const selectedIndexes = getSelectionRectIndexes()
+    const dragIndexes = selectedIndexes.length ? selectedIndexes : [singleDragIndex]
 
-    if (dragIndex === index) return
+    if (dragIndexes.includes(index)) return
 
-    const finalIndex = isTop ? index : index + 1
+    const dropIndex = isTop ? index : index + 1
+    const hoveredIndex = dragIndexes.some(i => i <= dropIndex) ? dropIndex - 1 : dropIndex
     let nextValue = [...value]
-    let hoveredIndex = finalIndex
 
-    if (dragIndex > finalIndex) {
-      nextValue.splice(finalIndex, 0, value[dragIndex])
-      nextValue.splice(dragIndex + 1, 1)
+    if (dragIndexes.some(i => i > dropIndex)) {
+      nextValue.splice(dropIndex, 0, ...dragIndexes.map(i => value[i]))
+      nextValue.splice(dragIndexes[0] + dragIndexes.length, dragIndexes.length)
     }
     else {
-      nextValue.splice(finalIndex, 0, value[dragIndex])
-      nextValue.splice(dragIndex, 1)
-      hoveredIndex--
+      nextValue.splice(dropIndex, 0, ...dragIndexes.map(i => value[i]))
+      nextValue.splice(dragIndexes[0], dragIndexes.length)
     }
 
-    nextValue = applyMetadatas(finalIndex, nextValue, editorStates)
+    nextValue = applyMetadatas(dropIndex, nextValue, editorStates)
 
     onChange(nextValue)
     setHoveredIndex(hoveredIndex)
-  }, [value, editorStates, dragData, onChange, applyMetadatas, handleBlurAllContent])
+  }, [
+    value,
+    editorStates,
+    dragData,
+    onChange,
+    applyMetadatas,
+    handleBlurAllContent,
+    getSelectionRectIndexes,
+  ])
 
   /*
      ██████╗ ██████╗ ██████╗ ██╗   ██╗    ██████╗  █████╗ ███████╗████████╗███████╗
@@ -1845,6 +1902,7 @@ function ReactBlockText({
     if (!element) return
 
     // children[0] is a special element that is offseted from its parent by a few px
+    // So scrolling it into view scrolls a bit more than the parent
     // See Block component
     element.children[0].scrollIntoView({
       behavior: 'instant',
@@ -1858,9 +1916,9 @@ function ReactBlockText({
     Prevent hoveredIndex from being set to dragIndex after dragging
   --- */
   useEffect(() => {
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       setWasDragging(!!dragData)
-    }, 16) // 1 frame
+    })
   }, [dragData])
 
   /* ---
@@ -1940,13 +1998,20 @@ function ReactBlockText({
     GET IS DRAGGING TOP
     Get if the block should display the top dragging indicator (true | false for bottom | null for none)
   --- */
-  const getIsDraggingTop = useCallback((index: number) => (
-    dragData?.index === index
-      ? index === value.length - 1
-        ? dragData.isTop
-        : dragData.isTop || null
-      : (dragData?.index === index - 1 && dragData.isTop === false) || null
-  ), [dragData, value])
+  const getIsDraggingTop = useCallback((index: number) => {
+    const selectedIndexes = getSelectionRectIndexes()
+
+    // Allow drop on top of the first rect selected block
+    selectedIndexes.shift()
+
+    return selectedIndexes.includes(index)
+      ? null
+      : dragData?.index === index
+        ? index === value.length - 1
+          ? dragData.isTop
+          : dragData.isTop || null
+        : (dragData?.index === index - 1 && dragData.isTop === false) || null
+  }, [value, dragData, getSelectionRectIndexes])
 
   /* ---
     GET COMMON PROPS
@@ -1981,9 +2046,9 @@ function ReactBlockText({
       editorState: editorStates[item.id],
       readOnly: isSelecting || !!readOnly,
       focused: !dragData && index === focusedIndex,
-      isSelecting,
       placeholder: "Start typing or press '/' for commands",
       fallbackPlaceholder: '',
+      isSelecting,
       registerRef: ref => registerRef(item.id, ref),
       onChange: editorState => handleChange(item.id, editorState),
       onReturn: event => handleReturn(index, event),
@@ -2033,7 +2098,7 @@ function ReactBlockText({
       onMouseDown: handleBlockMouseDown,
       onMouseMove: () => !wasDragging && setHoveredIndex(index),
       onMouseLeave: () => !wasDragging && setHoveredIndex(previous => previous === index ? -1 : previous),
-      onDragStart: () => setDragData({ index, isTop: null }),
+      onDragStart: () => handleDragStart(index),
       onDrag: handleDrag,
       onDragEnd: () => handleDragEnd(index),
       onBlockMenuOpen: () => setIsBlockMenuOpen(true),
@@ -2057,6 +2122,7 @@ function ReactBlockText({
     handleAddItem,
     handleDeleteItem,
     handleDuplicateItem,
+    handleDragStart,
     handleDrag,
     handleDragEnd,
     handleBlockMenuClose,
@@ -2122,7 +2188,7 @@ function ReactBlockText({
             onClick={() => handleFocusContent(0)}
             onMouseDown={handleRectSelectionStart}
             className="cursor-text"
-            style={{ height: paddingTop ?? 0 }}
+            style={{ height: paddingTop || 0 }}
           />
           {value.map(renderEditor)}
           {!!contextMenuData && (
@@ -2154,7 +2220,7 @@ function ReactBlockText({
             onClick={() => handleFocusContent(value.length - 1, false, true)}
             onMouseDown={handleRectSelectionStart}
             className="cursor-text"
-            style={{ height: paddingBottom ?? 0 }}
+            style={{ height: paddingBottom || 0 }}
           />
         </div>
         <DragLayer
