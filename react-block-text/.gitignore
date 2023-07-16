@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 vite.config.ts.*
+
+bundle-analysis.txt
