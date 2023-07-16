@@ -774,10 +774,10 @@ function ReactBlockText({
         // But we can merge it with the previous one
         const previousSelection = previousEditorState.getSelection()
 
-        console.log('focusOffset', previousSelection.getFocusOffset())
+        // console.log('focusOffset', previousSelection.getFocusOffset())
         // If the selection is at the beggining of the first block
         if (previousSelection.isCollapsed() && previousSelection.getFocusOffset() === 0 && previousSelection.getAnchorKey() === previousFirstBlock.getKey()) {
-          console.log('merge')
+          // console.log('merge')
           handleBackspace(focusedIndex)
         }
 
