@@ -110,13 +110,13 @@ const selectionRefs: Record<string, Record<string, HTMLElement>> = {}
 // Not a state for performance reasons
 let isSelecting = false
 let lastForceFocusTime = 0
-let lastRelativeMousePosition: XY = { x: 0, y: 0 }
+let lastMousePosition: XY = { x: 0, y: 0 }
 let scrollParentFrame = -1
 
 function ReactBlockText({
   value: rawValue,
   onChange: rawOnChange,
-  plugins: rawPlugins = [],
+  plugins = [],
   readOnly,
   paddingTop,
   paddingBottom,
@@ -175,10 +175,10 @@ function ReactBlockText({
   const pluginsData = useMemo(() => (
     [
       ...textPlugin(),
-      ...rawPlugins,
+      ...plugins,
     ]
     .map(x => x(pluginOptions))
-  ), [rawPlugins, pluginOptions])
+  ), [plugins, pluginOptions])
 
   /* ---
     APPLY STYLES
@@ -1284,7 +1284,8 @@ function ReactBlockText({
       return
     }
 
-    // TODO scroll bottom only if child's bottom is not visible
+    // Scroll bottom only if child's bottom is not visible
+    // TODO
     if (relativeY > finalHeight - SELECTION_RECT_SCROLL_OFFSET) {
       setScrollSpeed(-BASE_SCROLL_SPEED * (finalHeight - relativeY - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
@@ -1301,7 +1302,9 @@ function ReactBlockText({
     if (!(selectionRect && selectionRect.isSelecting)) return
     if (!rootRef.current) return
 
-    handleSelectionRect(lastRelativeMousePosition.x, lastRelativeMousePosition.y)
+    const { x, y } = getRelativeMousePosition(rootRef.current!, lastMousePosition)
+
+    handleSelectionRect(x, y)
   }, [selectionRect, handleSelectionRect])
 
   /* ---
@@ -1311,9 +1314,12 @@ function ReactBlockText({
   const handleRootMouseMove = useCallback((event: ReactMouseEvent) => {
     if (!(selectionRect && selectionRect.isSelecting)) return
 
-    const { x, y } = getRelativeMousePosition(rootRef.current!, event)
+    lastMousePosition = {
+      x: event.clientX,
+      y: event.clientY,
+    }
 
-    lastRelativeMousePosition = { x, y }
+    const { x, y } = getRelativeMousePosition(rootRef.current!, lastMousePosition)
 
     handleScrollSpeed(x, y)
     handleSelectionRect(x, y)
@@ -1350,7 +1356,12 @@ function ReactBlockText({
     RECT SELECTION START
   --- */
   const handleRectSelectionStart = useCallback((event: ReactMouseEvent) => {
-    const { x, y } = getRelativeMousePosition(rootRef.current!, event)
+    lastMousePosition = {
+      x: event.clientX,
+      y: event.clientY,
+    }
+
+    const { x, y } = getRelativeMousePosition(rootRef.current!, lastMousePosition)
 
     setSelectionRect({
       isSelecting: true,
@@ -1694,21 +1705,21 @@ function ReactBlockText({
 
     if (!scrollSpeed) return
 
-    const rootElement = rootRef.current
+    const child = rootRef.current
 
-    if (!rootElement) return
+    if (!child) return
 
-    const scrollParent = findScrollParent(rootElement)
+    const parent = findScrollParent(child)
 
     const loop = () => {
       scrollParentFrame = requestAnimationFrame(() => {
         // Don't overscroll top
-        if (scrollSpeed < 0 && scrollParent.scrollTop < rootElement.offsetTop - scrollParent.offsetTop) return
+        if (scrollSpeed < 0 && parent.scrollTop < child.offsetTop - parent.offsetTop) return
 
         // Don't overscroll bottom
         // TODO
 
-        scrollParent.scrollBy({
+        parent.scrollBy({
           top: scrollSpeed,
           behavior: 'auto',
         })
