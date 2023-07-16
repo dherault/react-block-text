@@ -27,6 +27,7 @@
 // x Add CI for demo hosting
 // - Write documentation
 // - Write demo default editor text
+// - Investigate Checkbox opacity transition
 
 import {
   type MouseEvent as ReactMouseEvent,

@@ -22,7 +22,7 @@ function BlockContent(props: BlockContentProps) {
   }, [readOnly, item, editorState, onItemChange, forceBlurContent])
 
   return (
-    <div className="h-full flex">
+    <div className="flex">
       <div className="flex items-start">
         <Checkbox
           color={color}
