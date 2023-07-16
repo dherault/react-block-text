@@ -269,7 +269,7 @@ function ReactBlockText({
     ██║     ███████║███████║██╔██╗ ██║██║  ███╗█████╗
     ██║     ██╔══██║██╔══██║██║╚██╗██║██║   ██║██╔══╝
     ╚██████╗██║  ██║██║  ██║██║ ╚████║╚██████╔╝███████╗
-    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
   */
 
   /* ---
@@ -1576,7 +1576,7 @@ function ReactBlockText({
     Handle the mouse up event when selecting multiple blocks
     If the selection is not empty, set the selected items
   --- */
-  const handleMouseUp = useCallback((event: MouseEvent) => {
+  const handleWindowMouseUp = useCallback((event: MouseEvent) => {
     if (selectionRect?.isSelecting) {
       handleRectSelectionEnd()
     }
@@ -1631,24 +1631,6 @@ function ReactBlockText({
   */
 
   /* ---
-    KEYDOWN
-  --- */
-  const handleWindowKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Backspace' && (event.metaKey || event.ctrlKey)) {
-      handleMetaBackspace()
-    }
-
-    // TODO: remove this if necessary
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      setShouldTriggerRefresh(true)
-
-      setTimeout(() => {
-        setShouldTriggerRefresh(true)
-      }, 1)
-    }
-  }, [handleMetaBackspace])
-
-  /* ---
     HANDLE KEY COMMANDS
     Respond to the editor's key-bound commands
   --- */
@@ -1675,6 +1657,24 @@ function ReactBlockText({
 
     return 'not-handled'
   }, [onSave, handleBackspace, handleDelete, handleIndent])
+
+  /* ---
+    WINDOW KEYDOWN
+  --- */
+  const handleWindowKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Backspace' && (event.metaKey || event.ctrlKey)) {
+      handleMetaBackspace()
+    }
+
+    // TODO: remove this if necessary
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      setShouldTriggerRefresh(true)
+
+      setTimeout(() => {
+        setShouldTriggerRefresh(true)
+      }, 1)
+    }
+  }, [handleMetaBackspace])
 
   /*
     ███████╗██╗██████╗ ███████╗    ███████╗███████╗███████╗███████╗ ██████╗████████╗███████╗
@@ -1822,21 +1822,12 @@ function ReactBlockText({
 
     const scrollParent = findScrollParent(rootRef.current)
 
+    window.addEventListener('scroll', handleParentScroll, { passive: true })
     scrollParent.addEventListener('scroll', handleParentScroll, { passive: true })
 
     return () => {
-      scrollParent.removeEventListener('scroll', handleParentScroll)
-    }
-  }, [handleParentScroll])
-
-  /* ---
-    SCROLL WINDOW TO UPDATE SELECTION RECT
-  --- */
-  useEffect(() => {
-    window.addEventListener('scroll', handleParentScroll, { passive: true })
-
-    return () => {
       window.removeEventListener('scroll', handleParentScroll)
+      scrollParent.removeEventListener('scroll', handleParentScroll)
     }
   }, [handleParentScroll])
 
@@ -1853,6 +1844,8 @@ function ReactBlockText({
 
     if (!element) return
 
+    // children[0] is a special element that is offseted from its parent by a few px
+    // See Block component
     element.children[0].scrollIntoView({
       behavior: 'instant',
       inline: 'nearest',
@@ -1877,15 +1870,15 @@ function ReactBlockText({
     mousemove will trigger the selecting state if the mouse is down
   --- */
   useEffect(() => {
-    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('mouseup', handleWindowMouseUp)
 
     return () => {
-      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('mouseup', handleWindowMouseUp)
     }
-  }, [handleMouseUp])
+  }, [handleWindowMouseUp])
 
   useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
+    const handleWindowMouseMove = (event: MouseEvent) => {
       // Start selection only if the mouse is down
       if (event.buttons !== 1) return
       // Prevent selection on drag
@@ -1894,10 +1887,10 @@ function ReactBlockText({
       isSelecting = true
     }
 
-    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousemove', handleWindowMouseMove)
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mousemove', handleWindowMouseMove)
     }
   }, [])
 
@@ -2099,8 +2092,8 @@ function ReactBlockText({
   ])
 
   /*
-    SELECTED BLOCK CONTENT PROPS
-    For the drag layer to render the selected blocks' content on drag
+    SELECTED BLOCK PROPS
+    For the drag layer to render a preview of the selected blocks on drag
   */
   const selectedBlockProps = useMemo(() => {
     if (!(selectionRect && selectionRect.selectedIds.length)) return null
