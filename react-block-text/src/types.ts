@@ -52,6 +52,7 @@ export type ReactBlockTextProps = {
   paddingTop?: number
   paddingBottom?: number
   paddingLeft?: number
+  paddingRight?: number
   primaryColor?: string | null
   onChange?: (value: string) => void
   onSave?: () => void
@@ -67,6 +68,7 @@ export type BlockProps = {
   hovered: boolean
   isDraggingTop: boolean | null
   paddingLeft?: number
+  paddingRight?: number
   noPadding?: boolean
   registerSelectionRef: (ref: any) => void
   onAddItem: () => void
@@ -83,6 +85,7 @@ export type BlockProps = {
   onBlockMenuClose: () => void
   focusContent: () => void
   focusContentAtStart: () => void
+  focusContentAtEnd: () => void
   focusNextContent: () => void
   blurContent: () => void
   blockContentProps: BlockContentProps
@@ -112,6 +115,7 @@ export type BlockContentProps = {
   onRectSelectionMouseDown: (event: ReactMouseEvent) => void
   focusContent: () => void
   focusContentAtStart: () => void
+  focusContentAtEnd: () => void
   focusNextContent: () => void
   blurContent: () => void
   forceBlurContent: () => void

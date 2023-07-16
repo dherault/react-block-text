@@ -3,14 +3,19 @@ import { ReactNode, useCallback, useState } from 'react'
 import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
-const PADDINGS = [8, 32, 128]
+
+const plugins = [
+  ...headerPlugin(),
+  ...todoPlugin(),
+  ...listPlugin(),
+  ...quotePlugin(),
+]
 
 function App() {
   const savedData = localStorage.getItem(LOCAL_STORAGE_KEY) ?? ''
 
   const [data, setData] = useState(savedData)
   const [primaryColor, setPrimaryColor] = useState<string | null>(null)
-  const [padding, setPadding] = useState(PADDINGS[1])
   const [isContained, setIsContained] = useState(false)
 
   const handleSave = useCallback(() => {
@@ -22,7 +27,7 @@ function App() {
 
     return (
       <div
-        className="mx-auto border shadow-xl overflow-auto rounded bg-white"
+        className="mx-auto mt-32 border shadow-xl overflow-auto rounded bg-white"
         style={{
           maxWidth: 640,
           maxHeight: 256 + 64 + 16 + 4,
@@ -39,68 +44,51 @@ function App() {
 
   return (
     <div
-      className="p-4 pb-64 min-h-screen"
+      className="flex h-screen"
       style={{ backgroundColor: '#fbfbfa' }}
     >
-      <div className="flex gap-2">
-        <button
-          type="button"
+      <div className="w-[192px] flex-shrink-0">
+        <div
           onClick={() => setData('')}
-          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
         >
           Clear
-        </button>
-        <button
-          type="button"
+        </div>
+        <div
           onClick={handleSave}
-          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
         >
           Save
-        </button>
-        <button
-          type="button"
+        </div>
+        <div
           onClick={() => setPrimaryColor(x => x ? null : 'red')}
-          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
         >
           {primaryColor ? 'Reset primary color' : 'Set primary color red'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setPadding(x => PADDINGS[(PADDINGS.indexOf(x) + 1) % PADDINGS.length])}
-          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
-        >
-          Change padding left
-        </button>
-        <button
-          type="button"
+        </div>
+        <div
           onClick={() => setIsContained(x => !x)}
-          className="py-1 px-2 bg-white border hover:bg-gray-50 rounded cursor-pointer"
+          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
         >
           Toggle container
-        </button>
+        </div>
       </div>
-      <div className="mt-4">
+      <div className="bg-white border-l max-h-full overflow-y-auto flex-grow">
         {renderContainer(
-          <div className="bg-white rounded">
-            <ReactBlockText
-              value={data}
-              onChange={setData}
-              onSave={handleSave}
-              paddingTop={32}
-              paddingBottom={32}
-              paddingLeft={padding}
-              primaryColor={primaryColor}
-              plugins={[
-                ...headerPlugin(),
-                ...todoPlugin(),
-                ...listPlugin(),
-                ...quotePlugin(),
-              ]}
-            />
-          </div>
+          <ReactBlockText
+            value={data}
+            onChange={setData}
+            onSave={handleSave}
+            paddingTop={64}
+            paddingBottom={64}
+            paddingLeft={128 - 44}
+            paddingRight={128}
+            primaryColor={primaryColor}
+            plugins={plugins}
+          />
         )}
       </div>
-      <div className="mt-8 bg-white w-full rounded">
+      {/* <div className="mt-8 bg-white w-full rounded">
         <ReactBlockText
           readOnly
           value={data}
@@ -111,7 +99,7 @@ function App() {
             ...quotePlugin(),
           ]}
         />
-      </div>
+      </div> */}
       {/* <div className="mt-8 p-2 bg-white w-full rounded">
         {JSON.stringify(data, null, 2)}
       </div> */}

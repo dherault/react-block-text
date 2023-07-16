@@ -29,6 +29,7 @@ function Block(props: BlockProps) {
     hovered,
     isDraggingTop,
     paddingLeft: rawPaddingLeft,
+    paddingRight: rawPaddingRight,
     noPadding = false,
     registerSelectionRef,
     onAddItem,
@@ -45,6 +46,7 @@ function Block(props: BlockProps) {
     onBlockMenuClose,
     focusContent,
     focusContentAtStart,
+    focusContentAtEnd,
     focusNextContent,
     blurContent,
     blockContentProps,
@@ -63,6 +65,8 @@ function Block(props: BlockProps) {
   const paddingTop = useMemo(() => noPadding ? 0 : plugin?.paddingTop ?? 3, [noPadding, plugin])
   const paddingBottom = useMemo(() => noPadding ? 0 : plugin?.paddingBottom ?? 3, [noPadding, plugin])
   const paddingLeft = useMemo(() => noPadding ? 0 : rawPaddingLeft ?? 0, [noPadding, rawPaddingLeft])
+  const paddingRight = useMemo(() => noPadding ? 0 : rawPaddingRight ?? 0, [noPadding, rawPaddingRight])
+  const indentWidth = useMemo(() => item.indent * INDENT_SIZE, [item.indent])
 
   /* ---
     DRAG AND DROP
@@ -182,24 +186,34 @@ function Block(props: BlockProps) {
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
-        style={{ width: (paddingLeft ?? 0) + item.indent * INDENT_SIZE }}
+        style={{ width: (paddingLeft ?? 0) + indentWidth }}
       />
       <div className="flex-grow flex relative">
         {/* Selection background element */}
         <div
           ref={registerSelectionRef}
-          className="absolute rounded-sm z-0 transition-opacity"
+          className="absolute z-0"
           style={{
             top: paddingTop - 2,
             bottom: paddingBottom - 2,
-            left: (contentRef.current?.offsetLeft || 0) - 4,
+            left: (contentRef.current?.offsetLeft || 0) - indentWidth - 4,
             right: 2,
-            backgroundColor: primaryColor,
-            opacity: !isEmpty && selected ? 0.15 : 0,
           }}
         >
           {/* Scroll into view offset element */}
           <div className="absolute -bottom-[64px] left-0" />
+          {/* Visible background element */}
+          <div
+            className="absolute rounded-sm transition-opacity"
+            style={{
+              top: 0,
+              bottom: 0,
+              left: indentWidth,
+              right: 0,
+              backgroundColor: primaryColor,
+              opacity: !isEmpty && selected ? 0.15 : 0,
+            }}
+          />
         </div>
         {/* Add and drag icons */}
         {!readOnly && (
@@ -244,7 +258,7 @@ function Block(props: BlockProps) {
         <div
           onClick={focusContentAtStart}
           onMouseDown={onRectSelectionMouseDown}
-          className="w-1.5 h-full cursor-text z-10"
+          className="w-1.5 h-full cursor-text flex-shrink-0 z-10"
         />
         {/* Content */}
         <div
@@ -303,6 +317,13 @@ function Block(props: BlockProps) {
           />
         )}
       </div>
+      {/* padding right with click handler */}
+      <div
+        onClick={focusContentAtEnd}
+        onMouseDown={onRectSelectionMouseDown}
+        className="cursor-text flex-shrink-0"
+        style={{ width: paddingRight ?? 0 }}
+      />
     </div>
   )
 }

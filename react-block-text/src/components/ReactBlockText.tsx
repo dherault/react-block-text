@@ -28,6 +28,10 @@
 // - Write demo default editor text
 // - Investigate Checkbox opacity transition
 // - Handle meta backspace bug
+// - Handle rect selection + dnd bug on non-selected indented blocks
+// - Fix arrow up/down bug on long text
+// x Fix long text selection offset
+// - Fix selection rect bg bug
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -128,6 +132,7 @@ function ReactBlockText({
   paddingTop,
   paddingBottom,
   paddingLeft,
+  paddingRight,
   onSave,
 }: ReactBlockTextProps) {
   const [editorStates, setEditorStates] = useState<ReactBlockTextEditorStates>({})
@@ -247,6 +252,7 @@ function ReactBlockText({
   const [scrollSpeed, setScrollSpeed] = useState(0)
   const [refresh, setRefresh] = useState(false)
   const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
+  const [shouldBlurAllContent, setShouldBlurAllContent] = useState(false)
 
   const previousEditorStates = usePrevious(editorStates, refresh || shouldTriggerRefresh)
 
@@ -1765,6 +1771,7 @@ function ReactBlockText({
     .reduce((acc, x) => ({ ...acc, [x.item.id]: applyStyles(x.item, x.editorState) }), {})
 
     setEditorStates(editorStates)
+    setShouldBlurAllContent(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -1830,6 +1837,17 @@ function ReactBlockText({
 
     editorRefs[instanceId][item.id]?.blur()
   }, [value, readOnly, instanceId, forceBlurIndex])
+
+  /* ---
+    FORCE BLUR ALL CONTENT
+    Handle forcing blur on every block
+  --- */
+  useEffect(() => {
+    if (!shouldBlurAllContent) return
+
+    setShouldBlurAllContent(false)
+    handleBlurAllContent()
+  }, [shouldBlurAllContent, handleBlurAllContent])
 
   /* ---
     FORCE REFRESH
@@ -2031,6 +2049,7 @@ function ReactBlockText({
       pluginsData,
       focusContent: () => handleFocusContent(index),
       focusContentAtStart: () => handleFocusContent(index, true),
+      focusContentAtEnd: () => handleFocusContent(index, false, true),
       focusNextContent: () => handleFocusContent(index + 1),
       blurContent: () => handleBlurContent(index),
       onRectSelectionMouseDown: handleRectSelectionStart,
@@ -2094,6 +2113,7 @@ function ReactBlockText({
     const props: Omit<BlockProps, 'children'> = {
       ...getCommonProps(item, index),
       paddingLeft,
+      paddingRight,
       readOnly: !!readOnly,
       selected: !!selectionRect?.selectedIds.includes(item.id),
       hovered: !dragData && index === hoveredIndex,
@@ -2118,6 +2138,7 @@ function ReactBlockText({
   }, [
     readOnly,
     paddingLeft,
+    paddingRight,
     hoveredIndex,
     dragData,
     wasDragging,
