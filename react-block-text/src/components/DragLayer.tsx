@@ -2,9 +2,11 @@ import { type CSSProperties, useCallback } from 'react'
 import type { XYCoord } from 'react-dnd'
 import { useDragLayer } from 'react-dnd'
 
-import type { BlockContentProps, DragLayerProps } from '../types'
+import type { BlockProps, DragLayerProps } from '../types'
 
-const layerStyles: CSSProperties = {
+import Block from './Block'
+
+const layerStyle: CSSProperties = {
   position: 'fixed',
   pointerEvents: 'none',
   zIndex: 100,
@@ -14,7 +16,7 @@ const layerStyles: CSSProperties = {
   height: '100%',
 }
 
-function getItemStyles(
+function getPreviewStyle(
   initialOffset: XYCoord | null,
   currentOffset: XYCoord | null,
 ) {
@@ -25,49 +27,61 @@ function getItemStyles(
   }
 
   const { x, y } = currentOffset
-  const transform = `translate(${x}px, ${y}px)`
+  const transform = `translate(${x + 19}px, ${y - 2}px)`
 
   return {
     transform,
     WebkitTransform: transform,
-    paddingLeft: 22,
     opacity: 0.4,
   }
 }
 
-function DragLayer({ pluginsData }: DragLayerProps) {
+function DragLayer({ pluginsData, blockProps }: DragLayerProps) {
   const { isDragging, item, initialOffset, currentOffset } = useDragLayer(monitor => ({
     isDragging: monitor.isDragging(),
-    item: monitor.getItem() as BlockContentProps,
+    item: monitor.getItem() as BlockProps,
     initialOffset: monitor.getInitialSourceClientOffset(),
     currentOffset: monitor.getSourceClientOffset(),
   }))
 
-  const renderItem = useCallback(() => {
-    const plugin = pluginsData.find(plugin => plugin.type === item.item.type)
+  const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>) => {
+    const plugin = pluginsData.find(plugin => plugin.type === props.item.type)
 
     if (!plugin) return null
 
     const { BlockContent } = plugin
 
     return (
-      <BlockContent
-        {...item}
+      <Block
+        {...props}
+        key={props.item.id}
         readOnly
-      />
+        selected={false}
+        paddingLeft={0}
+        isDraggingTop={null}
+      >
+        <BlockContent
+          {...props.blockContentProps}
+          readOnly
+        />
+      </Block>
     )
-  }, [pluginsData, item])
+  }, [pluginsData])
 
-  if (!isDragging) {
-    return null
-  }
+  const renderPreview = useCallback(() => {
+    if (!blockProps) return renderSingleItem(item)
+
+    return blockProps.map(renderSingleItem)
+  }, [blockProps, item, renderSingleItem])
+
+  if (!isDragging) return null
 
   return (
-    <div style={layerStyles}>
+    <div style={layerStyle}>
       <div
-        style={getItemStyles(initialOffset, currentOffset)}
+        style={getPreviewStyle(initialOffset, currentOffset)}
       >
-        {renderItem()}
+        {renderPreview()}
       </div>
     </div>
   )

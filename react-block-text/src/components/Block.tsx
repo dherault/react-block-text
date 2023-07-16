@@ -4,7 +4,7 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import _ from 'clsx'
 import type { XYCoord } from 'react-dnd'
 
-import type { BlockContentProps, BlockProps, TopLeft } from '../types'
+import type { BlockProps, DragAndDropCollect, TopLeft } from '../types'
 
 import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
 
@@ -16,36 +16,38 @@ import DragIcon from '../icons/Drag'
 import BlockMenu from './BlockMenu'
 
 const DRAG_INDICATOR_SIZE = 3
+const DRAG_TYPE = 'block'
 
-function Block({
-  children,
-  pluginsData,
-  item,
-  index,
-  readOnly,
-  selected,
-  hovered,
-  isDraggingTop,
-  paddingLeft,
-  registerSelectionRef,
-  onAddItem,
-  onDeleteItem,
-  onDuplicateItem,
-  onMouseDown,
-  onMouseMove,
-  onMouseLeave,
-  onRectSelectionMouseDown,
-  onDragStart,
-  onDrag,
-  onDragEnd,
-  onBlockMenuOpen,
-  onBlockMenuClose,
-  focusContent,
-  focusContentAtStart,
-  focusNextContent,
-  blurContent,
-  blockContentProps,
-}: BlockProps) {
+function Block(props: BlockProps) {
+  const {
+    children,
+    pluginsData,
+    item,
+    index,
+    readOnly,
+    selected,
+    hovered,
+    isDraggingTop,
+    paddingLeft,
+    registerSelectionRef,
+    onAddItem,
+    onDeleteItem,
+    onDuplicateItem,
+    onMouseDown,
+    onMouseMove,
+    onMouseLeave,
+    onRectSelectionMouseDown,
+    onDragStart,
+    onDrag,
+    onDragEnd,
+    onBlockMenuOpen,
+    onBlockMenuClose,
+    focusContent,
+    focusContentAtStart,
+    focusNextContent,
+    blurContent,
+    blockContentProps,
+  } = props
   const rootRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -60,19 +62,16 @@ function Block({
 
   /* ---
     DRAG AND DROP
+    The `item` is the props of the dragged block
   --- */
-  const [{ handlerId }, drop] = useDrop<
-    BlockContentProps,
-    void,
-    { handlerId: string | symbol | null }
-  >({
-    accept: 'block',
+  const [{ handlerId }, drop] = useDrop<BlockProps, void, DragAndDropCollect>({
+    accept: DRAG_TYPE,
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
       }
     },
-    hover(dragItem: BlockContentProps, monitor) {
+    hover(dragItem, monitor) {
       if (!dragRef.current) return
 
       const dragIndex = dragItem.index
@@ -102,30 +101,32 @@ function Block({
       if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return
 
       // Don't display a drag indicator if the dragged block is hovered in the middle
-      const isMiddleOfSameIndex = dragIndex === hoverIndex && hoverClientY > hoverHeight / 3 && hoverClientY < hoverHeight * 2 / 3
+      const isMiddleOfSameIndex = dragIndex === hoverIndex
+        && hoverClientY > hoverHeight / 3
+        && hoverClientY < hoverHeight * 2 / 3
 
       // Time to actually perform the action
       onDrag(hoverIndex, isMiddleOfSameIndex ? null : hoverClientY < hoverMiddleY)
     },
-  }, [index, onDrag])
+  })
 
   const [, drag, preview] = useDrag({
-    type: 'block',
+    type: DRAG_TYPE,
     item() {
       onDragStart()
 
-      return blockContentProps
+      return props
     },
     end() {
       onDragEnd()
     },
-  }, [onDragStart, onDragEnd])
+  })
 
   drag(dragRef)
   drop(rootRef)
 
   /* ---
-    BLOCK MENU POSITIONING AND TRIGGER
+    BLOCK MENU POSITIONING ON OPEN
   --- */
   const handleDragClick = useCallback(() => {
     if (!rootRef.current) return
@@ -141,13 +142,17 @@ function Block({
     onBlockMenuOpen()
   }, [onBlockMenuOpen])
 
+  /* ---
+    BLOCK MENU CLOSE
+  --- */
   const handleBlockMenuClose = useCallback(() => {
     setMenuPosition(null)
     onBlockMenuClose()
   }, [onBlockMenuClose])
 
-  const isDraggingBottom = isDraggingTop === false
-
+  /* ---
+    USE EMPTY IMAGE FOR DND PREVIEW
+  --- */
   useEffect(() => {
     preview(getEmptyImage())
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,7 +277,7 @@ function Block({
             style={{
               height: DRAG_INDICATOR_SIZE,
               backgroundColor: primaryColor,
-              opacity: isDraggingBottom ? 0.4 : 0,
+              opacity: isDraggingTop === false ? 0.4 : 0,
             }}
           />
         </div>

@@ -52,6 +52,7 @@ import ignoreWarnings from 'ignore-warnings'
 import textPlugin from '../plugins/text/plugin'
 
 import type {
+  BlockCommonProps,
   BlockContentProps,
   BlockProps,
   ContextMenuData,
@@ -261,6 +262,15 @@ function ReactBlockText({
 
     selectionRefs[instanceId][id] = ref
   }, [instanceId])
+
+  /*
+     ██████╗██╗  ██╗ █████╗ ███╗   ██╗ ██████╗ ███████╗
+    ██╔════╝██║  ██║██╔══██╗████╗  ██║██╔════╝ ██╔════╝
+    ██║     ███████║███████║██╔██╗ ██║██║  ███╗█████╗
+    ██║     ██╔══██║██╔══██║██║╚██╗██║██║   ██║██╔══╝
+    ╚██████╗██║  ██║██║  ██║██║ ╚████║╚██████╔╝███████╗
+    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+  */
 
   /* ---
     CREATE TEXT ITEM
@@ -967,6 +977,15 @@ function ReactBlockText({
     return 'handled'
   }, [value, editorStates, pluginsData, onChange, applyMetadatas])
 
+  /*
+    ███████╗ ██████╗  ██████╗██╗   ██╗███████╗
+    ██╔════╝██╔═══██╗██╔════╝██║   ██║██╔════╝
+    █████╗  ██║   ██║██║     ██║   ██║███████╗
+    ██╔══╝  ██║   ██║██║     ██║   ██║╚════██║
+    ██║     ╚██████╔╝╚██████╗╚██████╔╝███████║
+    ╚═╝      ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝
+  */
+
   /* ---
     BLOCK MOUSE DOWN
   --- */
@@ -1057,6 +1076,25 @@ function ReactBlockText({
   }, [])
 
   /* ---
+    OUTSIDE CLICK
+  --- */
+  const handleOutsideClick = useCallback((event: MouseEvent) => {
+    if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+      handleRootBlur()
+      handleBlurAllContent()
+    }
+  }, [handleRootBlur, handleBlurAllContent])
+
+  /*
+    ██████╗ ██████╗  █████╗  ██████╗      █████╗ ███╗   ██╗██████╗     ██████╗ ██████╗  ██████╗ ██████╗
+    ██╔══██╗██╔══██╗██╔══██╗██╔════╝     ██╔══██╗████╗  ██║██╔══██╗    ██╔══██╗██╔══██╗██╔═══██╗██╔══██╗
+    ██║  ██║██████╔╝███████║██║  ███╗    ███████║██╔██╗ ██║██║  ██║    ██║  ██║██████╔╝██║   ██║██████╔╝
+    ██║  ██║██╔══██╗██╔══██║██║   ██║    ██╔══██║██║╚██╗██║██║  ██║    ██║  ██║██╔══██╗██║   ██║██╔═══╝
+    ██████╔╝██║  ██║██║  ██║╚██████╔╝    ██║  ██║██║ ╚████║██████╔╝    ██████╔╝██║  ██║╚██████╔╝██║
+    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝
+  */
+
+  /* ---
     DRAG
   --- */
   const handleDrag = useCallback((index: number, isTop: boolean | null) => {
@@ -1097,6 +1135,15 @@ function ReactBlockText({
     onChange(nextValue)
     setHoveredIndex(hoveredIndex)
   }, [value, editorStates, dragData, onChange, applyMetadatas, handleBlurAllContent])
+
+  /*
+     ██████╗ ██████╗ ██████╗ ██╗   ██╗    ██████╗  █████╗ ███████╗████████╗███████╗
+    ██╔════╝██╔═══██╗██╔══██╗╚██╗ ██╔╝    ██╔══██╗██╔══██╗██╔════╝╚══██╔══╝██╔════╝
+    ██║     ██║   ██║██████╔╝ ╚████╔╝     ██████╔╝███████║███████╗   ██║   █████╗
+    ██║     ██║   ██║██╔═══╝   ╚██╔╝      ██╔═══╝ ██╔══██║╚════██║   ██║   ██╔══╝
+    ╚██████╗╚██████╔╝██║        ██║       ██║     ██║  ██║███████║   ██║   ███████╗
+     ╚═════╝ ╚═════╝ ╚═╝        ╚═╝       ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝
+  */
 
   /* ---
     COPY
@@ -1176,6 +1223,15 @@ function ReactBlockText({
     return 'handled'
   }, [handleActualPaste])
 
+  /*
+    ███╗   ███╗███████╗███╗   ██╗██╗   ██╗███████╗
+    ████╗ ████║██╔════╝████╗  ██║██║   ██║██╔════╝
+    ██╔████╔██║█████╗  ██╔██╗ ██║██║   ██║███████╗
+    ██║╚██╔╝██║██╔══╝  ██║╚██╗██║██║   ██║╚════██║
+    ██║ ╚═╝ ██║███████╗██║ ╚████║╚██████╔╝███████║
+    ╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+  */
+
   /* ---
     CONTEXT MENU SELECT
     Handle context menu item selection after `/` then `enter` or click
@@ -1247,7 +1303,16 @@ function ReactBlockText({
     handleBlurAllContent()
   }, [handleBlurAllContent])
 
-   /* ---
+  /*
+    ███████╗███████╗██╗     ███████╗ ██████╗████████╗██╗ ██████╗ ███╗   ██╗
+    ██╔════╝██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝██║██╔═══██╗████╗  ██║
+    ███████╗█████╗  ██║     █████╗  ██║        ██║   ██║██║   ██║██╔██╗ ██║
+    ╚════██║██╔══╝  ██║     ██╔══╝  ██║        ██║   ██║██║   ██║██║╚██╗██║
+    ███████║███████╗███████╗███████╗╚██████╗   ██║   ██║╚██████╔╝██║ ╚████║
+    ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+  */
+
+  /* ---
     SELECTION RECT CHANGE
   --- */
   const handleSelectionRect = useCallback((x: number, y: number) => {
@@ -1556,10 +1621,19 @@ function ReactBlockText({
     }
   }, [hoveredIndex, selectionRect, handleRectSelectionEnd, handleMultiBlockTextSelectionEnd])
 
+  /*
+     ██████╗ ██████╗ ███╗   ███╗███╗   ███╗ █████╗ ███╗   ██╗██████╗ ███████╗
+    ██╔════╝██╔═══██╗████╗ ████║████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝
+    ██║     ██║   ██║██╔████╔██║██╔████╔██║███████║██╔██╗ ██║██║  ██║███████╗
+    ██║     ██║   ██║██║╚██╔╝██║██║╚██╔╝██║██╔══██║██║╚██╗██║██║  ██║╚════██║
+    ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║ ╚═╝ ██║██║  ██║██║ ╚████║██████╔╝███████║
+     ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝
+  */
+
   /* ---
     KEYDOWN
   --- */
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+  const handleWindowKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Backspace' && (event.metaKey || event.ctrlKey)) {
       handleMetaBackspace()
     }
@@ -1573,16 +1647,6 @@ function ReactBlockText({
       }, 1)
     }
   }, [handleMetaBackspace])
-
-  /* ---
-    OUTSIDE CLICK
-  --- */
-  const handleOutsideClick = useCallback((event: MouseEvent) => {
-    if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-      handleRootBlur()
-      handleBlurAllContent()
-    }
-  }, [handleRootBlur, handleBlurAllContent])
 
   /* ---
     HANDLE KEY COMMANDS
@@ -1611,6 +1675,15 @@ function ReactBlockText({
 
     return 'not-handled'
   }, [onSave, handleBackspace, handleDelete, handleIndent])
+
+  /*
+    ███████╗██╗██████╗ ███████╗    ███████╗███████╗███████╗███████╗ ██████╗████████╗███████╗
+    ██╔════╝██║██╔══██╗██╔════╝    ██╔════╝██╔════╝██╔════╝██╔════╝██╔════╝╚══██╔══╝██╔════╝
+    ███████╗██║██║  ██║█████╗      █████╗  █████╗  █████╗  █████╗  ██║        ██║   ███████╗
+    ╚════██║██║██║  ██║██╔══╝      ██╔══╝  ██╔══╝  ██╔══╝  ██╔══╝  ██║        ██║   ╚════██║
+    ███████║██║██████╔╝███████╗    ███████╗██║     ██║     ███████╗╚██████╗   ██║   ███████║
+    ╚══════╝╚═╝╚═════╝ ╚══════╝    ╚══════╝╚═╝     ╚═╝     ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝
+  */
 
   /* ---
     INITIAL VALUE POPULATION
@@ -1832,12 +1905,12 @@ function ReactBlockText({
     KEYDOWN EVENT
   --- */
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleWindowKeyDown)
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keydown', handleWindowKeyDown)
     }
-  }, [handleKeyDown])
+  }, [handleWindowKeyDown])
 
   /* ---
     OUTSIDE CLICK EVENT
@@ -1861,18 +1934,33 @@ function ReactBlockText({
     }
   }, [handleWindowCopy])
 
+  /*
+    ██████╗ ███████╗███╗   ██╗██████╗ ███████╗██████╗
+    ██╔══██╗██╔════╝████╗  ██║██╔══██╗██╔════╝██╔══██╗
+    ██████╔╝█████╗  ██╔██╗ ██║██║  ██║█████╗  ██████╔╝
+    ██╔══██╗██╔══╝  ██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗
+    ██║  ██║███████╗██║ ╚████║██████╔╝███████╗██║  ██║
+    ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+  */
+
   /* ---
-    RENDER EDITOR
-    Render the editor for each item of value
+    GET IS DRAGGING TOP
+    Get if the block should display the top dragging indicator (true | false for bottom | null for none)
   --- */
-  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number, array: any[]) => {
-    if (!editorStates[item.id]) return null
+  const getIsDraggingTop = useCallback((index: number) => (
+    dragData?.index === index
+      ? index === value.length - 1
+        ? dragData.isTop
+        : dragData.isTop || null
+      : (dragData?.index === index - 1 && dragData.isTop === false) || null
+  ), [dragData, value])
 
-    const plugin = pluginsData.find(plugin => plugin.type === item.type)
-
-    if (!plugin) return null
-
-    const commonProps = {
+  /* ---
+    GET COMMON PROPS
+    Get props shared by Block and BlockContent
+  --- */
+  const getCommonProps = useCallback((item: ReactBlockTextDataItem, index: number) => {
+    const props: Omit<BlockCommonProps, 'readOnly'> = {
       item,
       index,
       pluginsData,
@@ -1883,9 +1971,20 @@ function ReactBlockText({
       onRectSelectionMouseDown: handleRectSelectionStart,
     }
 
-    const blockContentProps: BlockContentProps = {
-      ...commonProps,
-      BlockContentText,
+    return props
+  }, [
+    pluginsData,
+    handleFocusContent,
+    handleBlurContent,
+    handleRectSelectionStart,
+  ])
+
+  /* ---
+    GET BLOCK CONTENT PROPS
+  --- */
+  const getBlockContentProps = useCallback((item: ReactBlockTextDataItem, index: number) => {
+    const props: BlockContentProps = {
+      ...getCommonProps(item, index),
       editorState: editorStates[item.id],
       readOnly: isSelecting || !!readOnly,
       focused: !dragData && index === focusedIndex,
@@ -1903,21 +2002,37 @@ function ReactBlockText({
       onKeyCommand: command => handleKeyCommand(index, command),
       onBlockSelection: () => handleSingleBlockSelection(item.id),
       forceBlurContent: () => handleForceBlurContent(index),
+      BlockContentText,
     }
 
-    const blockProps: Omit<BlockProps, 'children'> = {
-      ...commonProps,
+    return props
+  }, [
+    readOnly,
+    focusedIndex,
+    dragData,
+    editorStates,
+    getCommonProps,
+    registerRef,
+    handleChange,
+    handleReturn,
+    handleUpArrow,
+    handleDownArrow,
+    handleFocus,
+    handleBlur,
+    handlePaste,
+    handleKeyCommand,
+    handleSingleBlockSelection,
+    handleForceBlurContent,
+  ])
+
+  const getBlockProps = useCallback((item: ReactBlockTextDataItem, index: number) => {
+    const props: Omit<BlockProps, 'children'> = {
+      ...getCommonProps(item, index),
+      paddingLeft,
       readOnly: !!readOnly,
       selected: !!selectionRect?.selectedIds.includes(item.id),
       hovered: !dragData && index === hoveredIndex,
-      isDraggingTop: dragData?.index === index
-        ? index === array.length - 1
-          ? dragData.isTop
-          : dragData.isTop || null
-        : dragData?.index === index - 1 && dragData.isTop === false
-          ? true
-          : null,
-      paddingLeft,
+      isDraggingTop: getIsDraggingTop(index),
       registerSelectionRef: ref => registerSelectionRef(item.id, ref),
       onAddItem: () => handleAddItem(index),
       onDeleteItem: () => handleDeleteItem(index),
@@ -1930,58 +2045,76 @@ function ReactBlockText({
       onDragEnd: () => handleDragEnd(index),
       onBlockMenuOpen: () => setIsBlockMenuOpen(true),
       onBlockMenuClose: handleBlockMenuClose,
-      blockContentProps, // Pass block content props to block for drag preview display
+      // Pass block content props to block for drag preview display
+      blockContentProps: getBlockContentProps(item, index),
     }
 
+    return props
+  }, [
+    readOnly,
+    paddingLeft,
+    hoveredIndex,
+    dragData,
+    wasDragging,
+    selectionRect,
+    getCommonProps,
+    getBlockContentProps,
+    getIsDraggingTop,
+    registerSelectionRef,
+    handleAddItem,
+    handleDeleteItem,
+    handleDuplicateItem,
+    handleDrag,
+    handleDragEnd,
+    handleBlockMenuClose,
+    handleBlockMouseDown,
+  ])
+
+  /* ---
+    RENDER EDITOR
+    Render the editor for each item of value
+  --- */
+  const renderEditor = useCallback((item: ReactBlockTextDataItem, index: number) => {
+    if (!editorStates[item.id]) return null
+
+    const plugin = pluginsData.find(plugin => plugin.type === item.type)
+
+    if (!plugin) return null
+
     const { BlockContent } = plugin
+    const blockProps = getBlockProps(item, index)
 
     return (
       <Block
         key={item.id}
         {...blockProps}
       >
-        <BlockContent {...blockContentProps} />
+        <BlockContent {...blockProps.blockContentProps} />
       </Block>
     )
   }, [
-    readOnly,
-    paddingLeft,
     pluginsData,
     editorStates,
-    hoveredIndex,
-    focusedIndex,
-    dragData,
-    wasDragging,
-    selectionRect,
-    registerRef,
-    registerSelectionRef,
-    handleAddItem,
-    handleDeleteItem,
-    handleDuplicateItem,
-    handleChange,
-    handleReturn,
-    handleUpArrow,
-    handleDownArrow,
-    handleFocus,
-    handleBlur,
-    handlePaste,
-    handleDrag,
-    handleDragEnd,
-    handleBlockMenuClose,
-    handleBlockMouseDown,
-    handleFocusContent,
-    handleBlurContent,
-    handleForceBlurContent,
-    handleRectSelectionStart,
-    handleSingleBlockSelection,
-    handleKeyCommand,
+    getBlockProps,
   ])
+
+  /*
+    SELECTED BLOCK CONTENT PROPS
+    For the drag layer to render the selected blocks' content on drag
+  */
+  const selectedBlockProps = useMemo(() => {
+    if (!(selectionRect && selectionRect.selectedIds.length)) return null
+
+    return selectionRect.selectedIds.map(id => {
+      const index = value.findIndex(item => item.id === id)
+
+      return getBlockProps(value[index], index)
+    })
+  }, [value, selectionRect, getBlockProps])
 
   /* ---
     MAIN RETURN STATEMENT
   --- */
-  if (typeof rawValue !== 'string') throw new Error('ReactBlockText value prop must be a string')
-
   return (
     <DndProvider backend={HTML5Backend}>
       <PrimaryColorContext.Provider value={primaryColor}>
@@ -2031,7 +2164,10 @@ function ReactBlockText({
             style={{ height: paddingBottom ?? 0 }}
           />
         </div>
-        <DragLayer pluginsData={pluginsData} />
+        <DragLayer
+          pluginsData={pluginsData}
+          blockProps={selectedBlockProps}
+        />
       </PrimaryColorContext.Provider>
     </DndProvider>
   )

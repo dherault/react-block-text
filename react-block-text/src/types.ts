@@ -116,6 +116,10 @@ export type BlockContentProps = {
   forceBlurContent: () => void
 }
 
+export type BlockCommonProps = {
+  [K in keyof BlockProps & keyof BlockContentProps]: BlockProps[K] | BlockContentProps[K]
+}
+
 export type ContextMenuProps = {
   pluginsData: ReactBlockTextPluginData[]
   query: string
@@ -158,6 +162,7 @@ export type BlockMenuItemProps = {
 
 export type DragLayerProps = {
   pluginsData: ReactBlockTextPluginData[]
+  blockProps: Omit<BlockProps, 'children'>[] | null
 }
 
 export type SelectionRectProps = {
@@ -202,4 +207,8 @@ export type EditorRefRegistry = Record<string, Editor | null>
 export type XY = {
   x: number
   y: number
+}
+
+export type DragAndDropCollect = {
+  handlerId: string | symbol | null
 }
