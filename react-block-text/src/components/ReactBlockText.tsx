@@ -1272,6 +1272,7 @@ function ReactBlockText({
     if (!rootRef.current) return
 
     const parent = findScrollParent(rootRef.current)
+    const { height: childHeight } = rootRef.current.getBoundingClientRect()
     const { height: parentHeight } = parent.getBoundingClientRect()
     const relativeTop = rootRef.current.offsetTop - parent.offsetTop
     const relativeY = y - parent.scrollTop + relativeTop
@@ -1285,8 +1286,7 @@ function ReactBlockText({
     }
 
     // Scroll bottom only if child's bottom is not visible
-    // TODO
-    if (relativeY > finalHeight - SELECTION_RECT_SCROLL_OFFSET) {
+    if (parent.scrollTop + finalHeight < childHeight + relativeTop && relativeY > finalHeight - SELECTION_RECT_SCROLL_OFFSET) {
       setScrollSpeed(-BASE_SCROLL_SPEED * (finalHeight - relativeY - SELECTION_RECT_SCROLL_OFFSET) / SELECTION_RECT_SCROLL_OFFSET)
 
       return
@@ -1710,14 +1710,19 @@ function ReactBlockText({
     if (!child) return
 
     const parent = findScrollParent(child)
+    const { height: childHeight } = child.getBoundingClientRect()
+    const { height: parentHeight } = parent.getBoundingClientRect()
+    const finalHeight = Math.min(parentHeight, window.innerHeight)
 
     const loop = () => {
       scrollParentFrame = requestAnimationFrame(() => {
+        const relativeTop = child.offsetTop - parent.offsetTop
+
         // Don't overscroll top
-        if (scrollSpeed < 0 && parent.scrollTop < child.offsetTop - parent.offsetTop) return
+        if (scrollSpeed < 0 && parent.scrollTop < relativeTop) return
 
         // Don't overscroll bottom
-        // TODO
+        if (scrollSpeed > 0 && parent.scrollTop + finalHeight > childHeight + relativeTop) return
 
         parent.scrollBy({
           top: scrollSpeed,
