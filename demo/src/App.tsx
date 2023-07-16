@@ -38,7 +38,7 @@ function App() {
 
   return (
     <div className="p-4 pb-64 min-h-screen bg-gray-100">
-      <div className="flex gap-2 mt-64">
+      <div className="flex gap-2">
         <button
           type="button"
           onClick={() => setData('')}
@@ -88,7 +88,7 @@ function App() {
               primaryColor={primaryColor}
               plugins={[
                 ...headerPlugin(),
-                ...todoPlugin({ color: primaryColor }),
+                ...todoPlugin(),
                 ...listPlugin(),
                 ...quotePlugin(),
               ]}

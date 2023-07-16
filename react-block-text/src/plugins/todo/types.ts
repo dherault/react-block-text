@@ -2,10 +2,6 @@ import type { HTMLAttributes } from 'react'
 
 import type { BlockContentProps as ReactBlockTextBlockContentProps, ReactBlockTextOnChange } from '../../types'
 
-export type PluginOptions = {
-  color: string | null | undefined
-}
-
 export type CheckboxProps = HTMLAttributes<HTMLDivElement> & {
   color: string
   checked: boolean

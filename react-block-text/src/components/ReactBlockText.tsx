@@ -116,12 +116,12 @@ let scrollParentFrame = -1
 function ReactBlockText({
   value: rawValue,
   onChange: rawOnChange,
+  primaryColor: rawPrimaryColor,
   plugins = [],
   readOnly,
   paddingTop,
   paddingBottom,
   paddingLeft,
-  primaryColor,
   onSave,
 }: ReactBlockTextProps) {
   const [editorStates, setEditorStates] = useState<ReactBlockTextEditorStates>({})
@@ -146,6 +146,11 @@ function ReactBlockText({
   }, [rawOnChange])
 
   /* ---
+    PRIMARY COLOR
+  --- */
+  const primaryColor = useMemo(() => rawPrimaryColor ?? DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
+
+  /* ---
     HANDLE PLUGIN CHANGE
   --- */
   const handlePluginChange = useCallback((item: ReactBlockTextDataItem, editorState: EditorState) => {
@@ -166,8 +171,9 @@ function ReactBlockText({
   }, [readOnly, value, onChange])
 
   const pluginOptions = useMemo<ReactBlockTextPluginOptions>(() => ({
+    primaryColor,
     onChange: handlePluginChange,
-  }), [handlePluginChange])
+  }), [handlePluginChange, primaryColor])
 
   /* ---
     PLUGINS MERGING
@@ -1978,7 +1984,7 @@ function ReactBlockText({
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <PrimaryColorContext.Provider value={primaryColor ?? DEFAULT_PRIMARY_COLOR}>
+      <PrimaryColorContext.Provider value={primaryColor}>
         <div
           ref={rootRef}
           onBlur={handleRootBlur}

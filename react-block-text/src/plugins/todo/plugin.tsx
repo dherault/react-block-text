@@ -1,25 +1,20 @@
 import type { ReactBlockTextPlugins } from '../../types'
 
-import { DEFAULT_PRIMARY_COLOR } from '../../constants'
-
-import type { PluginOptions } from './types'
-
 import { INLINE_STYLES } from './constants'
+
+import applyTodoStyle from './utils/applyTodoStyle'
 
 import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
-import applyTodoStyle from './utils/applyTodoStyle'
 
-function todoPlugin(options?: PluginOptions): ReactBlockTextPlugins {
-  const color = options?.color || DEFAULT_PRIMARY_COLOR
-
+function todoPlugin(): ReactBlockTextPlugins {
   return [
-    ({ onChange }) => ({
+    ({ primaryColor, onChange }) => ({
       type: 'todo',
       title: 'To-do list',
       label: 'Track tasks with a to-do list.',
       shortcuts: 'todo',
-      icon: <Icon color={color || DEFAULT_PRIMARY_COLOR} />,
+      icon: <Icon color={primaryColor} />,
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       paddingTop: 5,
@@ -35,8 +30,8 @@ function todoPlugin(options?: PluginOptions): ReactBlockTextPlugins {
       BlockContent: props => (
         <BlockContent
           {...props}
+          color={primaryColor}
           onItemChange={onChange}
-          color={color || DEFAULT_PRIMARY_COLOR}
         />
       ),
     }),
