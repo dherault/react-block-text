@@ -29,7 +29,7 @@ export type ReactBlockTextPluginData = {
   icon: ReactNode
   isConvertibleToText?: boolean
   isNewItemOfSameType?: boolean
-  maxIndent?: number // default: 1
+  maxIndent?: number // default: 0
   paddingTop?: number // default: 3
   paddingBottom?: number // default: 3
   iconsPaddingTop?: number // default: 0

@@ -1007,7 +1007,7 @@ function ReactBlockText({
       indent: Math.max(
         0,
         Math.min(
-          pluginData?.maxIndent ?? 1,
+          pluginData?.maxIndent ?? 0,
           isIndent ? item.indent + 1 : item.indent - 1,
           (previousItem?.indent ?? 0) + 1
         )
