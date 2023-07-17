@@ -28,11 +28,12 @@
 // - Write demo default editor text
 // - Investigate Checkbox opacity transition
 // - Handle meta backspace bug
-// - Handle rect selection + dnd bug on non-selected indented blocks
+// x Handle rect selection + dnd bug on non-selected indented blocks
 // - Fix arrow up/down bug on long text
 // x Fix long text selection offset
-// - Fix selection rect bg bug
-// - Remove indent on text, header, ...
+// x Fix selection rect bg bug
+// x Remove indent on text, header, ...
+// x Take icons into paddingLeft account
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -622,7 +623,7 @@ function ReactBlockText({
         ...nextValue[index],
         type: 'text',
         metadata: '',
-        indent: Math.max(0, Math.min(nextValue[index].indent, 1)),
+        indent: Math.max(0, Math.min(0, nextValue[index].indent)),
       }
       nextValue = applyMetadatas(index, nextValue, nextEditorStates)
 

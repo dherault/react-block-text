@@ -10,6 +10,8 @@ export const COMMANDS = {
 
 export const INDENT_SIZE = 24
 
+export const BLOCK_ICONS_WIDTH = 44
+
 export const ADD_ITEM_BUTTON_ID = 'react-block-text-add-item-button'
 
 export const DRAG_ITEM_BUTTON_ID = 'react-block-text-drag-item-button'

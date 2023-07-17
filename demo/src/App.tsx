@@ -1,4 +1,5 @@
 import { ReactNode, useCallback, useState } from 'react'
+import GitHubButton from 'react-github-btn'
 
 import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
@@ -48,9 +49,19 @@ function App() {
       style={{ backgroundColor: '#fbfbfa' }}
     >
       <div className="w-[192px] flex-shrink-0">
-        <h1 className="py-1 px-2 font-semibold">
+        <h1 className="py-1 px-2 font-semibold text-xl">
           React Block Text
         </h1>
+        <div className="px-2 mb-2">
+          <GitHubButton
+            href="https://github.com/dherault/react-block-text"
+            data-icon="octicon-star"
+            data-show-count="true"
+            aria-label="Star dherault/react-block-text on GitHub"
+          >
+            Star
+          </GitHubButton>
+        </div>
         <div
           onClick={() => setData('')}
           className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
@@ -84,7 +95,7 @@ function App() {
             onSave={handleSave}
             paddingTop={64}
             paddingBottom={64}
-            paddingLeft={128 - 44}
+            paddingLeft={128}
             paddingRight={128}
             primaryColor={primaryColor}
             plugins={plugins}

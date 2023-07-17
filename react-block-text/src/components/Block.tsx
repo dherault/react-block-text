@@ -6,7 +6,7 @@ import type { XYCoord } from 'react-dnd'
 
 import type { BlockProps, DragAndDropCollect, TopLeft } from '../types'
 
-import { ADD_ITEM_BUTTON_ID, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
+import { ADD_ITEM_BUTTON_ID, BLOCK_ICONS_WIDTH, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
 
 import PrimaryColorContext from '../context/PrimaryColorContext'
 
@@ -186,7 +186,7 @@ function Block(props: BlockProps) {
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
-        style={{ width: (paddingLeft ?? 0) + indentWidth }}
+        style={{ width: Math.max((paddingLeft ?? 0) - BLOCK_ICONS_WIDTH, 0) + indentWidth }}
       />
       <div className="flex-grow flex relative">
         {/* Selection background element */}
