@@ -67,6 +67,7 @@ function Block(props: BlockProps) {
   const paddingLeft = useMemo(() => noPadding ? 0 : rawPaddingLeft ?? 0, [noPadding, rawPaddingLeft])
   const paddingRight = useMemo(() => noPadding ? 0 : rawPaddingRight ?? 0, [noPadding, rawPaddingRight])
   const indentWidth = useMemo(() => item.indent * INDENT_SIZE, [item.indent])
+  const iconsWidth = useMemo(() => readOnly ? 0 : BLOCK_ICONS_WIDTH, [readOnly])
 
   /* ---
     DRAG AND DROP
@@ -186,38 +187,28 @@ function Block(props: BlockProps) {
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
         className="cursor-text flex-shrink-0"
-        style={{ width: Math.max((paddingLeft ?? 0) - BLOCK_ICONS_WIDTH, 0) + indentWidth }}
+        style={{ width: Math.max((paddingLeft ?? 0) - iconsWidth, 0) + indentWidth }}
       />
       <div className="flex-grow flex relative">
         {/* Selection background element */}
         <div
           ref={registerSelectionRef}
-          className="absolute z-0"
+          className="absolute rounded-sm transition-opacity z-0"
           style={{
             top: paddingTop - 2,
             bottom: paddingBottom - 2,
             left: (contentRef.current?.offsetLeft || 0) - indentWidth - 4,
             right: 2,
+            backgroundColor: primaryColor,
+            opacity: !isEmpty && selected ? 0.15 : 0,
           }}
         >
           {/* Scroll into view offset element */}
           <div className="absolute -bottom-[64px] left-0" />
-          {/* Visible background element */}
-          <div
-            className="absolute rounded-sm transition-opacity"
-            style={{
-              top: 0,
-              bottom: 0,
-              left: indentWidth,
-              right: 0,
-              backgroundColor: primaryColor,
-              opacity: !isEmpty && selected ? 0.15 : 0,
-            }}
-          />
         </div>
         {/* Add and drag icons */}
         {!readOnly && (
-          <div className="flex-shrink-0 flex flex-col">
+          <div className="flex-shrink-0 flex flex-col z-10">
             <div
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
