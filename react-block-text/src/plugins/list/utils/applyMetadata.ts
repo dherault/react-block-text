@@ -27,26 +27,24 @@ function applyNumberedListMetadata(value: ReactBlockTextDataItem[], item: ReactB
   catch (error) {
     const previousItem = value[index - 1]
 
-    try {
-      const { depth } = JSON.parse(previousItem.metadata)
-
+    if (previousItem.type === 'numbered-list') {
       return {
         ...item,
+        indent: previousItem.indent + 1,
         metadata: JSON.stringify({
           index: 0,
-          depth: depth + 1,
+          depth: previousItem.indent + 1,
         }),
       }
     }
-    catch (error) {
-      return {
-        ...item,
-        indent: 0,
-        metadata: JSON.stringify({
-          index: 0,
-          depth: 0,
-        }),
-      }
+
+    return {
+      ...item,
+      indent: 0,
+      metadata: JSON.stringify({
+        index: 0,
+        depth: 0,
+      }),
     }
   }
 }
