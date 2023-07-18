@@ -4,11 +4,7 @@ import { toAbc } from 'abc-list'
 
 import type { BlockContentProps } from '../../../types'
 
-const depthToBullet = [
-  '•',
-  '◦',
-  '▪',
-]
+const depthToBullet = ['•', '◦', '▪']
 
 function BlockContentList(props: BlockContentProps) {
   const { item, onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
@@ -51,8 +47,8 @@ function BlockContentList(props: BlockContentProps) {
             .
           </div>
         ) : (
-          <div className="-mt-[2px] ml-2 scale-[200%]">
-            {depthToBullet[item.indent & depthToBullet.length]}
+          <div className="-my-[4px] ml-2 font-serif text-2xl">
+            {depthToBullet[item.indent % depthToBullet.length]}
           </div>
         )}
       </div>

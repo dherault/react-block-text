@@ -1017,6 +1017,7 @@ function ReactBlockText({
     nextValue = applyMetadatas(index, nextValue, editorStates)
 
     onChange(nextValue)
+    setHoveredIndex(-1)
 
     return 'handled'
   }, [value, editorStates, pluginsData, onChange, applyMetadatas])
