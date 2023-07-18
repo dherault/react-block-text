@@ -45,9 +45,6 @@ function BlockContentList(props: BlockContentProps) {
           >
             {label}
             .
-            <span className="text-red-500 text-xs">
-              {item.metadata}
-            </span>
           </div>
         ) : (
           <div className="-my-[4px] ml-2 font-serif text-2xl">
