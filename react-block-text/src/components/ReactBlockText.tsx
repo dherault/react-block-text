@@ -101,6 +101,7 @@ import getContextMenuData from '../utils/getContextMenuData'
 import forceContentFocus from '../utils/forceContentFocus'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
 import findScrollParent from '../utils/findScrollParent'
+import getIsFirstOrLastLine from '../utils/getIsFirstOrLastLine'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
@@ -240,6 +241,7 @@ function ReactBlockText({
   */
 
   const rootRef = useRef<HTMLDivElement>(null)
+  const injectionRef = useRef<HTMLDivElement>(null)
   const [hoveredIndex, setHoveredIndex] = useState(-1)
   const [focusedIndex, setFocusedIndex] = useState(value.length ? -1 : 0)
   const [forceFocusIndex, setForceFocusIndex] = useState(-1)
@@ -547,7 +549,11 @@ function ReactBlockText({
       return
     }
 
-    const editorState = editorStates[value[index]?.id]
+    const item = value[index]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
     const nextEditorState = editorStates[value[index + 1]?.id]
 
     if (!(editorState && nextEditorState)) return
@@ -557,12 +563,19 @@ function ReactBlockText({
     const isLastBlock = lastBlock.getKey() === selection.getFocusKey()
 
     if (!isLastBlock) return
+
+    const focusOffset = selection.getFocusOffset()
+
+    // If we are on a multiline block, we check first if we are on the last line
+    const { isLastLine } = getIsFirstOrLastLine(injectionRef.current!, editorRefs[instanceId][item.id]?.editorContainer, focusOffset)
+
+    console.log('isLastLine', isLastLine)
+    if (!isLastLine) return
+
     // If on the last block, we focus the next block
     // The caret position must be conserved
-
     const lastBlockText = lastBlock.getText()
     const indexOfLastCarriageReturn = lastBlockText.lastIndexOf('\n')
-    const focusOffset = selection.getFocusOffset()
 
     // If within a multiline block and not on the last line, we do nothing
     if (indexOfLastCarriageReturn !== -1 && focusOffset <= indexOfLastCarriageReturn) return
@@ -582,7 +595,7 @@ function ReactBlockText({
     setHoveredIndex(-1)
 
     event.preventDefault()
-  }, [value, editorStates, contextMenuData])
+  }, [value, editorStates, instanceId, contextMenuData])
 
   /* ---
     RETURN
@@ -2259,6 +2272,13 @@ function ReactBlockText({
             onMouseDown={handleRectSelectionStart}
             className="cursor-text"
             style={{ height: paddingBottom || 0 }}
+          />
+          <div
+            ref={injectionRef}
+            style={{
+              paddingLeft,
+              paddingRight,
+            }}
           />
         </div>
         <DragLayer

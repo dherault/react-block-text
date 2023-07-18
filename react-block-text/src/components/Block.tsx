@@ -208,49 +208,51 @@ function Block(props: BlockProps) {
         </div>
         {/* Add and drag icons */}
         {!readOnly && (
-          <div className="flex-shrink-0 flex flex-col z-10">
-            <div
-              onClick={focusContentAtStart}
-              onMouseDown={onRectSelectionMouseDown}
-              className="flex-shrink-0 cursor-text"
-              style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) }}
-            />
-            <div
-              className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
-              style={{ opacity: hovered ? 1 : 0 }}
-            >
+          <div className="flex-shrink-0 flex z-10">
+            <div className="flex-shrink-0 flex flex-col">
               <div
-                id={ADD_ITEM_BUTTON_ID}
-                className={_('p-1 hover:bg-gray-100 rounded cursor-pointer', {
-                  'opacity-0': !!menuPosition,
-                })}
-                onClick={onAddItem}
+                onClick={focusContentAtStart}
+                onMouseDown={onRectSelectionMouseDown}
+                className="flex-shrink-0 cursor-text"
+                style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) }}
+              />
+              <div
+                className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
+                style={{ opacity: hovered ? 1 : 0 }}
               >
-                <AddIcon width={18} />
+                <div
+                  id={ADD_ITEM_BUTTON_ID}
+                  className={_('p-1 hover:bg-gray-100 rounded cursor-pointer', {
+                    'opacity-0': !!menuPosition,
+                  })}
+                  onClick={onAddItem}
+                >
+                  <AddIcon width={18} />
+                </div>
+                <div
+                  ref={dragRef}
+                  id={DRAG_ITEM_BUTTON_ID}
+                  onClick={handleDragClick}
+                  onMouseDown={blurContent}
+                  className="py-1 hover:bg-gray-100 rounded cursor-pointer"
+                >
+                  <DragIcon width={18} />
+                </div>
               </div>
               <div
-                ref={dragRef}
-                id={DRAG_ITEM_BUTTON_ID}
-                onClick={handleDragClick}
-                onMouseDown={blurContent}
-                className="py-1 hover:bg-gray-100 rounded cursor-pointer"
-              >
-                <DragIcon width={18} />
-              </div>
+                onClick={focusContentAtStart}
+                onMouseDown={onRectSelectionMouseDown}
+                className="flex-grow cursor-text"
+              />
             </div>
+            {/* Separator/margin with click handler */}
             <div
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
-              className="flex-grow cursor-text"
+              className="w-1.5 h-full cursor-text flex-shrink-0"
             />
           </div>
         )}
-        {/* Separator/margin with click handler */}
-        <div
-          onClick={focusContentAtStart}
-          onMouseDown={onRectSelectionMouseDown}
-          className="w-1.5 h-full cursor-text flex-shrink-0 z-10"
-        />
         {/* Content */}
         <div
           ref={contentRef}
