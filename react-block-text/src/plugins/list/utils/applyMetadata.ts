@@ -56,6 +56,15 @@ function applyBulletedListMetadata(value: ReactBlockTextDataItem[], item: ReactB
 
   if (previousListItem) return item
 
+  const previousItem = value[index - 1]
+
+  if (previousItem && previousItem.type === 'bulleted-list') {
+    return {
+      ...item,
+      indent: Math.min(previousItem.indent + 1, item.indent),
+    }
+  }
+
   return {
     ...item,
     indent: 0,
