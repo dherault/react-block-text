@@ -61,6 +61,7 @@ import 'draft-js/dist/Draft.css'
 import ignoreWarnings from 'ignore-warnings'
 
 import type {
+  ArrowData,
   BlockCommonProps,
   BlockContentProps,
   BlockProps,
@@ -81,8 +82,8 @@ import {
   BASE_SCROLL_SPEED,
   COMMANDS,
   DEFAULT_PRIMARY_COLOR,
+  DEFAULT_TEXT_COLOR,
   DRAG_ITEM_BUTTON_ID,
-  ROOT_STYLE,
   SELECTION_RECT_SCROLL_OFFSET,
   VERSION,
 } from '../constants'
@@ -101,7 +102,7 @@ import getContextMenuData from '../utils/getContextMenuData'
 import forceContentFocus from '../utils/forceContentFocus'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
 import findScrollParent from '../utils/findScrollParent'
-import getIsFirstOrLastLine from '../utils/getIsFirstOrLastLine'
+import getLastLineFocusOffset from '../utils/getLastLineFocusOffset'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
@@ -130,6 +131,7 @@ function ReactBlockText({
   value: rawValue,
   onChange: rawOnChange,
   primaryColor: rawPrimaryColor,
+  textColor: rawTextColor,
   plugins = [],
   readOnly,
   paddingTop,
@@ -160,9 +162,10 @@ function ReactBlockText({
   }, [rawOnChange])
 
   /* ---
-    PRIMARY COLOR
+    COLORS
   --- */
   const primaryColor = useMemo(() => rawPrimaryColor || DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
+  const textColor = useMemo(() => rawTextColor || DEFAULT_TEXT_COLOR, [rawTextColor])
 
   /*
     ██████╗ ██╗     ██╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
@@ -250,6 +253,8 @@ function ReactBlockText({
   const [dragData, setDragData] = useState<DragData | null>(null)
   const [wasDragging, setWasDragging] = useState(false)
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
+  const [isCaretVisible, setIsCaretVisible] = useState(true)
+  const [arrowData, setArrowData] = useState<ArrowData | null>(null)
   const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
   const [selectionRect, setSelectionRect] = useState<SelectionRectData | null>(null)
   const [selectionText, setSelectionText] = useState<SelectionTextData | null>(null)
@@ -482,6 +487,15 @@ function ReactBlockText({
     }
   }, [value, editorStates, instanceId, contextMenuData, onChange, applyStyles, applyMetadatas])
 
+  /*
+     █████╗ ██████╗ ██████╗  ██████╗ ██╗    ██╗███████╗
+    ██╔══██╗██╔══██╗██╔══██╗██╔═══██╗██║    ██║██╔════╝
+    ███████║██████╔╝██████╔╝██║   ██║██║ █╗ ██║███████╗
+    ██╔══██║██╔══██╗██╔══██╗██║   ██║██║███╗██║╚════██║
+    ██║  ██║██║  ██║██║  ██║╚██████╔╝╚███╔███╔╝███████║
+    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝  ╚══╝╚══╝ ╚══════╝
+  */
+
   /* ---
     UP ARROW
     Handle up arrow, to move between editor instances
@@ -559,43 +573,83 @@ function ReactBlockText({
     if (!(editorState && nextEditorState)) return
 
     const selection = editorState.getSelection()
-    const lastBlock = editorState.getCurrentContent().getLastBlock()
-    const isLastBlock = lastBlock.getKey() === selection.getFocusKey()
 
-    if (!isLastBlock) return
+    // If not on the last block, return
+    if (editorState.getCurrentContent().getLastBlock().getKey() !== selection.getFocusKey()) return
 
-    const focusOffset = selection.getFocusOffset()
+    setIsCaretVisible(false)
 
-    // If we are on a multiline block, we check first if we are on the last line
-    const { isLastLine } = getIsFirstOrLastLine(injectionRef.current!, editorRefs[instanceId][item.id]?.editorContainer, focusOffset)
-
-    console.log('isLastLine', isLastLine)
-    if (!isLastLine) return
-
-    // If on the last block, we focus the next block
-    // The caret position must be conserved
-    const lastBlockText = lastBlock.getText()
-    const indexOfLastCarriageReturn = lastBlockText.lastIndexOf('\n')
-
-    // If within a multiline block and not on the last line, we do nothing
-    if (indexOfLastCarriageReturn !== -1 && focusOffset <= indexOfLastCarriageReturn) return
-
-    // Find the position of the caret and apply the selection to the previous block
-    const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
-    const firstLine = nextFirstBlock.getText().split('\n')[0] ?? ''
-    const offset = Math.min(focusOffset - indexOfLastCarriageReturn - 1, firstLine.length)
-    const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
-      anchorOffset: offset,
-      focusOffset: offset,
+    setTimeout(() => {
+      setArrowData({
+        index,
+        isTop: false,
+        offset: selection.getFocusOffset(),
+      })
     })
-    const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
+  }, [value, editorStates, contextMenuData])
 
-    setEditorStates(x => ({ ...x, [value[index + 1].id]: updatedNextEditorState }))
-    setFocusedIndex(index + 1)
+  const handleArrow = useCallback(() => {
+    if (!arrowData) return
+
+    setArrowData(null)
+    setIsCaretVisible(true)
+
+    const { index, isTop, offset } = arrowData
+    const item = value[arrowData.index]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    if (isTop) {
+      console.log('isTop')
+    }
+    else {
+      const selection = editorState.getSelection()
+      const lastBlock = editorState.getCurrentContent().getLastBlock()
+
+      if (!(selection.getFocusKey() === lastBlock.getKey() && selection.getFocusOffset() === lastBlock.getLength())) return
+
+      const nextItem = value[index + 1]
+
+      if (!nextItem) return
+
+      const nextEditorState = editorStates[nextItem.id]
+
+      if (!nextEditorState) return
+
+      const nextFocusOffset = getLastLineFocusOffset(
+        item.id,
+        offset,
+        editorRefs[instanceId][item.id]?.editorContainer,
+        injectionRef.current!
+      )
+      const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
+      const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
+        anchorOffset: nextFocusOffset,
+        focusOffset: nextFocusOffset,
+      })
+      const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
+
+      console.log('nextFocusOffset', nextFocusOffset)
+
+      setEditorStates(x => ({ ...x, [nextItem.id]: updatedNextEditorState }))
+      setFocusedIndex(index + 1)
+    }
+
     setHoveredIndex(-1)
+  }, [value, editorStates, instanceId, arrowData])
 
-    event.preventDefault()
-  }, [value, editorStates, instanceId, contextMenuData])
+  /*
+    ███╗   ███╗███████╗████████╗ █████╗
+    ████╗ ████║██╔════╝╚══██╔══╝██╔══██╗
+    ██╔████╔██║█████╗     ██║   ███████║
+    ██║╚██╔╝██║██╔══╝     ██║   ██╔══██║
+    ██║ ╚═╝ ██║███████╗   ██║   ██║  ██║
+    ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
+  */
 
   /* ---
     RETURN
@@ -1823,6 +1877,13 @@ function ReactBlockText({
   }, [readOnly, value])
 
   /* ---
+    UP AND DOWN ARROW
+  --- */
+  useEffect(() => {
+    handleArrow()
+  }, [handleArrow])
+
+  /* ---
     FORCE FOCUS
     Handle forcing focus on a specific block
   --- */
@@ -2233,7 +2294,11 @@ function ReactBlockText({
           onMouseMove={handleRootMouseMove}
           onMouseLeave={handleRootMouseLeave}
           className="relative"
-          style={ROOT_STYLE}
+          style={{
+            // Prevent flickering of caret at the end of the line when switching blocks with arrow keys
+            caretColor: isCaretVisible ? textColor : 'transparent',
+            color: textColor,
+          }}
         >
           <div
             onClick={() => handleFocusContent(0)}
@@ -2273,13 +2338,7 @@ function ReactBlockText({
             className="cursor-text"
             style={{ height: paddingBottom || 0 }}
           />
-          <div
-            ref={injectionRef}
-            style={{
-              paddingLeft,
-              paddingRight,
-            }}
-          />
+          <div ref={injectionRef} />
         </div>
         <DragLayer
           pluginsData={pluginsData}

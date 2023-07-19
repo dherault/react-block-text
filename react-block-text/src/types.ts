@@ -54,6 +54,7 @@ export type ReactBlockTextProps = {
   paddingLeft?: number
   paddingRight?: number
   primaryColor?: string | null
+  textColor?: string | null
   onChange?: (value: string) => void
   onSave?: () => void
 }
@@ -218,4 +219,10 @@ export type XY = {
 
 export type DragAndDropCollect = {
   handlerId: string | symbol | null
+}
+
+export type ArrowData = {
+  isTop: boolean
+  index: number
+  offset: number
 }

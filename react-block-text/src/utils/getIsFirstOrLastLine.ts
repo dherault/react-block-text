@@ -1,6 +1,7 @@
 function getIsFirstOrLastLine(injectionElement: HTMLElement, editorElement: HTMLElement | null | undefined, focusOffset: number) {
   if (!(injectionElement && editorElement)) {
     return {
+      lineCharacterCount: 0,
       isFirstLine: false,
       isLastLine: false,
     }
@@ -12,51 +13,65 @@ function getIsFirstOrLastLine(injectionElement: HTMLElement, editorElement: HTML
   injectionElement.appendChild(editorClone)
 
   let charCount = 0
+  let lineCharacterCount = 0
   let lineNumber = 0
   let lineY = lineHeight
   const nLines = editorClone.offsetHeight / lineHeight
   const text = editorClone.textContent ?? ''
+  const wordArray = text.split(/ |-/)
 
   editorClone.textContent = ''
 
-  const wordArray = text.split(' ')
-
   for (let i = 0; i < wordArray.length; i++) {
-    const nextWord = `${wordArray[i]} `
+    let nextWord = `${wordArray[i]} `
 
     charCount += nextWord.length
+    lineCharacterCount += nextWord.length
 
     // Add text character by character
     editorClone.textContent += nextWord
 
-    const currentY = editorClone.offsetHeight
+    let currentY = editorClone.offsetHeight
 
     // currentY > lineY means new line
     if (currentY > lineY || i === wordArray.length - 1) {
       lineY = currentY
       lineNumber++
+      lineCharacterCount = 0
     }
 
-    // editorClone.textContent += 'A '
+    if (charCount === focusOffset && wordArray[i + 1]) {
+      nextWord = `${wordArray[i + 1]} `
 
-    // currentY = editorClone.offsetHeight
+      editorClone.textContent += nextWord
 
-    // // currentY > lineY means new line
-    // if (currentY > lineY || i === wordArray.length - 1) {
-    //   lineY = currentY
-    //   lineNumber++
-    // }
+      currentY = editorClone.offsetHeight
 
-    // editorClone.textContent = editorClone.textContent.slice(0, -1)
+      if (currentY > lineY) {
+        lineY = currentY
+        lineNumber++
+      }
 
-    if (charCount >= focusOffset) break
+      editorClone.textContent = editorClone.textContent.slice(0, -nextWord.length)
+    }
+
+    if (charCount >= focusOffset) {
+      console.log('lineCharacterCount', lineCharacterCount)
+      lineCharacterCount -= charCount - focusOffset
+      console.log('lineCharacterCount 2', lineCharacterCount)
+
+      if (lineCharacterCount < 0) {
+        lineCharacterCount += wordArray[i].length + 1
+      }
+
+      break
+    }
   }
 
-  // injectionElement.removeChild(editorClone)
-
-  console.log('lineNumber, nLines', lineNumber, nLines)
+  injectionElement.removeChild(editorClone)
 
   return {
+    lineCharacterCount,
     isFirstLine: lineNumber === 0,
     isLastLine: lineNumber >= nLines - 1,
   }

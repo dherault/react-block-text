@@ -24,4 +24,4 @@ export const SELECTION_RECT_SCROLL_OFFSET = 64
 
 export const BASE_SCROLL_SPEED = 16
 
-export const ROOT_STYLE = { color: '#37352f', caretColor: '#37352f' } as const
+export const DEFAULT_TEXT_COLOR = '#37352f'
