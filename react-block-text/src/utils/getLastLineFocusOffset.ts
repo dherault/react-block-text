@@ -37,22 +37,23 @@ function getLastLineFocusOffset(id: string, focusOffset: number, editorElement: 
     }
 
     const lastWord = words.pop() ?? ''
+
     contentElement.innerText = contentElement.innerText.slice(0, -(lastWord.length + 1))
 
     if (contentElement.innerText.length < focusOffset) {
-      if (!hasAcheivedOffset) {
-        offset += focusOffset - contentElement.innerText.length - 1
-        hasAcheivedOffset = true
+      if (hasAcheivedOffset) {
+        offset += lastWord.length + 1
       }
       else {
-        offset += lastWord.length + 1
+        offset += focusOffset - contentElement.innerText.length - 1
+        hasAcheivedOffset = true
       }
     }
   }
 
   injectionElement.removeChild(blockElementClone)
 
-  return 0
+  return focusOffset
 }
 
 function findParentBlock(id: string, element: HTMLElement) {
