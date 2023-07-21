@@ -579,6 +579,7 @@ function ReactBlockText({
 
     setIsCaretVisible(false)
 
+    // A timeout is necessary for the editorState to update the selection
     setTimeout(() => {
       setArrowData({
         index,
@@ -620,20 +621,18 @@ function ReactBlockText({
 
       if (!nextEditorState) return
 
-      const nextFocusOffset = getLastLineFocusOffset(
+      const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
+      const nextFocusOffset = Math.min(getLastLineFocusOffset(
         item.id,
         offset,
         editorRefs[instanceId][item.id]?.editorContainer,
         injectionRef.current!
-      )
-      const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
+      ), nextFirstBlock.getLength())
       const nextSelection = SelectionState.createEmpty(nextFirstBlock.getKey()).merge({
         anchorOffset: nextFocusOffset,
         focusOffset: nextFocusOffset,
       })
       const updatedNextEditorState = EditorState.forceSelection(nextEditorState, nextSelection)
-
-      console.log('nextFocusOffset', nextFocusOffset)
 
       setEditorStates(x => ({ ...x, [nextItem.id]: updatedNextEditorState }))
       setFocusedIndex(index + 1)
