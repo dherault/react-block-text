@@ -631,7 +631,15 @@ function ReactBlockText({
       if (!previousEditorState) return
 
       const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
+      const nextFocusOffset = Math.min(offset, previousLastBlock.getLength())
+      const nextSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+        anchorOffset: nextFocusOffset,
+        focusOffset: nextFocusOffset,
+      })
+      const updatedNextEditorState = EditorState.forceSelection(previousEditorState, nextSelection)
 
+      setEditorStates(x => ({ ...x, [previousItem.id]: updatedNextEditorState }))
+      setFocusedIndex(index - 1)
     }
     else {
       const lastBlock = editorState.getCurrentContent().getLastBlock()
