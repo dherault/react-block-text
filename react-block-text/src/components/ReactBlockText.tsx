@@ -1268,7 +1268,6 @@ function ReactBlockText({
 
     if (!dragData) return
 
-    // Actually the drop data: `index` is the drop index
     const { dropIndex, isTop } = dragData
     const selectedIndexes = getSelectionRectIndexes()
     const dragIndexes = selectedIndexes.length ? selectedIndexes : [singleDragIndex]

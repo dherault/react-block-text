@@ -1,56 +1,62 @@
 import type { ReactBlockTextDataItem } from '../../../types'
 
 function applyMetadatas(_index: number, value: ReactBlockTextDataItem[]) {
-  return value.map((item, index) => {
-    if (item.type === 'numbered-list') return applyNumberedListMetadata(value, item, index)
-    if (item.type === 'bulleted-list') return applyBulletedListMetadata(value, item, index)
+  const nextValue = [...value]
 
-    return item
-  })
+  for (let i = 0; i < nextValue.length; i++) {
+    const { type } = nextValue[i]
+
+    if (type === 'numbered-list') nextValue[i] = applyNumberedListMetadata(nextValue, i)
+    if (type === 'bulleted-list') nextValue[i] = applyBulletedListMetadata(nextValue, i)
+  }
+
+  return nextValue
 }
 
-function applyNumberedListMetadata(value: ReactBlockTextDataItem[], item: ReactBlockTextDataItem, index: number) {
-  const previousListItem = findPreviousListItem(value, item, index, 'numbered-list')
+function applyNumberedListMetadata(value: ReactBlockTextDataItem[], index: number) {
+  const item = value[index]
+  const previousListItem = findPreviousListItem(value, index)
 
-  try {
-    const { index, depth } = JSON.parse(previousListItem!.metadata)
-    const isIndented = previousListItem!.indent < item.indent
+  if (previousListItem) {
+    const { index: previousIndex, depth } = JSON.parse(previousListItem.metadata)
+    const isIndented = previousListItem.indent < item.indent
 
     return {
       ...item,
       metadata: JSON.stringify({
-        index: isIndented ? 0 : index + 1,
+        index: isIndented ? 0 : previousIndex + 1,
         depth: isIndented ? depth + 1 : depth,
       }),
     }
   }
-  catch (error) {
-    const previousItem = value[index - 1]
 
-    if (previousItem.type === 'numbered-list') {
-      return {
-        ...item,
-        indent: previousItem.indent + 1,
-        metadata: JSON.stringify({
-          index: 0,
-          depth: previousItem.indent + 1,
-        }),
-      }
-    }
+  const previousItem = value[index - 1]
 
+  if (previousItem.type === 'numbered-list') {
     return {
       ...item,
-      indent: 0,
+      indent: previousItem.indent + 1,
       metadata: JSON.stringify({
         index: 0,
-        depth: 0,
+        depth: previousItem.indent + 1,
       }),
     }
   }
+
+  return {
+    ...item,
+    indent: 0,
+    metadata: JSON.stringify({
+      index: 0,
+      depth: 0,
+    }),
+  }
+
 }
 
-function applyBulletedListMetadata(value: ReactBlockTextDataItem[], item: ReactBlockTextDataItem, index: number) {
-  const previousListItem = findPreviousListItem(value, item, index, 'bulleted-list')
+function applyBulletedListMetadata(value: ReactBlockTextDataItem[], index: number) {
+  const item = value[index]
+  const previousListItem = findPreviousListItem(value, index)
 
   if (previousListItem) return item
 
@@ -69,10 +75,16 @@ function applyBulletedListMetadata(value: ReactBlockTextDataItem[], item: ReactB
   }
 }
 
-function findPreviousListItem(value: ReactBlockTextDataItem[], item: ReactBlockTextDataItem, index: number, type: string) {
+function findPreviousListItem(value: ReactBlockTextDataItem[], index: number) {
+  const item = value[index]
+  let lastIndent = item.indent
+
   for (let i = index - 1; i >= 0; i--) {
-    if (value[i].type !== type) return null
+    if (value[i].indent > lastIndent) continue
+    if (value[i].type !== item.type) return null
     if (value[i].indent === item.indent) return value[i]
+
+    lastIndent = value[i].indent
   }
 
   return null
