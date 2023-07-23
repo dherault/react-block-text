@@ -27,7 +27,7 @@
 // - Write documentation
 // - Write demo default editor text
 // - Investigate Checkbox opacity transition
-// - Handle meta backspace bug
+// x Handle meta backspace bug
 // x Handle rect selection + dnd bug on non-selected indented blocks
 // x Fix arrow up/down bug on long text
 // x Fix long text selection offset
@@ -1784,7 +1784,7 @@ function ReactBlockText({
       return 'handled'
     }
 
-    if (command === 'backspace') {
+    if (command === 'backspace' || command === 'backspace-to-start-of-line') {
       return handleBackspace(index)
     }
 
