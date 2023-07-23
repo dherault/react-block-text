@@ -7,7 +7,7 @@
 // x Write header plugin
 // x Write quote plugin
 // x Write list plugin
-// - Complete list plugin (it's buggy)
+// x Complete list plugin (it's buggy)
 // - Write code plugin
 // - Write image plugin
 // - Write table plugin (may need to set editorStates as an array)
@@ -530,33 +530,6 @@ function ReactBlockText({
         offset: selection.getFocusOffset(),
       })
     })
-
-    // If on the first block, we focus the previous block
-    // The caret position must be conserved
-    // const firstBlockText = firstBlock.getText()
-    // const indexOfCarriageReturn = firstBlockText.indexOf('\n')
-    // const focusOffset = selection.getFocusOffset()
-
-    // // If within a multiline block and not on the first line, we do nothing
-    // if (indexOfCarriageReturn !== -1 && focusOffset > indexOfCarriageReturn) return
-
-    // // Find the position of the caret and apply the selection to the previous block
-    // const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
-    // const lines = previousLastBlock.getText().split('\n')
-    // const lastLine = lines.pop() ?? ''
-    // const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
-    // const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
-    // const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
-    //   anchorOffset: offset,
-    //   focusOffset: offset,
-    // })
-    // const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
-
-    // setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
-    // setFocusedIndex(index - 1)
-    // setHoveredIndex(-1)
-
-    // event.preventDefault()
   }, [value, editorStates, contextMenuData])
 
   /* ---
