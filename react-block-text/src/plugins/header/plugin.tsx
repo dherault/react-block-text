@@ -8,7 +8,7 @@ const TITLES = ['Heading 1', 'Heading 2', 'Heading 3']
 const LABELS = ['Big section heading.', 'Medium section heading.', 'Small section heading.']
 const PADDING_TOPS = [24, 18, 12]
 const PADDING_BOTTOMS = [9, 9, 9]
-const ICONS_PADDING_TOPS = [6, 4, 1]
+const ICONS_PADDING_TOPS = [7, 5, 2]
 
 function headerPlugin(): ReactBlockTextPlugins {
   return TYPES.map((type, i) => () => ({

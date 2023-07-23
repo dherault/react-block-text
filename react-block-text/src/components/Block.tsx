@@ -214,7 +214,7 @@ function Block(props: BlockProps) {
                 onClick={focusContentAtStart}
                 onMouseDown={onRectSelectionMouseDown}
                 className="flex-shrink-0 cursor-text"
-                style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) }}
+                style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) - 1 }}
               />
               <div
                 className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-400"

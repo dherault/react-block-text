@@ -29,12 +29,11 @@
 // - Investigate Checkbox opacity transition
 // - Handle meta backspace bug
 // x Handle rect selection + dnd bug on non-selected indented blocks
-// - Fix arrow up/down bug on long text
+// x Fix arrow up/down bug on long text
 // x Fix long text selection offset
 // x Fix selection rect bg bug
 // x Remove indent on text, header, ...
 // x Take icons into paddingLeft account
-// - Fix newline via enter on \n bug
 
 import {
   type MouseEvent as ReactMouseEvent,
