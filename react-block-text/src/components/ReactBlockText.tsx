@@ -34,6 +34,7 @@
 // x Fix selection rect bg bug
 // x Remove indent on text, header, ...
 // x Take icons into paddingLeft account
+// - Fix newline via enter on \n bug
 
 import {
   type MouseEvent as ReactMouseEvent,
@@ -516,37 +517,47 @@ function ReactBlockText({
     if (!(editorState && previousEditorState)) return
 
     const selection = editorState.getSelection()
-    const firstBlock = editorState.getCurrentContent().getFirstBlock()
-    const isFirstBlock = firstBlock.getKey() === selection.getFocusKey()
 
-    if (!isFirstBlock) return
+    // If not on the first block, return
+    if (editorState.getCurrentContent().getFirstBlock().getKey() !== selection.getFocusKey()) return
+
+    setIsCaretVisible(false)
+
+    // A timeout is necessary for the editorState to update the selection
+    setTimeout(() => {
+      setArrowData({
+        index,
+        isTop: true,
+        offset: selection.getFocusOffset(),
+      })
+    })
+
     // If on the first block, we focus the previous block
     // The caret position must be conserved
+    // const firstBlockText = firstBlock.getText()
+    // const indexOfCarriageReturn = firstBlockText.indexOf('\n')
+    // const focusOffset = selection.getFocusOffset()
 
-    const firstBlockText = firstBlock.getText()
-    const indexOfCarriageReturn = firstBlockText.indexOf('\n')
-    const focusOffset = selection.getFocusOffset()
+    // // If within a multiline block and not on the first line, we do nothing
+    // if (indexOfCarriageReturn !== -1 && focusOffset > indexOfCarriageReturn) return
 
-    // If within a multiline block and not on the first line, we do nothing
-    if (indexOfCarriageReturn !== -1 && focusOffset > indexOfCarriageReturn) return
+    // // Find the position of the caret and apply the selection to the previous block
+    // const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
+    // const lines = previousLastBlock.getText().split('\n')
+    // const lastLine = lines.pop() ?? ''
+    // const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
+    // const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
+    // const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
+    //   anchorOffset: offset,
+    //   focusOffset: offset,
+    // })
+    // const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
 
-    // Find the position of the caret and apply the selection to the previous block
-    const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
-    const lines = previousLastBlock.getText().split('\n')
-    const lastLine = lines.pop() ?? ''
-    const otherLinesLength = lines.length ? lines.join(' ').length + 1 : 0 // Space replaces carriage return
-    const offset = otherLinesLength + Math.min(focusOffset, lastLine.length)
-    const previousSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
-      anchorOffset: offset,
-      focusOffset: offset,
-    })
-    const updatedPreviousEditorState = EditorState.forceSelection(previousEditorState, previousSelection)
+    // setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
+    // setFocusedIndex(index - 1)
+    // setHoveredIndex(-1)
 
-    setEditorStates(x => ({ ...x, [value[index - 1].id]: updatedPreviousEditorState }))
-    setFocusedIndex(index - 1)
-    setHoveredIndex(-1)
-
-    event.preventDefault()
+    // event.preventDefault()
   }, [value, editorStates, contextMenuData])
 
   /* ---
@@ -604,11 +615,25 @@ function ReactBlockText({
 
     if (!editorState) return
 
+    const selection = editorState.getSelection()
+
     if (isTop) {
-      console.log('isTop')
+      const firstBlock = editorState.getCurrentContent().getFirstBlock()
+
+      if (!(selection.getFocusKey() === firstBlock.getKey() && selection.getFocusOffset() === 0)) return
+
+      const previousItem = value[index - 1]
+
+      if (!previousItem) return
+
+      const previousEditorState = editorStates[previousItem.id]
+
+      if (!previousEditorState) return
+
+      const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
+
     }
     else {
-      const selection = editorState.getSelection()
       const lastBlock = editorState.getCurrentContent().getLastBlock()
 
       if (!(selection.getFocusKey() === lastBlock.getKey() && selection.getFocusOffset() === lastBlock.getLength())) return

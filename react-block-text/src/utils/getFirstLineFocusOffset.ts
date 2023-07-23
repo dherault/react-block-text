@@ -1,7 +1,7 @@
 import findParentBlock from './findParentBlock'
 import findChildWithProperty from './findChildWithProperty'
 
-function getLastLineFocusOffset(id: string, focusOffset: number, editorElement: HTMLElement | null | undefined, injectionElement: HTMLElement) {
+function getFirstLineFocusOffset(id: string, focusOffset: number, editorElement: HTMLElement | null | undefined, injectionElement: HTMLElement) {
   if (!(editorElement && injectionElement)) return 0
 
   // We want to reconstitute the Block element with its content
@@ -59,4 +59,4 @@ function getLastLineFocusOffset(id: string, focusOffset: number, editorElement: 
   return focusOffset
 }
 
-export default getLastLineFocusOffset
+export default getFirstLineFocusOffset

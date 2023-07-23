@@ -217,7 +217,7 @@ function Block(props: BlockProps) {
                 style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) }}
               />
               <div
-                className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-500"
+                className="flex-shrink-0 flex items-center opacity-0 transition-opacity duration-300 text-gray-400"
                 style={{ opacity: hovered ? 1 : 0 }}
               >
                 <div
