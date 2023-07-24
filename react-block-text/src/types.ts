@@ -195,6 +195,7 @@ export type TopLeft = {
 export type SelectionTextData = {
   items: ReactBlockTextDataItem[]
   startId: string
+  text: string
 }
 
 export type SelectionRectData = SelectionRectProps & {

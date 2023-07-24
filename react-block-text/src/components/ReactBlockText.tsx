@@ -1292,6 +1292,16 @@ function ReactBlockText({
     if (!(selectionText && selectionText.items.length)) return
 
     navigator.clipboard.writeText(JSON.stringify(selectionText.items))
+
+    const element = document.createElement('div')
+
+    element.innerText = JSON.stringify(selectionText.items)
+
+    console.log('copy xxx', selectionText.text)
+    // navigator.clipboard.write([new ClipboardItem({
+    //   'text/plain': new Blob([element.innerText], {type: 'text/plain'}),
+    //   'text/html': new Blob([element.innerHTML], {type: 'text/html'})
+    // })])
   }, [selectionText])
 
   /* ---
@@ -1634,6 +1644,8 @@ function ReactBlockText({
       }
     })
 
+    // Find selected text
+    let textWithLineBreaks = ''
     // Find selected blocks
     const selected: ReactBlockTextDataItem[] = []
     // The text that has been selected
@@ -1642,7 +1654,7 @@ function ReactBlockText({
 
     value.forEach((item, valueI) => {
       if (complete) return
-      if (itemIndex > valueI) return
+      if (valueI < itemIndex) return
 
       const editorState = editorStates[item.id]
 
@@ -1652,65 +1664,132 @@ function ReactBlockText({
         return
       }
 
+      const blocks = editorState.getCurrentContent().getBlocksAsArray()
       let nextEditorState = editorState
+      let consideredBlocks = [...blocks]
 
-      // If a block matches the text to cut, extract it and add it to the selection
-      editorState.getCurrentContent().getBlocksAsArray().forEach((block, blockI) => {
-        if (complete) return
-        if (itemIndex === valueI && blockIndex < blockI) return
+      for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i]
 
+        // Start only at selected block, remove blocks before that
+        if (itemIndex === valueI && i < blockIndex) {
+          consideredBlocks = consideredBlocks.filter(b => b !== block)
+
+          nextEditorState = EditorState.push(
+            nextEditorState,
+            ContentState.createFromBlockArray(consideredBlocks),
+            'change-block-data'
+          )
+
+          continue
+        }
+
+        textWithLineBreaks += '\n'
+
+        let blockComplete = false
         const blockText = block.getText()
+        const emptySelection = SelectionState.createEmpty(block.getKey())
+        const selectionsToRemove = []
 
-        // Slice the block text from the beginning
-        for (let i = 0; i < blockText.length; i++) {
-          const lastBlock = blockText.length >= textToCut.length
-          let selectionStateToRemove = SelectionState.createEmpty(block.getKey())
+        // Cut from start to x
+        for (let j = 1; j <= blockText.length; j++) {
+          const blockTextSlice = blockText.slice(0, j)
 
-          // If it is the last block, slice the block text from the end too to take partial block selection into account
-          if (lastBlock) {
-            for (let j = i; j < blockText.length; j++) {
-              const blockTextSlice = blockText.slice(i, j + 1)
-
-              if (textToCut === blockTextSlice) {
-                textToCut = textToCut.slice(blockTextSlice.length)
-
-                selectionStateToRemove = selectionStateToRemove.merge({
-                  anchorOffset: j + 1,
-                  focusOffset: blockTextSlice.length + 1,
-                })
-              }
-            }
-          }
-          // If not the last block, the text to cut must start with the block text slice for the block to be accepted
-          else {
-            const blockTextSlice = blockText.slice(i)
-
-            if (textToCut.startsWith(blockTextSlice)) {
-              textToCut = textToCut.slice(blockTextSlice.length)
-
-              selectionStateToRemove = selectionStateToRemove.merge({
-                anchorOffset: 0,
-                focusOffset: i,
-              })
-            }
-          }
-
-          const nextContent = Modifier.removeRange(editorState.getCurrentContent(), selectionStateToRemove, 'forward')
-          nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
-
-          if (textToCut.length === 0) {
+          if (textToCut === blockTextSlice) {
+            selectionsToRemove.push(emptySelection.merge({
+              anchorOffset: j,
+              focusOffset: blockText.length,
+            }))
+            blockComplete = true
             complete = true
+            textWithLineBreaks += blockTextSlice
+            textToCut = ''
             break
           }
         }
-      })
+
+        // Cut from x to end
+        if (!blockComplete) {
+          for (let j = 0; j < blockText.length; j++) {
+            const blockTextSlice = blockText.slice(j)
+
+            if (textToCut.startsWith(blockTextSlice)) {
+              selectionsToRemove.push(emptySelection.merge({
+                anchorOffset: 0,
+                focusOffset: j,
+              }))
+              blockComplete = true
+              textToCut = textToCut.slice(blockTextSlice.length)
+              textWithLineBreaks += blockTextSlice
+              break
+            }
+          }
+        }
+
+        // Cut from x to y
+        if (!blockComplete) {
+          dance: for (let j = 0; j < blockText.length; j++) {
+            for (let k = j + 1; k < blockText.length; k++) {
+              const blockTextSlice = blockText.slice(j, k)
+
+              if (textToCut === blockTextSlice) {
+                selectionsToRemove.push(
+                  emptySelection.merge({
+                    anchorOffset: 0,
+                    focusOffset: j,
+                  }),
+                  emptySelection.merge({
+                    anchorOffset: k - j,
+                    focusOffset: blockText.length - j,
+                  })
+                )
+                blockComplete = true
+                complete = true
+                textWithLineBreaks += blockTextSlice
+                textToCut = ''
+                break dance
+              }
+            }
+          }
+        }
+
+        if (textToCut.length === 0) {
+          complete = true
+        }
+
+        let nextContent = nextEditorState.getCurrentContent()
+
+        selectionsToRemove.forEach(selection => {
+          nextContent = Modifier.removeRange(nextContent, selection, 'forward')
+        })
+
+        nextEditorState = EditorState.push(nextEditorState, nextContent, 'change-block-data')
+
+        if (complete) {
+          // Remove following blocks
+          const nextBlocks = nextContent.getBlocksAsArray().filter((_b, bi) => bi + blocks.length - consideredBlocks.length <= i)
+
+          nextEditorState = EditorState.push(
+            nextEditorState,
+            ContentState.createFromBlockArray(nextBlocks),
+            'change-block-data'
+          )
+
+          break
+        }
+      }
 
       selected.push(appendItemData(item, nextEditorState))
     })
 
+    // Remove first \n
+    textWithLineBreaks = textWithLineBreaks.slice(1)
+
+    // Finally set the selection data for copy/paste
     setSelectionText({
       items: selected,
       startId: id,
+      text: textWithLineBreaks,
     })
   }, [value, editorStates])
 
