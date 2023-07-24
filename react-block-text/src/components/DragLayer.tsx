@@ -57,6 +57,8 @@ function DragLayer({ pluginsData, blockProps, dragIndex }: DragLayerProps) {
   }))
 
   const renderSingleItem = useCallback((props: Omit<BlockProps, 'children'>, index: number, noPadding = false) => {
+    if (!props.item) return null
+
     const plugin = pluginsData.find(plugin => plugin.type === props.item.type)
 
     if (!plugin) return null
