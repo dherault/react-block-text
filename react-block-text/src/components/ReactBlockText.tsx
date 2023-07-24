@@ -148,7 +148,12 @@ function ReactBlockText({
   --- */
   const value = useMemo<ReactBlockTextDataItem[]>(() => {
     try {
-      return JSON.parse(rawValue)
+      const value = JSON.parse(rawValue)
+
+      if (!Array.isArray(value)) return []
+
+      // TODO check reactBlockTextVersion
+      return value
     }
     catch (error) {
       return []
@@ -812,7 +817,7 @@ function ReactBlockText({
         ...nextValue[index],
         type: 'text',
         metadata: '',
-        indent: Math.max(0, Math.min(nextValue[index].indent, 1)),
+        indent: Math.max(0, Math.min(1, nextValue[index].indent)),
       }
       nextValue = applyMetadatas(index, nextValue, editorStates)
 
@@ -937,7 +942,7 @@ function ReactBlockText({
         ...nextValue[focusedIndex],
         type: 'text',
         metadata: '',
-        indent: Math.max(0, Math.min(nextValue[focusedIndex].indent, 1)),
+        indent: Math.max(0, Math.min(1, nextValue[focusedIndex].indent)),
       }
       nextValue = applyMetadatas(focusedIndex, nextValue, editorStates)
 
