@@ -35,6 +35,7 @@
 // x Remove indent on text, header, ...
 // x Take icons into paddingLeft account
 // - Fix block menu position
+// - Fix arrow + selection bug
 
 import {
   type MouseEvent as ReactMouseEvent,
