@@ -48,43 +48,118 @@ function App() {
       className="flex h-screen"
       style={{ backgroundColor: '#fbfbfa' }}
     >
-      <div className="w-[192px] flex-shrink-0">
-        <h1 className="py-1 px-2 font-semibold text-xl">
+      <div className="w-[256px] flex-shrink-0 flex flex-col">
+        <h1 className="py-3 px-4 font-semibold text-xl">
           React Block Text
         </h1>
-        <div className="px-2 mb-2">
+        <div className="px-4 mb-2">
           <GitHubButton
             href="https://github.com/dherault/react-block-text"
             data-icon="octicon-star"
             data-show-count="true"
             aria-label="Star dherault/react-block-text on GitHub"
+            data-size="large"
           >
             Star
           </GitHubButton>
         </div>
         <div
           onClick={() => setData('')}
-          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            />
+          </svg>
+
           Clear
         </div>
         <div
           onClick={handleSave}
-          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            />
+          </svg>
+
           Save
         </div>
         <div
           onClick={() => setPrimaryColor(x => x ? null : 'red')}
-          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
         >
-          {primaryColor ? 'Reset primary color' : 'Set primary color red'}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"
+            />
+          </svg>
+          Set primary color
+          {' '}
+          {primaryColor ? 'blue' : 'red'}
         </div>
         <div
           onClick={() => setIsContained(x => !x)}
-          className="py-1 px-2 hover:bg-gray-100 cursor-pointer"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 00-2.25 2.25v6"
+            />
+          </svg>
+
           Toggle container
+        </div>
+        <div className="flex-grow" />
+        <div className="px-4 mb-2 text-gray-600 text-sm">
+          <a
+            href="https://github.com/dherault/react-block-text"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            Documentation
+          </a>
+          {' '}
+          - MIT License
         </div>
       </div>
       <div className="bg-white border-l max-h-full overflow-y-auto flex-grow">

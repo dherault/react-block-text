@@ -1787,8 +1787,8 @@ function ReactBlockText({
 
     // Finally set the selection data for copy/paste
     setSelectionText({
-      items: selected,
       startId: id,
+      items: selected,
       text: textWithLineBreaks,
     })
   }, [value, editorStates])
