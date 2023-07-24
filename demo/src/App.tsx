@@ -65,7 +65,7 @@ function App() {
         </div>
         <div
           onClick={() => setData('')}
-          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2 select-none"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +86,7 @@ function App() {
         </div>
         <div
           onClick={handleSave}
-          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2 select-none"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@ function App() {
         </div>
         <div
           onClick={() => setPrimaryColor(x => x ? null : 'red')}
-          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2 select-none"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -129,7 +129,7 @@ function App() {
         </div>
         <div
           onClick={() => setIsContained(x => !x)}
-          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+          className="py-1 px-4 text-gray-600 hover:bg-gray-100 cursor-pointer flex items-center gap-2 select-none"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
