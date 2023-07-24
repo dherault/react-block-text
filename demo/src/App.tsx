@@ -103,7 +103,7 @@ function App() {
             />
           </svg>
 
-          Save
+          Save to local storage
         </div>
         <div
           onClick={() => setPrimaryColor(x => x ? null : 'red')}
