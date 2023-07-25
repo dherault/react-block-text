@@ -36,8 +36,11 @@
 // x Take icons into paddingLeft account
 // - Fix block menu position
 // - Fix arrow + selection bug
+// - Fix arrow up on empty line bug
+// - Rename API plugins to blockPlugins
 
 import {
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   useCallback,
   useEffect,
@@ -96,15 +99,15 @@ import PrimaryColorContext from '../context/PrimaryColorContext'
 
 import usePrevious from '../hooks/usePrevious'
 
-import findParentWithId from '../utils/findParentWithId'
-import findAttributeInParents from '../utils/findAttributeInParents'
-import getRelativeMousePosition from '../utils/getRelativeMousePosition'
 import appendItemData from '../utils/appendItemData'
-import getContextMenuData from '../utils/getContextMenuData'
-import forceContentFocus from '../utils/forceContentFocus'
-import findSelectionRectIds from '../utils/findSelectionRectIds'
+import findAttributeInParents from '../utils/findAttributeInParents'
+import findParentWithId from '../utils/findParentWithId'
 import findScrollParent from '../utils/findScrollParent'
+import findSelectionRectIds from '../utils/findSelectionRectIds'
+import forceContentFocus from '../utils/forceContentFocus'
+import getContextMenuData from '../utils/getContextMenuData'
 import getLastLineFocusOffset from '../utils/getLastLineFocusOffset'
+import getRelativeMousePosition from '../utils/getRelativeMousePosition'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
@@ -508,7 +511,7 @@ function ReactBlockText({
     Handle up arrow, to move between editor instances
     Although this causes a warning in the console (suppressed), I found it to be the only way to make it work
   --- */
-  const handleUpArrow = useCallback((index: number, event: any) => {
+  const handleUpArrow = useCallback((index: number, event: ReactKeyboardEvent) => {
     if (index === 0) return
 
     if (contextMenuData) {
@@ -544,7 +547,7 @@ function ReactBlockText({
     Handle down arrow, to move between editor instances
     Although this causes a warning in the console (suppressed), I found it to be the only way to make it work
   --- */
-  const handleDownArrow = useCallback((index: number, event: any) => {
+  const handleDownArrow = useCallback((index: number, event: ReactKeyboardEvent) => {
     if (index === value.length - 1) return
 
     if (contextMenuData) {
