@@ -36,8 +36,9 @@
 // x Take icons into paddingLeft account
 // - Fix block menu position
 // - Fix arrow + selection bug
-// - Fix arrow up on empty line bug
+// x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
+// - Fix multiline arrowdown bug on trimmed lines
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -106,6 +107,7 @@ import findScrollParent from '../utils/findScrollParent'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
 import forceContentFocus from '../utils/forceContentFocus'
 import getContextMenuData from '../utils/getContextMenuData'
+import getFirstLineFocusOffset from '../utils/getFirstLineFocusOffset'
 import getLastLineFocusOffset from '../utils/getLastLineFocusOffset'
 import getRelativeMousePosition from '../utils/getRelativeMousePosition'
 
@@ -613,7 +615,12 @@ function ReactBlockText({
       if (!previousEditorState) return
 
       const previousLastBlock = previousEditorState.getCurrentContent().getLastBlock()
-      const nextFocusOffset = Math.min(offset, previousLastBlock.getLength())
+      const nextFocusOffset = Math.min(getFirstLineFocusOffset(
+        previousItem.id,
+        offset,
+        editorRefs[instanceId][previousItem.id]?.editorContainer,
+        injectionRef.current!
+      ), previousLastBlock.getLength())
       const nextSelection = SelectionState.createEmpty(previousLastBlock.getKey()).merge({
         anchorOffset: nextFocusOffset,
         focusOffset: nextFocusOffset,
