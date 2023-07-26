@@ -35,7 +35,7 @@
 // x Remove indent on text, header, ...
 // x Take icons into paddingLeft account
 // - Fix block menu position
-// - Fix arrow + selection bug
+// x Fix arrow + selection bug
 // x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
 // - Fix multiline arrowdown bug on trimmed lines
@@ -101,6 +101,7 @@ import PrimaryColorContext from '../context/PrimaryColorContext'
 import usePrevious from '../hooks/usePrevious'
 
 import appendItemData from '../utils/appendItemData'
+import countCharactersOnLastBlockLines from '../utils/countCharactersOnLastBlockLines'
 import findAttributeInParents from '../utils/findAttributeInParents'
 import findParentWithId from '../utils/findParentWithId'
 import findScrollParent from '../utils/findScrollParent'
@@ -531,6 +532,8 @@ function ReactBlockText({
 
     // If not on the first block, return
     if (editorState.getCurrentContent().getFirstBlock().getKey() !== selection.getFocusKey()) return
+    // If under selection, return
+    if (selection.getAnchorOffset() !== selection.getFocusOffset()) return
 
     setIsCaretVisible(false)
 
@@ -571,6 +574,8 @@ function ReactBlockText({
 
     // If not on the last block, return
     if (editorState.getCurrentContent().getLastBlock().getKey() !== selection.getFocusKey()) return
+    // If under selection, return
+    if (selection.getAnchorOffset() !== selection.getFocusOffset()) return
 
     setIsCaretVisible(false)
 
@@ -642,6 +647,33 @@ function ReactBlockText({
       const nextEditorState = editorStates[nextItem.id]
 
       if (!nextEditorState) return
+
+      const characterCounts = countCharactersOnLastBlockLines(
+        item.id,
+        editorRefs[instanceId][item.id]?.editorContainer,
+        injectionRef.current!
+      )
+
+      if (!characterCounts) return
+
+      const previousLinesCharacterCount = characterCounts
+        .map((x, i, a) => i < a.length - 1 ? x : 0)
+        .reduce((sum, x) => sum + x + 1, 0) - 2 // Magic -2 -> first and last carriage return
+      const previousLineCharacterCount = characterCounts[characterCounts.length - 2] + 1 ?? 0
+      const lastLineCharacterCount = characterCounts[characterCounts.length - 1] ?? 0
+
+      // Edge case
+      // Consider this line:
+      // React block text is an open-source Notion editor clone for React.
+      // Here is what it can do:
+      // If the caret is at the begining of "editor"
+      // i.e. on the previous line longer than the last, at a position larger than the length of the last line
+      // Don't go to the next block. Let the caret fall to the end of the last line
+      if (
+        previousLinesCharacterCount - previousLineCharacterCount <= offset
+        && previousLinesCharacterCount + 1 >= offset
+        && previousLineCharacterCount - previousLinesCharacterCount + offset >= lastLineCharacterCount
+      ) return
 
       const nextFirstBlock = nextEditorState.getCurrentContent().getFirstBlock()
       const nextFocusOffset = Math.min(getLastLineFocusOffset(

@@ -1,20 +1,20 @@
 import findParentBlock from './findParentBlock'
 import findChildWithProperty from './findChildWithProperty'
 
-function getLastLineFocusOffset(id: string, focusOffset: number, editorElement: HTMLElement | null | undefined, injectionElement: HTMLElement) {
+function countCharactersOnLastBlockLines(id: string, editorElement: HTMLElement | null | undefined, injectionElement: HTMLElement) {
   if (!(editorElement && injectionElement)) return 0
 
   // We want to reconstitute the Block element with its content
   const blockElement = findParentBlock(id, editorElement)
 
-  if (!blockElement) return 0
+  if (!blockElement) return null
 
   // So we clone it
   const blockElementClone = blockElement.cloneNode(true) as HTMLElement
   // Find its content
   const contentElement = findChildWithProperty(blockElementClone, 'data-contents', 'true')
 
-  if (!contentElement) return 0
+  if (!contentElement) return null
 
   injectionElement.appendChild(blockElementClone)
 
@@ -23,42 +23,36 @@ function getLastLineFocusOffset(id: string, focusOffset: number, editorElement: 
     contentElement.removeChild(contentElement.children[i])
   }
 
-  // Then we calculate the offset from the start of the last line
-  let offset = 0
-  let hasAcheivedOffset = false
+  // We count the characters of each line
+  const count = [0]
   const text = contentElement.innerText ?? ''
   const words = text.split(/ |-/)
-  const height = contentElement.offsetHeight
+  let height = contentElement.offsetHeight
 
   contentElement.innerText = text
 
   const { length } = words
 
   for (let i = 0; i < length; i++) {
-    if (contentElement.offsetHeight < height) {
-      injectionElement.removeChild(blockElementClone)
-
-      return offset
-    }
-
     const lastWord = words.pop() ?? ''
+
+    count[0] += lastWord.length + 1
 
     contentElement.innerText = contentElement.innerText.slice(0, -(lastWord.length + 1))
 
-    if (contentElement.innerText.length < focusOffset) {
-      if (hasAcheivedOffset) {
-        offset += lastWord.length + 1
-      }
-      else {
-        offset += focusOffset - contentElement.innerText.length - 1
-        hasAcheivedOffset = true
-      }
+    if (contentElement.offsetHeight < height) {
+      height = contentElement.offsetHeight
+      count[0] -= 1
+
+      if (contentElement.innerText.length === 0) break
+
+      count.unshift(0)
     }
   }
 
   injectionElement.removeChild(blockElementClone)
 
-  return focusOffset
+  return count
 }
 
-export default getLastLineFocusOffset
+export default countCharactersOnLastBlockLines
