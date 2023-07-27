@@ -39,6 +39,7 @@
 // x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
 // - Fix multiline arrowdown bug on trimmed lines
+//
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
