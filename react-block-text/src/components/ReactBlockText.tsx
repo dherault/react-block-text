@@ -1346,11 +1346,11 @@ function ReactBlockText({
 
     element.innerText = JSON.stringify(selectionText.items)
 
-    console.log('copy xxx', selectionText.text)
-    // navigator.clipboard.write([new ClipboardItem({
-    //   'text/plain': new Blob([element.innerText], {type: 'text/plain'}),
-    //   'text/html': new Blob([element.innerHTML], {type: 'text/html'})
-    // })])
+    // console.log('copy xxx', selectionText.text)
+    navigator.clipboard.write([new ClipboardItem({
+      'text/plain': new Blob([selectionText.text], { type: 'text/plain' }),
+      'text/html': new Blob([element.innerHTML], { type: 'text/html' }),
+    })])
   }, [selectionText])
 
   /* ---
@@ -1395,23 +1395,40 @@ function ReactBlockText({
   }, [])
 
   const handleActualPaste = useCallback(async (index: number) => {
-    const data = await window.navigator.clipboard.readText()
+    const clipboardItems = await window.navigator.clipboard.read()
+
+    const htmlClipboardItem = clipboardItems.find(x => x.types.includes('text/html'))
 
     let parsedData = null
 
-    try {
-      parsedData = JSON.parse(data)
-    }
-    catch (error) {
-      //
+    if (htmlClipboardItem) {
+      const blob = await htmlClipboardItem?.getType('text/html')
+
+      const html = await blob?.text()
+
+      const element = document.createElement('div')
+
+      element.innerHTML = html || ''
+
+      const data = element.innerText
+
+      try {
+        parsedData = JSON.parse(data)
+      }
+      catch (error) {
+        //
+      }
     }
 
     if (Array.isArray(parsedData) && parsedData[0] && typeof parsedData[0].reactBlockTextVersion === 'string') {
       handlePasteItems(index, parsedData)
+
+      return
     }
-    else {
-      handlePasteText(index, data)
-    }
+
+    const text = await window.navigator.clipboard.readText()
+
+    handlePasteText(index, text)
   }, [handlePasteText, handlePasteItems])
 
   // Passed to editor component
