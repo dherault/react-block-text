@@ -34,12 +34,11 @@
 // x Fix selection rect bg bug
 // x Remove indent on text, header, ...
 // x Take icons into paddingLeft account
-// - Fix block menu position
+// x Fix block menu position
 // x Fix arrow + selection bug
 // x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
 // - Fix multiline arrowdown bug on trimmed lines
-//
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,

@@ -146,10 +146,10 @@ function Block(props: BlockProps) {
 
     setMenuPosition({
       top: dragRect.top - rootRect.top - 4,
-      left: dragRect.left - rootRect.left + 12,
+      left: dragRect.left - rootRect.left + 24 - paddingLeft + BLOCK_ICONS_WIDTH,
     })
     onBlockMenuOpen()
-  }, [onBlockMenuOpen])
+  }, [paddingLeft, onBlockMenuOpen])
 
   /* ---
     BLOCK MENU CLOSE
