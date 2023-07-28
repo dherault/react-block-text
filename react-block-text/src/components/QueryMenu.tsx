@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import _ from 'clsx'
 
-import type { ContextMenuIconProps, ContextMenuItemProps, ContextMenuProps } from '../types'
+import type { QueryMenuIconProps, QueryMenuItemProps, QueryMenuProps } from '../types'
 
-import { CONTEXT_MENU_HEIGHT } from '../constants'
+import { QUERY_MENU_HEIGHT, QUERY_MENU_WIDTH } from '../constants'
 
 const fuseOptions = {
   keys: ['title', 'label', 'shortcuts'],
   threshold: 0.3,
 }
 
-function ContextMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }: ContextMenuProps) {
+function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }: QueryMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [scrollIntoViewIndex, setScrollIntoViewIndex] = useState(-1)
@@ -104,36 +104,46 @@ function ContextMenu({ pluginsData, query, top, bottom, left, onSelect, onClose 
         top,
         bottom,
         left,
-        maxHeight: CONTEXT_MENU_HEIGHT,
+        width: QUERY_MENU_WIDTH,
+        maxHeight: QUERY_MENU_HEIGHT,
       }}
     >
-      <div className="px-2 py-1 text-gray-400 text-xs">
-        Basic blocks
-      </div>
-      <div className="mt-1 flex flex-col">
-        {results.map((result, i) => (
-          <ContextMenuItem
-            key={result.item.title}
-            title={result.item.title}
-            label={result.item.label}
-            icon={result.item.icon}
-            active={i === activeIndex}
-            onMouseEnter={() => isHovering && setActiveIndex(i)}
-            onMouseLeave={() => isHovering && setActiveIndex(-1)}
-            onClick={() => onSelect(result.item.type)}
-            shouldScrollIntoView={i === scrollIntoViewIndex}
-            resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
-          />
-        ))}
-      </div>
+      {results.length > 0 && (
+        <>
+          <div className="px-2 py-1 text-gray-400 text-xs">
+            Basic blocks
+          </div>
+          <div className="mt-1 flex flex-col">
+            {results.map((result, i) => (
+              <QueryMenuItem
+                key={result.item.title}
+                title={result.item.title}
+                label={result.item.label}
+                icon={result.item.icon}
+                active={i === activeIndex}
+                onMouseEnter={() => isHovering && setActiveIndex(i)}
+                onMouseLeave={() => isHovering && setActiveIndex(-1)}
+                onClick={() => onSelect(result.item.type)}
+                shouldScrollIntoView={i === scrollIntoViewIndex}
+                resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {results.length === 0 && (
+        <div className="px-2 py-1 text-gray-400 text-xs select-none">
+          No results
+        </div>
+      )}
     </div>
   )
 }
 
 /* ---
-  CONTEXT MENU ITEM
+  QUERY MENU ITEM
 --- */
-function ContextMenuItem({
+function QueryMenuItem({
   title,
   label,
   icon,
@@ -143,7 +153,7 @@ function ContextMenuItem({
   onMouseEnter,
   onMouseLeave,
   resetShouldScrollIntoView,
-}: ContextMenuItemProps) {
+}: QueryMenuItemProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -168,9 +178,9 @@ function ContextMenuItem({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <ContextMenuIcon>
+      <QueryMenuIcon>
         {icon}
-      </ContextMenuIcon>
+      </QueryMenuIcon>
       <div>
         <div className="text-sm">{title}</div>
         <div className="mt-0.5 text-xs text-gray-400">{label}</div>
@@ -180,9 +190,9 @@ function ContextMenuItem({
 }
 
 /* ---
-  CONTEXT MENU ICON
+  QUERY MENU ICON
 --- */
-function ContextMenuIcon({ children }: ContextMenuIconProps) {
+function QueryMenuIcon({ children }: QueryMenuIconProps) {
   return (
     <div className="px-2 py-1 bg-white border rounded w-12 h-12 border-gray-300">
       {children}
@@ -190,4 +200,4 @@ function ContextMenuIcon({ children }: ContextMenuIconProps) {
   )
 }
 
-export default ContextMenu
+export default QueryMenu

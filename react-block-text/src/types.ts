@@ -126,7 +126,7 @@ export type BlockCommonProps = {
   [K in keyof BlockProps & keyof BlockContentProps]: BlockProps[K] | BlockContentProps[K]
 }
 
-export type ContextMenuProps = {
+export type QueryMenuProps = {
   pluginsData: ReactBlockTextPluginData[]
   query: string
   top?: number
@@ -136,7 +136,7 @@ export type ContextMenuProps = {
   onClose: () => void
 }
 
-export type ContextMenuItemProps = {
+export type QueryMenuItemProps = {
   title: string
   label: string
   icon: ReactNode
@@ -148,7 +148,7 @@ export type ContextMenuItemProps = {
   onMouseLeave: () => void
 }
 
-export type ContextMenuIconProps = {
+export type QueryMenuIconProps = {
   children: ReactNode
 }
 
@@ -179,12 +179,13 @@ export type SelectionRectProps = {
   height: number
 }
 
-export type ContextMenuData = {
+export type QueryMenuData = {
   id: string
   query: string
   top?: number
   bottom?: number
   left: number
+  noSlash?: boolean
 }
 
 export type TopLeft = {

@@ -12,7 +12,9 @@ export const INDENT_SIZE = 24
 
 export const BLOCK_ICONS_WIDTH = 50
 
-export const CONTEXT_MENU_HEIGHT = 322
+export const QUERY_MENU_WIDTH = 280
+
+export const QUERY_MENU_HEIGHT = 322
 
 export const ADD_ITEM_BUTTON_ID = 'react-block-text-add-item-button'
 

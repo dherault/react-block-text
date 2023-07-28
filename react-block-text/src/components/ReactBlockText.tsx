@@ -39,6 +39,7 @@
 // x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
 // - Fix multiline arrowdown bug on trimmed lines
+// - Display block menu on new block created
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -71,9 +72,9 @@ import type {
   BlockCommonProps,
   BlockContentProps,
   BlockProps,
-  ContextMenuData,
   DragData,
   EditorRefRegistry,
+  QueryMenuData,
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextEditorStates,
@@ -107,14 +108,14 @@ import findParentWithId from '../utils/findParentWithId'
 import findScrollParent from '../utils/findScrollParent'
 import findSelectionRectIds from '../utils/findSelectionRectIds'
 import forceContentFocus from '../utils/forceContentFocus'
-import getContextMenuData from '../utils/getContextMenuData'
+import getQueryMenuData from '../utils/getQueryMenuData'
 import getFirstLineFocusOffset from '../utils/getFirstLineFocusOffset'
 import getLastLineFocusOffset from '../utils/getLastLineFocusOffset'
 import getRelativeMousePosition from '../utils/getRelativeMousePosition'
 
 import Block from './Block'
 import BlockContentText from './BlockContentText'
-import ContextMenu from './ContextMenu'
+import QueryMenu from './QueryMenu'
 import SelectionRect from './SelectionRect'
 import DragLayer from './DragLayer'
 
@@ -268,13 +269,14 @@ function ReactBlockText({
   const [isBlockMenuOpen, setIsBlockMenuOpen] = useState(false)
   const [isCaretVisible, setIsCaretVisible] = useState(true)
   const [arrowData, setArrowData] = useState<ArrowData | null>(null)
-  const [contextMenuData, setContextMenuData] = useState<ContextMenuData | null>(null)
+  const [queryMenuData, setQueryMenuData] = useState<QueryMenuData | null>(null)
   const [selectionRect, setSelectionRect] = useState<SelectionRectData | null>(null)
   const [selectionText, setSelectionText] = useState<SelectionTextData | null>(null)
   const [scrollSpeed, setScrollSpeed] = useState(0)
   const [refresh, setRefresh] = useState(false)
   const [shouldTriggerRefresh, setShouldTriggerRefresh] = useState(false)
   const [shouldBlurAllContent, setShouldBlurAllContent] = useState(false)
+  const [shouldDisplayQueryMenu, setShouldDisplayQueryMenu] = useState(false)
 
   const previousEditorStates = usePrevious(editorStates, refresh || shouldTriggerRefresh)
 
@@ -374,6 +376,7 @@ function ReactBlockText({
     setFocusedIndex(index + 1)
     setForceFocusIndex(index + 1)
     setScrollIntoViewId(item.id)
+    setShouldDisplayQueryMenu(true)
   }, [value, editorStates, onChange, createTextItem, applyMetadatas])
 
   /* ---
@@ -476,29 +479,34 @@ function ReactBlockText({
     const currentSelection = nextEditorState.getSelection()
     const block = nextEditorState.getCurrentContent().getBlockForKey(currentSelection.getStartKey())
     const text = block.getText()
-    const lastWord = text.split(' ').pop() || ''
+    const words = text.split(' ')
+    const lastWord = words.pop() || ''
     const lastWordIncludesCommand = lastWord.includes('/')
     const lastChar = lastWord.slice(-1)
 
     // Toggle context menu with `/` command
-    if (!contextMenuData && lastChar === '/') {
-      setContextMenuData(getContextMenuData(editorRefs[instanceId], id, rootRef.current!))
+    if (!queryMenuData && lastChar === '/') {
+      setQueryMenuData(getQueryMenuData(editorRefs[instanceId], id, rootRef.current!))
 
       return
     }
 
-    if (contextMenuData && !lastWordIncludesCommand) {
-      setContextMenuData(null)
+    if (queryMenuData && !lastWordIncludesCommand && !queryMenuData.noSlash) {
+      setQueryMenuData(null)
 
       return
     }
 
-    if (contextMenuData && lastWordIncludesCommand) {
+    if (queryMenuData && (lastWordIncludesCommand || queryMenuData.noSlash)) {
       const query = lastWord.slice(lastWord.lastIndexOf('/') + 1)
 
-      setContextMenuData(x => x ? ({ ...x, query }) : null) // Due to side effects the ternary is mandatory here
+      setQueryMenuData(x => x ? ({ ...x, query }) : null) // Due to side effects the ternary is mandatory here
     }
-  }, [value, editorStates, instanceId, contextMenuData, onChange, applyStyles, applyMetadatas])
+
+    if (queryMenuData && queryMenuData.noSlash && words.length > 0) {
+      setQueryMenuData(null)
+    }
+  }, [value, editorStates, instanceId, queryMenuData, onChange, applyStyles, applyMetadatas])
 
   /*
      █████╗ ██████╗ ██████╗  ██████╗ ██╗    ██╗███████╗
@@ -517,7 +525,7 @@ function ReactBlockText({
   const handleUpArrow = useCallback((index: number, event: ReactKeyboardEvent) => {
     if (index === 0) return
 
-    if (contextMenuData) {
+    if (queryMenuData) {
       event.preventDefault()
 
       return
@@ -545,7 +553,7 @@ function ReactBlockText({
         offset: selection.getFocusOffset(),
       })
     })
-  }, [value, editorStates, contextMenuData])
+  }, [value, editorStates, queryMenuData])
 
   /* ---
     DOWN ARROW
@@ -555,7 +563,7 @@ function ReactBlockText({
   const handleDownArrow = useCallback((index: number, event: ReactKeyboardEvent) => {
     if (index === value.length - 1) return
 
-    if (contextMenuData) {
+    if (queryMenuData) {
       event.preventDefault()
 
       return
@@ -587,7 +595,7 @@ function ReactBlockText({
         offset: selection.getFocusOffset(),
       })
     })
-  }, [value, editorStates, contextMenuData])
+  }, [value, editorStates, queryMenuData])
 
   const handleArrow = useCallback(() => {
     if (!arrowData) return
@@ -710,7 +718,7 @@ function ReactBlockText({
     If necessary, split block into two
   --- */
   const handleReturn = useCallback((index: number, event: any) => {
-    if (contextMenuData) {
+    if (queryMenuData) {
       event.preventDefault()
 
       return 'handled'
@@ -730,6 +738,8 @@ function ReactBlockText({
     const pluginData = pluginsData.find(x => x.type === item.type)
 
     if (!pluginData) return 'not-handled'
+
+    setQueryMenuData(null)
 
     const selection = editorState.getSelection()
     let contentState = editorState.getCurrentContent()
@@ -814,7 +824,7 @@ function ReactBlockText({
     setScrollIntoViewId(secondItem.id)
 
     return 'handled'
-  }, [value, editorStates, contextMenuData, pluginsData, onChange, applyStyles, applyMetadatas])
+  }, [value, editorStates, queryMenuData, pluginsData, onChange, applyStyles, applyMetadatas])
 
   /* ---
     BACKSPACE
@@ -839,6 +849,8 @@ function ReactBlockText({
 
     if (!(selection.isCollapsed() && selection.getAnchorOffset() === 0 && selection.getAnchorKey() === firstBlockKey)) return 'not-handled'
     // If the selection is collapsed and at the beginning of the block, we merge the block with the previous one
+
+    setQueryMenuData(null)
 
     // If the item is indented, we unindent it
     if (item.indent > 0) {
@@ -1057,6 +1069,8 @@ function ReactBlockText({
     let nextEditorState = editorStates[nextItem.id]
 
     if (!nextEditorState) return 'not-handled'
+
+    setQueryMenuData(null)
 
     let nextContent = nextEditorState.getCurrentContent()
     const nextFirstBlock = nextContent.getFirstBlock()
@@ -1453,9 +1467,9 @@ function ReactBlockText({
     Handle context menu item selection after `/` then `enter` or click
   --- */
   const handleContextMenuSelect = useCallback((command: ReactBlockTextDataItemType) => {
-    setContextMenuData(null)
+    setQueryMenuData(null)
 
-    const { id } = contextMenuData!
+    const { id } = queryMenuData!
     const item = value.find(x => x.id === id)
 
     if (!item) return
@@ -1509,7 +1523,7 @@ function ReactBlockText({
     setEditorStates(nextEditorStates)
     // Update previousEditorState to clear the command query from them
     setShouldTriggerRefresh(true)
-  }, [value, editorStates, contextMenuData, onChange, applyMetadatas])
+  }, [value, editorStates, queryMenuData, onChange, applyMetadatas])
 
   /* ---
     BLOCK MENU CLOSE
@@ -2085,6 +2099,39 @@ function ReactBlockText({
   }, [shouldTriggerRefresh])
 
   /* ---
+    FORCE DISPLAY QUERY MENU
+    On block created
+  --- */
+  useEffect(() => {
+    if (!shouldDisplayQueryMenu) return
+
+    setShouldDisplayQueryMenu(false)
+
+    const item = value[focusedIndex]
+
+    if (!item) return
+
+    const editorState = editorStates[item.id]
+
+    if (!editorState) return
+
+    const queryMenuData = getQueryMenuData(editorRefs[instanceId], item.id, rootRef.current!)
+
+    if (!queryMenuData) return
+
+    setQueryMenuData({
+      ...queryMenuData,
+      noSlash: true,
+    })
+  }, [
+    shouldDisplayQueryMenu,
+    value,
+    editorStates,
+    focusedIndex,
+    instanceId,
+  ])
+
+  /* ---
     SCROLL PARENT WHEN SELECTION RECT
   --- */
   useEffect(() => {
@@ -2456,14 +2503,14 @@ function ReactBlockText({
             style={{ height: paddingTop || 0 }}
           />
           {value.map(renderEditor)}
-          {!!contextMenuData && (
-            <ContextMenu
+          {!!queryMenuData && (
+            <QueryMenu
               pluginsData={pluginsData}
-              query={contextMenuData.query}
-              top={contextMenuData.top}
-              bottom={contextMenuData.bottom}
-              left={contextMenuData.left}
-              onClose={() => setContextMenuData(null)}
+              query={queryMenuData.query}
+              top={queryMenuData.top}
+              bottom={queryMenuData.bottom}
+              left={queryMenuData.left}
+              onClose={() => setQueryMenuData(null)}
               onSelect={handleContextMenuSelect}
             />
           )}
