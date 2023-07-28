@@ -22,6 +22,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
   if (bulleted) {
     plugins.push(() => ({
       type: TYPES[0],
+      blockCategory: 'basic',
       title: TITLES[0],
       label: LABELS[0],
       icon: ICONS[0],
@@ -37,6 +38,7 @@ function listPlugin(options?: PluginOptions): ReactBlockTextPlugins {
   if (numbered) {
     plugins.push(() => ({
       type: TYPES[1],
+      blockCategory: 'basic',
       title: TITLES[1],
       label: LABELS[1],
       icon: ICONS[1],

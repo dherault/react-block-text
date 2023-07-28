@@ -7,6 +7,7 @@ function textPlugin(): ReactBlockTextPlugins {
   return [
     () => ({
       type: 'text',
+      blockCategory: 'basic',
       title: 'Text',
       label: 'Just start writing with plain text.',
       shortcuts: 'txt',

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Fuse from 'fuse.js'
 import _ from 'clsx'
 
-import type { QueryMenuIconProps, QueryMenuItemProps, QueryMenuProps } from '../types'
+import type { BlockCategory, QueryMenuIconProps, QueryMenuItemProps, QueryMenuProps } from '../types'
 
-import { QUERY_MENU_HEIGHT, QUERY_MENU_WIDTH } from '../constants'
+import { BLOCK_CATEGORY_TO_LABEL, QUERY_MENU_HEIGHT, QUERY_MENU_WIDTH } from '../constants'
 
 const fuseOptions = {
   keys: ['title', 'label', 'shortcuts'],
@@ -18,6 +18,10 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
   const [isHovering, setIsHovering] = useState(false)
   const fuse = useMemo(() => new Fuse(pluginsData, fuseOptions), [pluginsData])
   const results = useMemo(() => query ? fuse.search(query) : pluginsData.map(item => ({ item })), [pluginsData, query, fuse])
+  const packs = useMemo(() => Object.keys(BLOCK_CATEGORY_TO_LABEL).map(blockCategory => ({
+    blockCategory: blockCategory as BlockCategory,
+    results: results.filter(result => result.item.blockCategory === blockCategory),
+  })), [results])
 
   /* ---
     ARROW UP, DOWN, ENTER, ESCAPE HANDLERS
@@ -109,27 +113,30 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
       }}
     >
       {results.length > 0 && (
-        <>
-          <div className="px-2 py-1 text-gray-400 text-xs">
-            Basic blocks
-          </div>
-          <div className="mt-1 flex flex-col">
-            {results.map((result, i) => (
-              <QueryMenuItem
-                key={result.item.title}
-                title={result.item.title}
-                label={result.item.label}
-                icon={result.item.icon}
-                active={i === activeIndex}
-                onMouseEnter={() => isHovering && setActiveIndex(i)}
-                onMouseLeave={() => isHovering && setActiveIndex(-1)}
-                onClick={() => onSelect(result.item.type)}
-                shouldScrollIntoView={i === scrollIntoViewIndex}
-                resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
-              />
-            ))}
-          </div>
-        </>
+        <div className="mt-1 flex flex-col">
+          {packs.map(({ blockCategory, results }) => !!results.length && (
+            <Fragment key={blockCategory}>
+              <div className="px-2 py-1 text-gray-400 text-xs">
+                {BLOCK_CATEGORY_TO_LABEL[blockCategory]}
+              </div>
+              {results.map((result, i) => (
+                <QueryMenuItem
+                  key={result.item.title}
+                  title={result.item.title}
+                  label={result.item.label}
+                  icon={result.item.icon}
+                  active={i === activeIndex}
+                  onMouseEnter={() => isHovering && setActiveIndex(i)}
+                  onMouseLeave={() => isHovering && setActiveIndex(-1)}
+                  onClick={() => onSelect(result.item.type)}
+                  shouldScrollIntoView={i === scrollIntoViewIndex}
+                  resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
+                />
+              ))}
+            </Fragment>
+          )
+          )}
+        </div>
       )}
       {results.length === 0 && (
         <div className="px-2 py-1 text-gray-400 text-xs select-none">

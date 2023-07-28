@@ -1,3 +1,5 @@
+import type { BlockCategory } from './types'
+
 export const VERSION = '1.0.0'
 
 export const COMMANDS = {
@@ -27,3 +29,12 @@ export const DEFAULT_TEXT_COLOR = '#37352f'
 export const SELECTION_RECT_SCROLL_OFFSET = 64
 
 export const BASE_SCROLL_SPEED = 16
+
+export const BLOCK_CATEGORY_TO_LABEL: Record<BlockCategory, string> = {
+  basic: 'Basic blocks',
+  media: 'Media',
+  database: 'Database',
+  advanced: 'Advanced blocks',
+  inline: 'Inline',
+  embed: 'Embeds',
+}

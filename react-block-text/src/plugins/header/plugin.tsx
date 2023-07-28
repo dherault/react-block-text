@@ -13,6 +13,7 @@ const ICONS_PADDING_TOPS = [7, 5, 2]
 function headerPlugin(): ReactBlockTextPlugins {
   return TYPES.map((type, i) => () => ({
     type,
+    blockCategory: 'basic',
     title: TITLES[i],
     label: LABELS[i],
     icon: (

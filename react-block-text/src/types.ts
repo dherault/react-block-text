@@ -21,8 +21,11 @@ export type ReactBlockTextPluginOptions = {
   onChange: ReactBlockTextOnChange
 }
 
+export type BlockCategory = 'basic' | 'media' | 'database' | 'advanced' | 'inline' | 'embed'
+
 export type ReactBlockTextPluginData = {
   type: string
+  blockCategory: BlockCategory
   title: string
   label: string
   shortcuts: string

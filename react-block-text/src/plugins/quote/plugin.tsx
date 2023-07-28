@@ -7,6 +7,7 @@ function quotePlugin(): ReactBlockTextPlugins {
   return [
     () => ({
       type: 'quote',
+      blockCategory: 'basic',
       title: 'Quote',
       label: 'Capture a quote.',
       shortcuts: 'citation',

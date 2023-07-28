@@ -11,6 +11,7 @@ function todoPlugin(): ReactBlockTextPlugins {
   return [
     ({ primaryColor, onChange }) => ({
       type: 'todo',
+      blockCategory: 'basic',
       title: 'To-do list',
       label: 'Track tasks with a to-do list.',
       shortcuts: 'todo',
