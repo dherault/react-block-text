@@ -38,8 +38,8 @@
 // x Fix arrow + selection bug
 // x Fix arrow up on empty line bug
 // - Rename API plugins to blockPlugins
-// - Fix multiline arrowdown bug on trimmed lines
-// - Display block menu on new block created
+// x Fix multiline arrowdown bug on trimmed lines
+// x Display block menu on new block created
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -1469,7 +1469,7 @@ function ReactBlockText({
   const handleContextMenuSelect = useCallback((command: ReactBlockTextDataItemType) => {
     setQueryMenuData(null)
 
-    const { id } = queryMenuData!
+    const { id, noSlash } = queryMenuData!
     const item = value.find(x => x.id === id)
 
     if (!item) return
@@ -1487,14 +1487,16 @@ function ReactBlockText({
     let offset = originalOffset
 
     // Remove text after `/`
-    while (blockText[offset - 1] !== '/') {
+    while (offset > 0 && blockText[offset - 1] !== '/' && blockText[offset - 1] !== ' ') {
       offset--
       blockText = blockText.slice(0, -1)
     }
 
-    // Remove '/'
-    blockText = blockText.slice(0, -1)
-    offset--
+    if (!noSlash) {
+      // Remove '/'
+      blockText = blockText.slice(0, -1)
+      offset--
+    }
 
     // The command query to remove
     const selectionStateToRemove = SelectionState.createEmpty(blockKey).merge({
