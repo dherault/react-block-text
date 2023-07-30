@@ -201,7 +201,7 @@ function QueryMenuItem({
 --- */
 function QueryMenuIcon({ children }: QueryMenuIconProps) {
   return (
-    <div className="px-2 py-1 bg-white border rounded w-12 h-12 border-gray-300">
+    <div className="px-2 py-1 bg-white border rounded w-12 h-12 border-gray-300 overflow-hidden">
       {children}
     </div>
   )

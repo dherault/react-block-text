@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useState } from 'react'
 import GitHubButton from 'react-github-btn'
 
-import ReactBlockText, { headerPlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
+import ReactBlockText, { headerPlugin, imagePlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 
@@ -10,6 +10,7 @@ const plugins = [
   ...todoPlugin(),
   ...listPlugin(),
   ...quotePlugin(),
+  ...imagePlugin(),
 ]
 
 function App() {
