@@ -1,9 +1,17 @@
 import type { BlockContentProps } from '../types'
 
+import ImageSelector from './ImageSelector'
+
 function BlockContent(props: BlockContentProps) {
-  const { item } = props
+  const { item, secondaryColor } = props
 
   console.log('item', item)
+
+  if (!item.metadata) {
+    return (
+      <ImageSelector secondaryColor={secondaryColor} />
+    )
+  }
 
   return (
     <div className="flex">
