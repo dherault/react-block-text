@@ -24,8 +24,6 @@ export const DRAG_ITEM_BUTTON_ID = 'react-block-text-drag-item-button'
 
 export const DEFAULT_PRIMARY_COLOR = '#3b82f6'
 
-export const DEFAULT_SECONDARY_COLOR = '#f2f1ee'
-
 export const DEFAULT_TEXT_COLOR = '#37352f'
 
 export const SELECTION_RECT_SCROLL_OFFSET = 64

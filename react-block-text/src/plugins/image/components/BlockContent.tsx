@@ -1,15 +1,15 @@
-import type { BlockContentProps } from '../types'
+import type { BlockContentProps } from '../../../types'
 
 import ImageSelector from './ImageSelector'
 
 function BlockContent(props: BlockContentProps) {
-  const { item, secondaryColor } = props
+  const { item } = props
 
   console.log('item', item)
 
   if (!item.metadata) {
     return (
-      <ImageSelector secondaryColor={secondaryColor} />
+      <ImageSelector />
     )
   }
 

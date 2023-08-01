@@ -5,7 +5,7 @@ import Icon from './components/Icon'
 
 function imagePlugin(): ReactBlockTextPlugins {
   return [
-    ({ secondaryColor }) => ({
+    () => ({
       type: 'image',
       blockCategory: 'media',
       title: 'Image',
@@ -15,12 +15,7 @@ function imagePlugin(): ReactBlockTextPlugins {
       isConvertibleToText: false,
       paddingTop: 5,
       paddingBottom: 5,
-      BlockContent: props => (
-        <BlockContent
-          {...props}
-          secondaryColor={secondaryColor}
-        />
-      ),
+      BlockContent,
     }),
   ]
 }

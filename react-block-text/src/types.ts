@@ -18,7 +18,6 @@ export type ReactBlockTextOnChange = (item: ReactBlockTextDataItem, editorState:
 
 export type ReactBlockTextPluginOptions = {
   primaryColor: string
-  secondaryColor: string
   textColor: string
   onChange: ReactBlockTextOnChange
 }
@@ -59,7 +58,6 @@ export type ReactBlockTextProps = {
   paddingLeft?: number
   paddingRight?: number
   primaryColor?: string | null | undefined
-  secondaryColor?: string | null | undefined
   textColor?: string | null | undefined
   onChange?: (value: string) => void
   onSave?: () => void

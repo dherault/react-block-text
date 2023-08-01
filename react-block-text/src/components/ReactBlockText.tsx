@@ -89,7 +89,6 @@ import {
   BASE_SCROLL_SPEED,
   COMMANDS,
   DEFAULT_PRIMARY_COLOR,
-  DEFAULT_SECONDARY_COLOR,
   DEFAULT_TEXT_COLOR,
   DRAG_ITEM_BUTTON_ID,
   SELECTION_RECT_SCROLL_OFFSET,
@@ -141,7 +140,6 @@ function ReactBlockText({
   value: rawValue,
   onChange: rawOnChange,
   primaryColor: rawPrimaryColor,
-  secondaryColor: rawSecondaryColor,
   textColor: rawTextColor,
   plugins = [],
   readOnly,
@@ -181,7 +179,6 @@ function ReactBlockText({
     COLORS
   --- */
   const primaryColor = useMemo(() => rawPrimaryColor || DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
-  const secondaryColor = useMemo(() => rawSecondaryColor || DEFAULT_SECONDARY_COLOR, [rawSecondaryColor])
   const textColor = useMemo(() => rawTextColor || DEFAULT_TEXT_COLOR, [rawTextColor])
 
   /*
@@ -219,7 +216,6 @@ function ReactBlockText({
   const pluginsData = useMemo(() => {
     const options = {
       primaryColor,
-      secondaryColor,
       textColor,
       onChange: handlePluginChange,
     }
@@ -229,7 +225,7 @@ function ReactBlockText({
       ...plugins,
     ]
     .map(x => x(options))
-  }, [plugins, primaryColor, secondaryColor, textColor, handlePluginChange])
+  }, [plugins, primaryColor, textColor, handlePluginChange])
 
   /* ---
     APPLY STYLES
