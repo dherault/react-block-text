@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 type Mode = 'upload' | 'url'
 
 type ImageUploaderProps = {
-  maxFileSize?: number
+  maxFileSize?: string
 }
 
 function ImageUploader({ maxFileSize }: ImageUploaderProps) {

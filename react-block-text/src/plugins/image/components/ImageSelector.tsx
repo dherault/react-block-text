@@ -5,7 +5,7 @@ import ImageIcon from './ImageIcon'
 import ImageUploader from './ImageUploader'
 
 type ImageSelectorProps = {
-  maxFileSize?: number
+  maxFileSize?: string
 }
 
 const transitionDuration = 100
