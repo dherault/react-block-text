@@ -1,6 +1,7 @@
 # React Block Text
 
 [![npm version](https://badge.fury.io/js/react-block-text.svg)](https://badge.fury.io/js/react-block-text)
+[![PRs](https://img.shields.io/badge/PRs-Welcome!-darkGreen)](https://github.com/dherault/react-block-text/pulls)
 
 A block text editor for React.
 
