@@ -208,7 +208,7 @@ function Block(props: BlockProps) {
         </div>
         {/* Add and drag icons */}
         {!readOnly && (
-          <div className="flex-shrink-0 flex z-10">
+          <div className="flex-shrink-0 flex">
             <div className="flex-shrink-0 flex flex-col">
               <div
                 onClick={focusContentAtStart}
@@ -256,7 +256,7 @@ function Block(props: BlockProps) {
         {/* Content */}
         <div
           ref={contentRef}
-          className="flex-grow cursor-text z-10"
+          className="flex-grow cursor-text"
         >
           {!noPadding && (
             <>

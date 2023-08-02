@@ -5,8 +5,6 @@ import ImageSelector from './ImageSelector'
 function BlockContent(props: BlockContentProps) {
   const { item } = props
 
-  console.log('item', item)
-
   if (!item.metadata) {
     return (
       <ImageSelector />

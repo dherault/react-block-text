@@ -39,13 +39,15 @@
     "nanoid": "^4.0.2",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "^18.2.0",
+    "react-dom": "^18.0.0",
+    "react-transition-group": "^4.4.5",
     "roman-numerals": "^0.3.2"
   },
   "devDependencies": {
     "@types/draft-js": "^0.11.12",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@types/react-transition-group": "^4.4.6",
     "@types/roman-numerals": "^0.3.0",
     "@vitejs/plugin-react": "^4.0.3",
     "autoprefixer": "^10.4.14",
