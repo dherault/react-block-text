@@ -97,7 +97,7 @@ Three functions are required for the plugin to work:
 ```ts
 type ImagePluginSubmitHandler = () => {
   progress: number // Between 0 and 1
-  imageKey?: string // The url of the image once it's uploaded
+  imageKey?: string // The identifier of the image once it's uploaded
 }
 
 function onSubmitFile(file: File): Promise<ImagePluginSubmitHandler>
