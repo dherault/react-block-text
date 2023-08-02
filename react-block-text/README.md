@@ -1,6 +1,6 @@
-# React Block Text
-
 [![npm version](https://badge.fury.io/js/react-block-text.svg)](https://badge.fury.io/js/react-block-text)
+
+# React Block Text
 
 A block text editor for React.
 
