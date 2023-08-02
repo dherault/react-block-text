@@ -20,7 +20,7 @@ const transitionStyles = {
   exited: { opacity: 0 },
 }
 
-function ImageSelector({ maxFileSize }: ImageSelectorProps) {
+function ImageSelector({ maxFileSize, onSubmitFile, onSubmitUrl }: ImageSelectorProps) {
   const mainRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -72,7 +72,11 @@ function ImageSelector({ maxFileSize }: ImageSelectorProps) {
                 ...transitionStyles[state as keyof typeof transitionStyles],
               }}
             >
-              <ImageUploader maxFileSize={maxFileSize} />
+              <ImageUploader
+                maxFileSize={maxFileSize}
+                onSubmitFile={onSubmitFile}
+                onSubmitUrl={onSubmitUrl}
+              />
             </div>
           )}
         </Transition>

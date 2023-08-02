@@ -1,13 +1,38 @@
+import { useCallback, useState } from 'react'
+
 import type { BlockContentProps } from '../types'
 
 import ImageSelector from './ImageSelector'
+import Image from './Image'
 
 function BlockContent(props: BlockContentProps) {
-  const { item } = props
+  const { item, maxFileSize, onSubmitFile, onSubmitUrl } = props
+  const [url, setUrl] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+
+  const handleSubmitFile = useCallback((file: File) => {
+    setFile(file)
+    onSubmitFile(file)
+  }, [onSubmitFile])
+
+  const handleSubmitUrl = useCallback((url: string) => {
+    setUrl(url)
+    onSubmitUrl(url)
+  }, [onSubmitUrl])
+
+  if (file || url) {
+    return (
+      <Image src={url || URL.createObjectURL(file!)} />
+    )
+  }
 
   if (!item.metadata) {
     return (
-      <ImageSelector maxFileSize={props.maxFileSize} />
+      <ImageSelector
+        maxFileSize={maxFileSize}
+        onSubmitFile={handleSubmitFile}
+        onSubmitUrl={handleSubmitUrl}
+      />
     )
   }
 

@@ -2,19 +2,36 @@ import type { BlockContentProps as ReactBlockTextBlockContentProps, ReactBlockTe
 
 export type PluginOptions = {
   maxFileSize?: string
+  onSubmitFile: (file: File) => void
+  onSubmitUrl: (url: string) => void
 }
 
 export type BlockContentProps = ReactBlockTextBlockContentProps & {
-  onItemChange: ReactBlockTextOnChange
   maxFileSize?: string
+  onItemChange: ReactBlockTextOnChange
+  onSubmitFile: (file: File) => void
+  onSubmitUrl: (url: string) => void
 }
 
 export type ImageSelectorProps = {
   maxFileSize?: string
+  onSubmitFile: (file: File) => void
+  onSubmitUrl: (url: string) => void
 }
 
 export type Mode = 'upload' | 'url'
 
 export type ImageUploaderProps = {
   maxFileSize?: string
+  onSubmitFile: (file: File) => void
+  onSubmitUrl: (url: string) => void
+}
+
+export type LoadingImageProps = {
+  file?: File | null
+  url?: string
+}
+
+export type ImageProps = {
+  src: string
 }

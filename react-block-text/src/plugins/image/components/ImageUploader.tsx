@@ -1,19 +1,35 @@
-import { type FormEvent, useCallback, useContext, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useCallback, useContext, useRef, useState } from 'react'
 
 import { ColorsContext } from '../../..'
 
 import type { ImageUploaderProps, Mode } from '../types'
 
-function ImageUploader({ maxFileSize }: ImageUploaderProps) {
+function ImageUploader({ maxFileSize, onSubmitFile, onSubmitUrl }: ImageUploaderProps) {
   const { primaryColor, primaryColorDark, primaryColorTransparent } = useContext(ColorsContext)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [mode, setMode] = useState<Mode>('upload')
   const [url, setUrl] = useState('')
+
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleUploadChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    onSubmitFile(file)
+  }, [onSubmitFile])
 
   const handleUrlSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    console.log('url', url)
-  }, [url])
+    if (!url) return
+
+    onSubmitUrl(url)
+  }, [url, onSubmitUrl])
 
   const renderTabItem = useCallback((label: string, itemMode: Mode) => (
     <div
@@ -33,10 +49,18 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
     <>
       <button
         type="button"
+        onClick={handleUploadClick}
         className="p-1.5 w-full border rounded text-sm hover:bg-gray-100"
       >
         Upload file
       </button>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleUploadChange}
+        className="hidden"
+      />
       {!!maxFileSize && (
         <div className="mt-3 text-xs text-zinc-500 text-center">
           The maximum size per file is
@@ -46,7 +70,7 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
         </div>
       )}
     </>
-  ), [maxFileSize])
+  ), [maxFileSize, handleUploadClick, handleUploadChange])
 
   const renderUrl = useCallback(() => (
     <form onSubmit={handleUrlSubmit}>

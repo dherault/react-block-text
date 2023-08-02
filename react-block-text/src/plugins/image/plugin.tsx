@@ -5,6 +5,9 @@ import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
 
 function imagePlugin(options: PluginOptions): ReactBlockTextPlugins {
+  if (typeof options.onSubmitFile !== 'function') throw new Error('Image plugin: you must provide a "onSubmitFile" function to handle file uploads.')
+  if (typeof options.onSubmitUrl !== 'function') throw new Error('Image plugin: you must provide a "onSubmitUrl" function to handle url uploads.')
+
   return [
     ({ onChange }) => ({
       type: 'image',
@@ -20,6 +23,8 @@ function imagePlugin(options: PluginOptions): ReactBlockTextPlugins {
         <BlockContent
           {...props}
           onItemChange={onChange}
+          onSubmitFile={options.onSubmitFile}
+          onSubmitUrl={options.onSubmitUrl}
           maxFileSize={options.maxFileSize}
         />
       ),
