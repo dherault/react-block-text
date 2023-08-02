@@ -99,7 +99,7 @@ import {
 
 import textPlugin from '../plugins/text'
 
-import ColorsContext from '../context/ColorsContext'
+import ColorsContext from '../contexts/ColorsContext'
 
 import usePrevious from '../hooks/usePrevious'
 

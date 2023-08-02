@@ -8,7 +8,7 @@ import type { BlockProps, DragAndDropCollect, TopLeft } from '../types'
 
 import { ADD_ITEM_BUTTON_ID, BLOCK_ICONS_WIDTH, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
 
-import ColorsContext from '../context/ColorsContext'
+import ColorsContext from '../contexts/ColorsContext'
 
 import AddIcon from '../icons/Add'
 import DragIcon from '../icons/Drag'

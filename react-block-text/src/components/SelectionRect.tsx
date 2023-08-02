@@ -2,7 +2,7 @@ import { useContext } from 'react'
 
 import type { SelectionRectProps } from '../types'
 
-import ColorsContext from '../context/ColorsContext'
+import ColorsContext from '../contexts/ColorsContext'
 
 function SelectionRect(props: SelectionRectProps) {
   const { primaryColorTransparent } = useContext(ColorsContext)

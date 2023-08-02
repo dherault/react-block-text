@@ -10,7 +10,7 @@ import imagePlugin from './plugins/image'
 
 export { VERSION } from './constants'
 
-export { default as ColorsContext } from './context/ColorsContext'
+export { default as ColorsContext } from './contexts/ColorsContext'
 
 export {
   headerPlugin,
