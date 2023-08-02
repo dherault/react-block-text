@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 
+import type { ImageSelectorProps } from '../types'
+
 import ImageIcon from './ImageIcon'
 import ImageUploader from './ImageUploader'
-
-type ImageSelectorProps = {
-  maxFileSize?: string
-}
 
 const transitionDuration = 100
 

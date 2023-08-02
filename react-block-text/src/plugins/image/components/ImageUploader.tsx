@@ -1,13 +1,19 @@
-import { useCallback, useState } from 'react'
+import { type FormEvent, useCallback, useContext, useState } from 'react'
 
-type Mode = 'upload' | 'url'
+import { ColorsContext } from '../../..'
 
-type ImageUploaderProps = {
-  maxFileSize?: string
-}
+import type { ImageUploaderProps, Mode } from '../types'
 
 function ImageUploader({ maxFileSize }: ImageUploaderProps) {
+  const { primaryColor, primaryColorDark, primaryColorTransparent } = useContext(ColorsContext)
   const [mode, setMode] = useState<Mode>('upload')
+  const [url, setUrl] = useState('')
+
+  const handleUrlSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    console.log('url', url)
+  }, [url])
 
   const renderTabItem = useCallback((label: string, itemMode: Mode) => (
     <div
@@ -32,7 +38,7 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
         Upload file
       </button>
       {!!maxFileSize && (
-        <div className="mt-3 mb-1 text-xs text-gray-500 text-center">
+        <div className="mt-3 text-xs text-zinc-500 text-center">
           The maximum size per file is
           {' '}
           {maxFileSize}
@@ -43,10 +49,32 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
   ), [maxFileSize])
 
   const renderUrl = useCallback(() => (
-    <>
-      URL
-    </>
-  ), [])
+    <form onSubmit={handleUrlSubmit}>
+      <input
+        type="url"
+        value={url}
+        onChange={event => setUrl(event.target.value)}
+        placeholder="Paste the image link..."
+        style={{ '--shadow-color': primaryColorTransparent } as any}
+        className="w-full h-[28px] bg-zinc-50 border rounded text-sm p-1.5 outline-none focus:ring focus:ring-[var(--shadow-color)]"
+      />
+      <div className="mt-3 text-center">
+        <button
+          type="submit"
+          style={{
+            '--bg-color': primaryColor,
+            '--bg-color-dark': primaryColorDark,
+          } as any}
+          className="p-1.5 w-[300px] bg-[var(--bg-color)] hover:bg-[var(--bg-color-dark)] border border-[var(--bg-color-dark)] rounded text-sm font-bold text-white"
+        >
+          Embed image
+        </button>
+      </div>
+      <div className="mt-3 text-xs text-zinc-500 text-center">
+        Works with any image from the web
+      </div>
+    </form>
+  ), [primaryColor, primaryColorTransparent, primaryColorDark, url, handleUrlSubmit])
 
   return (
     <div className="w-full bg-white border shadow-lg rounded">
@@ -54,7 +82,7 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
         {renderTabItem('Upload', 'upload')}
         {renderTabItem('Embed link', 'url')}
       </div>
-      <div className="p-2">
+      <div className="py-3 pb-2">
         {mode === 'upload' && renderUpload()}
         {mode === 'url' && renderUrl()}
       </div>

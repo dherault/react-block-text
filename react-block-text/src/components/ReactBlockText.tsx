@@ -64,6 +64,7 @@ import {
   convertToRaw,
 } from 'draft-js'
 import 'draft-js/dist/Draft.css'
+import Color from 'color'
 // @ts-expect-error
 import ignoreWarnings from 'ignore-warnings'
 
@@ -78,6 +79,7 @@ import type {
   ReactBlockTextDataItem,
   ReactBlockTextDataItemType,
   ReactBlockTextEditorStates,
+  ReactBlockTextPluginOptions,
   ReactBlockTextProps,
   SelectionRectData,
   SelectionTextData,
@@ -97,7 +99,7 @@ import {
 
 import textPlugin from '../plugins/text/plugin'
 
-import PrimaryColorContext from '../context/PrimaryColorContext'
+import ColorsContext from '../context/ColorsContext'
 
 import usePrevious from '../hooks/usePrevious'
 
@@ -179,7 +181,20 @@ function ReactBlockText({
     COLORS
   --- */
   const primaryColor = useMemo(() => rawPrimaryColor || DEFAULT_PRIMARY_COLOR, [rawPrimaryColor])
+  const primaryColorTransparent = useMemo(() => Color(primaryColor).alpha(0.15).hexa(), [primaryColor])
+  const primaryColorDark = useMemo(() => Color(primaryColor).darken(0.1).hex(), [primaryColor])
   const textColor = useMemo(() => rawTextColor || DEFAULT_TEXT_COLOR, [rawTextColor])
+  const colorsContextValue = useMemo(() => ({
+    primaryColor,
+    primaryColorTransparent,
+    primaryColorDark,
+    textColor,
+  }), [
+    primaryColor,
+    primaryColorTransparent,
+    primaryColorDark,
+    textColor,
+  ])
 
   /*
     ██████╗ ██╗     ██╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
@@ -214,9 +229,7 @@ function ReactBlockText({
     PLUGINS MERGING
   --- */
   const pluginsData = useMemo(() => {
-    const options = {
-      primaryColor,
-      textColor,
+    const options: ReactBlockTextPluginOptions = {
       onChange: handlePluginChange,
     }
 
@@ -225,7 +238,7 @@ function ReactBlockText({
       ...plugins,
     ]
     .map(x => x(options))
-  }, [plugins, primaryColor, textColor, handlePluginChange])
+  }, [plugins, handlePluginChange])
 
   /* ---
     APPLY STYLES
@@ -2486,7 +2499,7 @@ function ReactBlockText({
   --- */
   return (
     <DndProvider backend={HTML5Backend}>
-      <PrimaryColorContext.Provider value={primaryColor}>
+      <ColorsContext.Provider value={colorsContextValue}>
         <div
           ref={rootRef}
           onBlur={handleRootBlur}
@@ -2544,7 +2557,7 @@ function ReactBlockText({
           blockProps={selectedBlockProps}
           dragIndex={offsetDragIndex}
         />
-      </PrimaryColorContext.Provider>
+      </ColorsContext.Provider>
     </DndProvider>
   )
 }

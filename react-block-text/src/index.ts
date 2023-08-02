@@ -10,6 +10,8 @@ import imagePlugin from './plugins/image'
 
 export { DEFAULT_PRIMARY_COLOR, VERSION } from './constants'
 
+export { default as ColorsContext } from './context/ColorsContext'
+
 export {
   headerPlugin,
   listPlugin,

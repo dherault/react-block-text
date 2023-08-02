@@ -17,8 +17,6 @@ export type ReactBlockTextData = ReactBlockTextDataItem[]
 export type ReactBlockTextOnChange = (item: ReactBlockTextDataItem, editorState: EditorState) => void
 
 export type ReactBlockTextPluginOptions = {
-  primaryColor: string
-  textColor: string
   onChange: ReactBlockTextOnChange
 }
 

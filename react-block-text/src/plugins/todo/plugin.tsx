@@ -9,13 +9,13 @@ import Icon from './components/Icon'
 
 function todoPlugin(): ReactBlockTextPlugins {
   return [
-    ({ primaryColor, onChange }) => ({
+    ({ onChange }) => ({
       type: 'todo',
       blockCategory: 'basic',
       title: 'To-do list',
       label: 'Track tasks with a to-do list.',
       shortcuts: 'todo',
-      icon: <Icon color={primaryColor} />,
+      icon: <Icon />,
       isConvertibleToText: true,
       isNewItemOfSameType: true,
       paddingTop: 5,
@@ -31,7 +31,6 @@ function todoPlugin(): ReactBlockTextPlugins {
       BlockContent: props => (
         <BlockContent
           {...props}
-          color={primaryColor}
           onItemChange={onChange}
         />
       ),

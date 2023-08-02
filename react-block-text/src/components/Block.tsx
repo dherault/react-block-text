@@ -8,7 +8,7 @@ import type { BlockProps, DragAndDropCollect, TopLeft } from '../types'
 
 import { ADD_ITEM_BUTTON_ID, BLOCK_ICONS_WIDTH, DRAG_ITEM_BUTTON_ID, INDENT_SIZE } from '../constants'
 
-import PrimaryColorContext from '../context/PrimaryColorContext'
+import ColorsContext from '../context/ColorsContext'
 
 import AddIcon from '../icons/Add'
 import DragIcon from '../icons/Drag'
@@ -54,7 +54,7 @@ function Block(props: BlockProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const primaryColor = useContext(PrimaryColorContext)
+  const { primaryColor, primaryColorTransparent } = useContext(ColorsContext)
   const [menuPosition, setMenuPosition] = useState<TopLeft | null>(null)
 
   const plugin = useMemo(() => pluginsData.find(plugin => plugin.type === item.type), [pluginsData, item])
@@ -199,8 +199,8 @@ function Block(props: BlockProps) {
             bottom: paddingBottom - 2,
             left: (contentRef.current?.offsetLeft || 0) - indentWidth - 4,
             right: 2,
-            backgroundColor: primaryColor,
-            opacity: !isEmpty && selected ? 0.15 : 0,
+            backgroundColor: primaryColorTransparent,
+            opacity: !isEmpty && selected ? 1 : 0,
           }}
         >
           {/* Scroll into view offset element */}

@@ -7,7 +7,7 @@ import applyTodoStyle from '../utils/applyTodoStyle'
 import Checkbox from './Checkbox'
 
 function BlockContent(props: BlockContentProps) {
-  const { item, editorState, readOnly, color, BlockContentText, onItemChange, forceBlurContent } = props
+  const { item, editorState, readOnly, BlockContentText, onItemChange, forceBlurContent } = props
 
   const handleCheck = useCallback((checked: boolean) => {
     if (readOnly) return
@@ -25,7 +25,6 @@ function BlockContent(props: BlockContentProps) {
     <div className="flex">
       <div className="flex items-start">
         <Checkbox
-          color={color}
           checked={item.metadata === 'true'}
           onCheck={handleCheck}
           className="flex-shrink-0"

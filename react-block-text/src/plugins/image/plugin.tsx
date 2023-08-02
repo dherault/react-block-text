@@ -6,7 +6,7 @@ import Icon from './components/Icon'
 
 function imagePlugin(options: PluginOptions): ReactBlockTextPlugins {
   return [
-    () => ({
+    ({ onChange }) => ({
       type: 'image',
       blockCategory: 'media',
       title: 'Image',
@@ -19,6 +19,7 @@ function imagePlugin(options: PluginOptions): ReactBlockTextPlugins {
       BlockContent: props => (
         <BlockContent
           {...props}
+          onItemChange={onChange}
           maxFileSize={options.maxFileSize}
         />
       ),

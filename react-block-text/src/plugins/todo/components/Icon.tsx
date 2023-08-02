@@ -1,13 +1,10 @@
-import type { IconProps } from '../types'
-
 import Checkbox from './Checkbox'
 
-function Icon({ color: primaryColor }: IconProps) {
+function Icon() {
   return (
     <div className="w-full h-full flex items-center justify-center gap-1">
       <div className="scale-[85%]">
         <Checkbox
-          color={primaryColor}
           checked
           onCheck={() => {}}
         />

@@ -38,20 +38,16 @@ function BlockContentList(props: BlockContentProps) {
       >
         {item.metadata.length ? (
           <div
-            className="ml-2 before:content-[attr(before)]"
+            className="ml-2 before:content-[attr(data-before)]"
             style={{
               width: 6 * label.length,
             }}
-            // @ts-expect-error
-            // eslint-disable-next-line react/no-unknown-property
-            before={`${label}.`}
+            data-before={`${label}.`}
           />
         ) : (
           <div
-            className="-my-[4px] ml-2 font-serif text-2xl before:content-[attr(before)]"
-            // @ts-expect-error
-            // eslint-disable-next-line react/no-unknown-property
-            before={depthToBullet[item.indent % depthToBullet.length]}
+            className="-my-[4px] ml-2 font-serif text-2xl before:content-[attr(data-before)]"
+            data-before={depthToBullet[item.indent % depthToBullet.length]}
           />
         )}
       </div>

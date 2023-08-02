@@ -2,17 +2,16 @@ import { useContext } from 'react'
 
 import type { SelectionRectProps } from '../types'
 
-import PrimaryColorContext from '../context/PrimaryColorContext'
+import ColorsContext from '../context/ColorsContext'
 
 function SelectionRect(props: SelectionRectProps) {
-  const primaryColor = useContext(PrimaryColorContext)
+  const { primaryColorTransparent } = useContext(ColorsContext)
 
   return (
     <div
       className="absolute"
       style={{
-        backgroundColor: primaryColor,
-        opacity: 0.15,
+        backgroundColor: primaryColorTransparent,
         ...props,
       }}
     />

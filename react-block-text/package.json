@@ -33,6 +33,7 @@
   "dependencies": {
     "abc-list": "^1.0.2",
     "clsx": "^2.0.0",
+    "color": "^4.2.3",
     "draft-js": "^0.11.7",
     "fuse.js": "^6.6.2",
     "ignore-warnings": "^0.2.1",
@@ -44,6 +45,7 @@
     "roman-numerals": "^0.3.2"
   },
   "devDependencies": {
+    "@types/color": "^3.0.3",
     "@types/draft-js": "^0.11.12",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
