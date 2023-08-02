@@ -26,6 +26,7 @@ You might need to [add globalThis](https://github.com/vitejs/vite/discussions/79
 ## Usage
 
 ```jsx
+import { useState } from 'react'
 import ReactBlockText, { headerPlugin, imagePlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
 const plugins = [
