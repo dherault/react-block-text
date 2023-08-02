@@ -1,5 +1,7 @@
 # React Block Text
 
+[![npm version](https://badge.fury.io/js/react-block-text.svg)](https://badge.fury.io/js/react-block-text)
+
 A block text editor for React.
 
 This is an open-source clone of the famous [Notion.so](https://notion.so) editor. Although not entirely feature complete, it comes with the basic blocks and offers a similar UI.
