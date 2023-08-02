@@ -61,7 +61,7 @@ function Editor() {
 ```ts
 type ReactBlockTextProps = {
   value: string // The data for the editor
-  plugins?: ReactBlockTextPlugins // A list of plugin
+  plugins?: ReactBlockTextPlugins // An array of plugin
   readOnly?: boolean // Enable read only mode
   paddingTop?: number // Padding top of the editor
   paddingBottom?: number // Padding bottom of the editor
