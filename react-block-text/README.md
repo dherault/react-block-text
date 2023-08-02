@@ -6,7 +6,7 @@ This is an open-source clone of the famous [Notion.so](https://notion.so) editor
 
 ## Demo
 
-[See it live in your browser!](https://react-block-text.web.app/).
+[See it live in your browser!](https://react-block-text.web.app/)
 
 ## Installation
 
@@ -107,10 +107,12 @@ function getUrl(imageKey: string): Promise<string>
 
 The returned promise should resolve to a function that returns the progress of the upload as a number between 0 and 1 and eventually a `imageKey` corresponding to the image on your server. Using S3 or Firebase storage this is typically the storage path of the image. This `ImagePluginSubmitHandler` function will be called periodically to update the progress of the upload.
 
-`getUrl` should return the url of the image on your server based on the `imageKey`.
+`getUrl` should return the url of the image on your server based on the `imageKey`. Of course you can set `imageKey` directly to the URL and make getUrl an identity function.
 
 ## License
 
 MIT
+
+This project is not affiliated with Notion Labs, Inc.
 
 Notion Labs, hire me!
