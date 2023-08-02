@@ -109,6 +109,10 @@ The returned promise should resolve to a function that returns the progress of t
 
 `getUrl` should return the url of the image on your server based on the `imageKey`. Of course you can set `imageKey` directly to the URL and make getUrl an identity function.
 
+### Create your own
+
+Create your own plugin based on the template provided by this repository and I'll add it here!
+
 ## License
 
 MIT
