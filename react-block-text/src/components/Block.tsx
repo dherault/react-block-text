@@ -300,6 +300,14 @@ function Block(props: BlockProps) {
             </>
           )}
         </div>
+        {/* Separator/margin with click handler */}
+        {!readOnly && (
+          <div
+            onClick={focusContentAtStart}
+            onMouseDown={onRectSelectionMouseDown}
+            className="w-1.5 h-full cursor-text flex-shrink-0"
+          />
+        )}
         {/* Block menu */}
         {!!menuPosition && (
           <BlockMenu

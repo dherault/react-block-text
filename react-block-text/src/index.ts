@@ -8,7 +8,7 @@ import quotePlugin from './plugins/quote'
 import todoPlugin from './plugins/todo'
 import imagePlugin from './plugins/image'
 
-export { DEFAULT_PRIMARY_COLOR, VERSION } from './constants'
+export { VERSION } from './constants'
 
 export { default as ColorsContext } from './context/ColorsContext'
 

@@ -65,7 +65,7 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
             '--bg-color': primaryColor,
             '--bg-color-dark': primaryColorDark,
           } as any}
-          className="p-1.5 w-[300px] bg-[var(--bg-color)] hover:bg-[var(--bg-color-dark)] border border-[var(--bg-color-dark)] rounded text-sm font-bold text-white"
+          className="p-1.5 w-[300px] bg-[var(--bg-color)] hover:bg-[var(--bg-color-dark)] border border-[var(--bg-color-dark)] rounded text-sm font-semibold text-white"
         >
           Embed image
         </button>
