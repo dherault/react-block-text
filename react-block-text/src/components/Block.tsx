@@ -193,7 +193,7 @@ function Block(props: BlockProps) {
         {/* Selection background element */}
         <div
           ref={registerSelectionRef}
-          className="absolute rounded-sm transition-opacity z-0"
+          className="absolute rounded-sm transition-opacity z-0 cursor-text"
           style={{
             top: paddingTop - 2,
             bottom: paddingBottom - 2,
@@ -249,7 +249,7 @@ function Block(props: BlockProps) {
             <div
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
-              className="w-1.5 h-full cursor-text flex-shrink-0"
+              className="w-1.5 h-full cursor-text flex-shrink-0 z-10"
             />
           </div>
         )}
@@ -305,7 +305,7 @@ function Block(props: BlockProps) {
           <div
             onClick={focusContentAtStart}
             onMouseDown={onRectSelectionMouseDown}
-            className="w-1.5 h-full cursor-text flex-shrink-0"
+            className="w-1.5 h-full cursor-text flex-shrink-0 z-10"
           />
         )}
         {/* Block menu */}
