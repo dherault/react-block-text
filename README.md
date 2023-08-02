@@ -34,7 +34,7 @@ const plugins = [
   ...listPlugin(),
   ...quotePlugin(),
   ...imagePlugin({
-    onSubmitFile: /* See Image plugin section */,
+    onSubmitFile: /* See image plugin section */,
     onSubmitUrl: /* ... */,
     getUrl: /* ... */,
     maxFileSize: '5 MB'
