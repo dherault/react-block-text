@@ -115,4 +115,4 @@ MIT
 
 This project is not affiliated with Notion Labs, Inc.
 
-Notion Labs, hire me!
+Notion Labs, [hire me!](https://dherault.com)
