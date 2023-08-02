@@ -109,7 +109,7 @@ function getUrl(imageKey: string): Promise<string>
 
 The returned promises should resolve to a function that returns the progress of the upload as a number between 0 and 1 and eventually a `imageKey` corresponding to the image on your server. Using S3 or Firebase storage this is typically the storage path of the image. This `ImagePluginSubmitHandler` function will be called periodically to update the progress of the upload.
 
-`getUrl` should return the url of the image on your server based on the `imageKey`. Of course you can set `imageKey` directly to the URL and make getUrl an identity function.
+`getUrl` should return the url of the image on your server based on the `imageKey`. Of course you can set `imageKey` directly to the URL and make `getUrl` an identity function.
 
 ### Create your own
 
