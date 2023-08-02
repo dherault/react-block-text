@@ -1,7 +1,7 @@
 {
   "name": "react-block-text",
   "description": "A block text editor for React",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "type": "module",
   "main": "dist/react-block-text.js",
   "types": "dist/index.d.ts",
