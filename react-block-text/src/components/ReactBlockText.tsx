@@ -97,7 +97,7 @@ import {
   VERSION,
 } from '../constants'
 
-import textPlugin from '../plugins/text/plugin'
+import textPlugin from '../plugins/text'
 
 import ColorsContext from '../context/ColorsContext'
 
