@@ -82,7 +82,7 @@ function ImageUploader({ maxFileSize }: ImageUploaderProps) {
         {renderTabItem('Upload', 'upload')}
         {renderTabItem('Embed link', 'url')}
       </div>
-      <div className="py-3 pb-2">
+      <div className="py-3 px-2">
         {mode === 'upload' && renderUpload()}
         {mode === 'url' && renderUrl()}
       </div>
