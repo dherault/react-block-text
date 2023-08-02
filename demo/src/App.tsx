@@ -10,7 +10,7 @@ const plugins = [
   ...todoPlugin(),
   ...listPlugin(),
   ...quotePlugin(),
-  ...imagePlugin(),
+  ...imagePlugin({ maxFileSize: '5 MB' }),
 ]
 
 function App() {

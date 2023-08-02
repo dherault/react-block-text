@@ -4,6 +4,10 @@ import { Transition } from 'react-transition-group'
 import ImageIcon from './ImageIcon'
 import ImageUploader from './ImageUploader'
 
+type ImageSelectorProps = {
+  maxFileSize?: number
+}
+
 const transitionDuration = 100
 
 const defaultStyle = {
@@ -16,9 +20,9 @@ const transitionStyles = {
   entered: { opacity: 1 },
   exiting: { opacity: 0 },
   exited: { opacity: 0 },
-} as const
+}
 
-function ImageSelector() {
+function ImageSelector({ maxFileSize }: ImageSelectorProps) {
   const mainRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -70,7 +74,7 @@ function ImageSelector() {
                 ...transitionStyles[state as keyof typeof transitionStyles],
               }}
             >
-              <ImageUploader />
+              <ImageUploader maxFileSize={maxFileSize} />
             </div>
           )}
         </Transition>

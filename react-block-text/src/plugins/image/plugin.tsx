@@ -1,9 +1,10 @@
 import type { ReactBlockTextPlugins } from '../../types'
 
+import type { PluginOptions } from './types'
 import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
 
-function imagePlugin(): ReactBlockTextPlugins {
+function imagePlugin(options: PluginOptions): ReactBlockTextPlugins {
   return [
     () => ({
       type: 'image',
@@ -15,7 +16,12 @@ function imagePlugin(): ReactBlockTextPlugins {
       isConvertibleToText: false,
       paddingTop: 5,
       paddingBottom: 5,
-      BlockContent,
+      BlockContent: props => (
+        <BlockContent
+          {...props}
+          maxFileSize={options.maxFileSize}
+        />
+      ),
     }),
   ]
 }

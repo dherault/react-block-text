@@ -1,4 +1,4 @@
-import type { BlockContentProps } from '../../../types'
+import type { BlockContentProps } from '../types'
 
 import ImageSelector from './ImageSelector'
 
@@ -7,7 +7,7 @@ function BlockContent(props: BlockContentProps) {
 
   if (!item.metadata) {
     return (
-      <ImageSelector />
+      <ImageSelector maxFileSize={props.maxFileSize} />
     )
   }
 

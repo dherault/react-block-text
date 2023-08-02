@@ -2,7 +2,11 @@ import { useCallback, useState } from 'react'
 
 type Mode = 'upload' | 'url'
 
-function ImageUploader() {
+type ImageUploaderProps = {
+  maxFileSize?: number
+}
+
+function ImageUploader({ maxFileSize }: ImageUploaderProps) {
   const [mode, setMode] = useState<Mode>('upload')
 
   const renderTabItem = useCallback((label: string, itemMode: Mode) => (
@@ -21,9 +25,22 @@ function ImageUploader() {
 
   const renderUpload = useCallback(() => (
     <>
-      Upload
+      <button
+        type="button"
+        className="p-1.5 w-full border rounded text-sm hover:bg-gray-100"
+      >
+        Upload file
+      </button>
+      {!!maxFileSize && (
+        <div className="mt-3 mb-1 text-xs text-gray-500 text-center">
+          The maximum size per file is
+          {' '}
+          {maxFileSize}
+          .
+        </div>
+      )}
     </>
-  ), [])
+  ), [maxFileSize])
 
   const renderUrl = useCallback(() => (
     <>
@@ -37,8 +54,10 @@ function ImageUploader() {
         {renderTabItem('Upload', 'upload')}
         {renderTabItem('Embed link', 'url')}
       </div>
-      {mode === 'upload' && renderUpload()}
-      {mode === 'url' && renderUrl()}
+      <div className="p-2">
+        {mode === 'upload' && renderUpload()}
+        {mode === 'url' && renderUrl()}
+      </div>
     </div>
   )
 }
