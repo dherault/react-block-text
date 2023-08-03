@@ -26,8 +26,8 @@
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "count-locs": "(cd src && ( find ./ -name '*.ts*' -print0 | xargs -0 cat ) | wc -l)",
     "analysis": "BUNDLE_ANALYSIS=true npm run build",
+    "count-locs": "(cd src && ( find ./ -name '*.ts*' -print0 | xargs -0 cat ) | wc -l)",
     "prepublishOnly": "npm i && npm run build"
   },
   "dependencies": {
