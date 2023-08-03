@@ -3,8 +3,9 @@ import GitHubButton from 'react-github-btn'
 
 import ReactBlockText, { headerPlugin, imagePlugin, listPlugin, quotePlugin, todoPlugin } from 'react-block-text'
 
-import onSubmitFile from './helpers/onSubmitFile'
-import onSubmitUrl from './helpers/onSubmitUrl'
+import onSubmitImageFile from './helpers/onSubmitImageFile'
+import onSubmitImageUrl from './helpers/onSubmitImageUrl'
+import getImageUrl from './helpers/getImageUrl'
 
 const LOCAL_STORAGE_KEY = 'react-block-text-data'
 
@@ -13,7 +14,12 @@ const plugins = [
   ...todoPlugin(),
   ...listPlugin(),
   ...quotePlugin(),
-  ...imagePlugin({ onSubmitFile, onSubmitUrl, maxFileSize: '5 MB' }),
+  ...imagePlugin({
+    onSubmitFile: onSubmitImageFile,
+    onSubmitUrl: onSubmitImageUrl,
+    getUrl: getImageUrl,
+    maxFileSize: '5 MB',
+  }),
 ]
 
 function App() {

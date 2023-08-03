@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
+import { getStorage } from 'firebase/storage'
+import { ReCaptchaV3Provider, initializeAppCheck } from 'firebase/app-check'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAlyvTjtWNg_wl5Og6s8b8NUh1DIMtWLcY',
@@ -14,3 +16,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 export const analytics = getAnalytics(app)
+
+export const storage = getStorage(app)
+
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6Les-XcnAAAAAGxTW0Nh15IwnNSqpVwNUsNskmRW'),
+  isTokenAutoRefreshEnabled: true,
+})

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "firebase": "^10.1.0",
+    "nanoid": "^4.0.2",
     "react": "^18.2.0",
     "react-block-text": "0.0.13",
     "react-dom": "^18.2.0",

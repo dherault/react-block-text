@@ -1,0 +1,41 @@
+import { ref, uploadBytesResumable } from 'firebase/storage'
+import { nanoid } from 'nanoid'
+
+import { storage } from '../firebase'
+
+// Example on how to upload an image using Firebase Storage
+async function uploadImage(imageFile: File) {
+  const storageRef = ref(storage, `images/${nanoid()}`)
+  const uploadTask = uploadBytesResumable(storageRef, imageFile)
+
+  let imageKey = ''
+  let progress = 0
+  let isError = false
+
+  uploadTask.on('state_changed',
+    snapshot => {
+      progress = snapshot.bytesTransferred / snapshot.totalBytes
+
+      console.log('Image upload progress:', `${Math.round(progress * 100)}%`)
+    },
+    error => {
+      isError = true
+
+      console.error(error)
+    },
+    () => {
+      progress = 1
+      imageKey = uploadTask.snapshot.metadata.fullPath
+
+      console.log('Image upload complete!')
+    }
+  )
+
+  return () => ({
+    imageKey,
+    progress,
+    isError,
+  })
+}
+
+export default uploadImage

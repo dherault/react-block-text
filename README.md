@@ -39,7 +39,7 @@ const plugins = [
     onSubmitFile: /* See image plugin section */,
     onSubmitUrl: /* ... */,
     getUrl: /* ... */,
-    maxFileSize: '5 MB'
+    maxFileSize: '5 MB' // Optional, displayed in the file upload dialog
   }),
 ]
 

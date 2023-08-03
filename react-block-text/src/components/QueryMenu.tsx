@@ -22,6 +22,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     blockCategory: blockCategory as BlockCategory,
     results: results.filter(result => result.item.blockCategory === blockCategory),
   })), [results])
+  const flatPacks = useMemo(() => packs.reduce((acc, pack) => [...acc, ...pack.results], [] as any[]), [packs])
 
   /* ---
     ARROW UP, DOWN, ENTER, ESCAPE HANDLERS
@@ -30,7 +31,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     if (event.key === 'ArrowDown') {
       event.preventDefault()
 
-      const nextIndex = (activeIndex + 1) % results.length
+      const nextIndex = (activeIndex + 1) % flatPacks.length
 
       setActiveIndex(nextIndex)
       setScrollIntoViewIndex(nextIndex)
@@ -42,7 +43,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     if (event.key === 'ArrowUp') {
       event.preventDefault()
 
-      const nextIndex = activeIndex === -1 ? results.length - 1 : (activeIndex - 1 + results.length) % results.length
+      const nextIndex = activeIndex === -1 ? flatPacks.length - 1 : (activeIndex - 1 + flatPacks.length) % flatPacks.length
 
       setActiveIndex(nextIndex)
       setScrollIntoViewIndex(nextIndex)
@@ -54,8 +55,8 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     if (event.key === 'Enter') {
       event.preventDefault()
 
-      if (activeIndex !== -1 && results[activeIndex]) {
-        onSelect(results[activeIndex].item.type)
+      if (activeIndex !== -1 && flatPacks[activeIndex]) {
+        onSelect(flatPacks[activeIndex].item.type)
       }
 
       return
@@ -66,7 +67,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
 
       onClose()
     }
-  }, [results, activeIndex, onSelect, onClose])
+  }, [flatPacks, activeIndex, onSelect, onClose])
 
   /* ---
     OUTSIDE CLICK
@@ -114,12 +115,12 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     >
       {results.length > 0 && (
         <div className="mt-1 flex flex-col">
-          {packs.map(({ blockCategory, results }) => !!results.length && (
+          {packs.map(({ blockCategory, results }, i) => !!results.length && (
             <Fragment key={blockCategory}>
               <div className="px-2 py-1 text-gray-400 text-xs">
                 {BLOCK_CATEGORY_TO_LABEL[blockCategory]}
               </div>
-              {results.map((result, i) => (
+              {results.map(result => (
                 <QueryMenuItem
                   key={result.item.title}
                   title={result.item.title}

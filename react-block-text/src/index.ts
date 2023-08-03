@@ -32,4 +32,9 @@ export type {
   ReactBlockTextProps,
 } from './types'
 
+export type {
+  ReactBlockTextImagePluginSubmition,
+  ReactBlockTextImagePluginSubmitter,
+} from './plugins/image'
+
 export default ReactBlockText
