@@ -39,7 +39,7 @@ const plugins = [
     onSubmitFile: /* See image plugin section */,
     onSubmitUrl: /* ... */,
     getUrl: /* ... */,
-    maxFileSize: '5 MB' // Optional, displayed in the file upload dialog
+    maxFileSize: '5 MB', /* Optional, displayed in the file upload dialog */
   }),
 ]
 
@@ -99,17 +99,18 @@ Adds support for images.
 Three functions are required for the plugin to work:
 
 ```ts
-type ImagePluginSubmitHandler = () => {
+type ReactBlockTextImagePluginSubmitter = () => {
   progress: number // Between 0 and 1
   imageKey?: string // The reference to the image once it's uploaded
+  isError?: boolean // If true, the upload failed and an error will be displayed on the editor
 }
 
-function onSubmitFile(file: File): Promise<ImagePluginSubmitHandler>
-function onSubmitUrl(file: File): Promise<ImagePluginSubmitHandler>
+function onSubmitFile(file: File): Promise<ReactBlockTextImagePluginSubmitter>
+function onSubmitUrl(file: File): Promise<ReactBlockTextImagePluginSubmitter>
 function getUrl(imageKey: string): Promise<string>
 ```
 
-The returned promises should resolve to a function that returns the progress of the upload as a number between 0 and 1 and eventually a `imageKey` corresponding to the image on your server. Using S3 or Firebase storage this is typically the storage path of the image. This `ImagePluginSubmitHandler` function will be called periodically to update the progress of the upload.
+The returned promises should resolve to a function that returns the progress of the upload as a number between 0 and 1 and eventually a `imageKey` corresponding to the image on your server. Using S3 or Firebase storage this is typically the storage path of the image. This `ReactBlockTextImagePluginSubmitter` function will be called periodically to update the progress of the upload.
 
 `getUrl` should return the url of the image on your server based on the `imageKey`. Of course you can set `imageKey` directly to the URL and make `getUrl` an identity function.
 
