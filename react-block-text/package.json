@@ -40,7 +40,6 @@
     "nanoid": "^4.0.2",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "^18.2.0",
     "react-transition-group": "^4.4.5",
     "roman-numerals": "^0.3.2"
   },
