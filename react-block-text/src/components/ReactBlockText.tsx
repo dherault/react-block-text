@@ -158,7 +158,7 @@ function ReactBlockText({
   --- */
   const value = useMemo<ReactBlockTextDataItem[]>(() => {
     try {
-      const value = JSON.parse(rawValue)
+      const value = JSON.parse(rawValue || '')
 
       if (!Array.isArray(value)) return []
 

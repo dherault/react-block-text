@@ -48,7 +48,7 @@ export type ReactBlockTextPlugins = ReactBlockTextPlugin[]
 export type ReactBlockTextEditorStates = Record<string, EditorState>
 
 export type ReactBlockTextProps = {
-  value: string
+  value?: string
   plugins?: ReactBlockTextPlugins
   readOnly?: boolean
   paddingTop?: number
