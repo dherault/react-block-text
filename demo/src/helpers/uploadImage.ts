@@ -25,7 +25,7 @@ async function uploadImage(imageFile: File): Promise<ReactBlockTextImagePluginSu
       console.error(error)
     },
     () => {
-      progress = 1
+      progress = 1 // This is important to make sure the progress indicator disappears
       imageKey = uploadTask.snapshot.metadata.fullPath
 
       console.log('Image upload complete!')
