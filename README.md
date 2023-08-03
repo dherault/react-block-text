@@ -7,6 +7,8 @@ A block text editor for React.
 
 This is an open-source clone of the famous [Notion.so](https://notion.so) editor. Although not entirely feature complete, it comes with some basic blocks and offers a similar UI.
 
+Project status: In-development beta. The API will be stable starting with v1.
+
 ## Demo
 
 [See it live in your browser!](https://react-block-text.web.app/)
