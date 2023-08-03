@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import type { ResizableImageProps } from '../types'
 
-function ResizableImage({ src, width, ratio, setWidth, setRatio }: ResizableImageProps) {
+function ResizableImage({ src, width, ratio, progress, setWidth, setRatio }: ResizableImageProps) {
   const [image, setImage] = useState<HTMLImageElement | null>(null)
   console.log(false && setWidth)
 
@@ -42,6 +42,20 @@ function ResizableImage({ src, width, ratio, setWidth, setRatio }: ResizableImag
           </div>
         </div>
       </div>
+      {progress < 1 && (
+        <div className="absolute bottom-2 right-[10px]">
+          <div className="py-1 px-1.5 flex items-center gap-1 bg-zinc-600 rounded">
+            <div
+              role="status"
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] text-zinc-400 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            />
+            <div className="text-white text-xs">
+              {Math.round(progress * 100)}
+              %
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

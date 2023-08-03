@@ -11,7 +11,7 @@ function BlockContent(props: BlockContentProps) {
   const [url, setUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [submitter, setSubmitter] = useState<ReactBlockTextImagePluginSubmitter | null>(null)
-  const [progress, setProgress] = useState(0)
+  const [progress, setProgress] = useState(1)
   const [nextImageKey, setNextImageKey] = useState('')
   const [isError, setIsError] = useState(false)
 
