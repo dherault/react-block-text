@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid'
 
 import { storage } from '../firebase'
 
-// Example on how to upload an image using Firebase storage
+// Example on how to upload an image file using Firebase storage
 async function uploadImage(imageFile: File): Promise<ReactBlockTextImagePluginSubmitter> {
   const storageRef = ref(storage, `images/${nanoid()}`)
   const uploadTask = uploadBytesResumable(storageRef, imageFile)
