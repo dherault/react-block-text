@@ -1,9 +1,11 @@
+import type { Dispatch, SetStateAction } from 'react'
+
 import type { BlockContentProps as ReactBlockTextBlockContentProps, ReactBlockTextOnChange } from '../../types'
 
 export type Metadata = {
   imageKey: string
   width: number // between 0 and 1
-  height: number // absolute
+  ratio: number // width / height
 }
 
 export type ReactBlockTextImagePluginSubmition = {
@@ -48,14 +50,11 @@ export type LoadingImageProps = {
   url?: string
 }
 
-export type ImageProps = {
-  src: string
+export type ResizableImageProps = {
+  src?: string
   width: number
-  setDimensions: (width: number, height: number) => void
+  ratio: number
   progress: number
-}
-
-export type ImageSkeletonProps = {
-  width: number
-  height: number
+  setWidth: Dispatch<SetStateAction<number>>
+  setRatio: Dispatch<SetStateAction<number>>
 }

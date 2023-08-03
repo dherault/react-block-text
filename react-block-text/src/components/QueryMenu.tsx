@@ -115,25 +115,29 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     >
       {results.length > 0 && (
         <div className="mt-1 flex flex-col">
-          {packs.map(({ blockCategory, results }, i) => !!results.length && (
+          {packs.map(({ blockCategory, results }) => !!results.length && (
             <Fragment key={blockCategory}>
               <div className="px-2 py-1 text-gray-400 text-xs">
                 {BLOCK_CATEGORY_TO_LABEL[blockCategory]}
               </div>
-              {results.map(result => (
-                <QueryMenuItem
-                  key={result.item.title}
-                  title={result.item.title}
-                  label={result.item.label}
-                  icon={result.item.icon}
-                  active={i === activeIndex}
-                  onMouseEnter={() => isHovering && setActiveIndex(i)}
-                  onMouseLeave={() => isHovering && setActiveIndex(-1)}
-                  onClick={() => onSelect(result.item.type)}
-                  shouldScrollIntoView={i === scrollIntoViewIndex}
-                  resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
-                />
-              ))}
+              {results.map(result => {
+                const index = flatPacks.indexOf(result)
+
+                return (
+                  <QueryMenuItem
+                    key={result.item.title}
+                    title={result.item.title}
+                    label={result.item.label}
+                    icon={result.item.icon}
+                    active={index === activeIndex}
+                    onMouseEnter={() => isHovering && setActiveIndex(index)}
+                    onMouseLeave={() => isHovering && setActiveIndex(-1)}
+                    onClick={() => onSelect(result.item.type)}
+                    shouldScrollIntoView={index === scrollIntoViewIndex}
+                    resetShouldScrollIntoView={() => setScrollIntoViewIndex(-1)}
+                  />
+                )
+              })}
             </Fragment>
           )
           )}

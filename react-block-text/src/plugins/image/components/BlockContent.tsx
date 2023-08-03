@@ -3,11 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactBlockTextDataItem } from '../../..'
 import type { BlockContentProps, Metadata, ReactBlockTextImagePluginSubmitter } from '../types'
 
-import Image from './Image'
+import ResizableImage from './ResizableImage'
 import ImageSelector from './ImageSelector'
-import ImageSkeleton from './ImageSkeleton'
-
-const DEFAULT_HEIGHT = 256
 
 function BlockContent(props: BlockContentProps) {
   const { item, editorState, maxFileSize, onSubmitFile, onSubmitUrl, getUrl, onItemChange } = props
@@ -18,25 +15,20 @@ function BlockContent(props: BlockContentProps) {
   const [nextImageKey, setNextImageKey] = useState('')
   const [isError, setIsError] = useState(false)
 
-  // Width is relative from 0 to 1 --> 0% to 100%, height is absolute
-  const { imageKey, width, height } = useMemo<Metadata>(() => {
+  // Width is relative from 0 to 1 --> 0% to 100%
+  const { imageKey, width, ratio } = useMemo<Metadata>(() => {
     try {
-      const { imageKey, width, height } = JSON.parse(item.metadata) as Metadata
+      const { imageKey, width, ratio } = JSON.parse(item.metadata) as Metadata
 
-      return { imageKey, width, height }
+      return { imageKey, width, ratio }
     }
     catch {
-      return { imageKey: '', width: 1, height: DEFAULT_HEIGHT }
+      return { imageKey: '', width: 1, ratio: 1.618 }
     }
   }, [item.metadata])
 
   const [nextWidth, setNextWidth] = useState(width)
-  const [nextHeight, setNextHeight] = useState(height)
-
-  const setDimensions = useCallback((width: number, height: number) => {
-    setNextWidth(width)
-    setNextHeight(height)
-  }, [])
+  const [nextRatio, setNextRatio] = useState(ratio)
 
   const handleSubmitFile = useCallback(async (file: File) => {
     setFile(file)
@@ -79,12 +71,12 @@ function BlockContent(props: BlockContentProps) {
 
   useEffect(() => {
     if (!nextImageKey) return
-    if (imageKey === nextImageKey && width === nextWidth && height === nextHeight) return
+    if (imageKey === nextImageKey && width === nextWidth && ratio === nextRatio) return
 
     const metadata: Metadata = {
       imageKey: imageKey || nextImageKey,
       width: nextWidth,
-      height: nextHeight,
+      ratio: nextRatio,
     }
     const nextItem: ReactBlockTextDataItem = {
       ...item,
@@ -92,7 +84,7 @@ function BlockContent(props: BlockContentProps) {
     }
 
     onItemChange(nextItem, editorState)
-  }, [imageKey, nextImageKey, width, nextWidth, height, nextHeight, item, editorState, onItemChange])
+  }, [imageKey, nextImageKey, width, nextWidth, ratio, nextRatio, item, editorState, onItemChange])
 
   useEffect(() => {
     if (!(nextImageKey || imageKey)) return
@@ -110,11 +102,13 @@ function BlockContent(props: BlockContentProps) {
 
   if (url || file) {
     return (
-      <Image
+      <ResizableImage
         src={url || URL.createObjectURL(file!)}
         width={nextWidth}
+        ratio={nextRatio}
         progress={progress}
-        setDimensions={setDimensions}
+        setWidth={setNextWidth}
+        setRatio={setNextRatio}
       />
     )
   }
@@ -129,10 +123,14 @@ function BlockContent(props: BlockContentProps) {
     )
   }
 
+  // Skeleton mode
   return (
-    <ImageSkeleton
+    <ResizableImage
       width={nextWidth}
-      height={nextHeight}
+      ratio={nextRatio}
+      progress={1}
+      setWidth={setNextWidth}
+      setRatio={setNextRatio}
     />
   )
 }
