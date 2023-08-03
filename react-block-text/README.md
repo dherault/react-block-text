@@ -115,7 +115,7 @@ Three functions are required for the plugin to work:
 type ReactBlockTextImagePluginSubmitter = () => {
   progress: number  // Between 0 and 1
   imageKey?: string // The reference to the image once it's uploaded
-  isError?: boolean // If true, the upload failed and an error will be displayed on the editor
+  isError?: boolean // If true, the upload failed and an error will be displayed in the editor
 }
 
 function onSubmitFile(file: File): Promise<ReactBlockTextImagePluginSubmitter>
