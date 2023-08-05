@@ -7,7 +7,7 @@ function ResizableImage({ src, width, ratio, progress, setWidth, setRatio }: Res
   console.log(false && setWidth)
 
   useEffect(() => {
-    if (!src || image) return
+    if (!src) return
 
     const img = new Image()
 
@@ -17,7 +17,7 @@ function ResizableImage({ src, width, ratio, progress, setWidth, setRatio }: Res
       setImage(img)
       setRatio(img.width / img.height)
     })
-  }, [src, image, setRatio])
+  }, [src, setRatio])
 
   return (
     <div className="w-full flex justify-center">
