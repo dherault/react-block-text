@@ -176,7 +176,7 @@ function Block(props: BlockProps) {
       id={item.id}
       data-react-block-text-id={item.id}
       data-handler-id={handlerId}
-      className="rbt-flex"
+      className="rbt-flex-shrink-0 rbt-flex"
       onMouseDown={() => !menuPosition && !readOnly && onMouseDown()}
       onMouseMove={() => !menuPosition && !readOnly && onMouseMove()}
       onMouseEnter={() => !menuPosition && !readOnly && onMouseMove()}

@@ -2508,7 +2508,7 @@ function ReactBlockText({
           onBlur={handleRootBlur}
           onMouseMove={handleRootMouseMove}
           onMouseLeave={handleRootMouseLeave}
-          className={_('rbt-relative', className)}
+          className={_('rbt-flex rbt-flex-col rbt-relative', className)}
           style={{
             // Prevent flickering of caret at the end of the line when switching blocks with arrow keys
             caretColor: isCaretVisible ? textColor : 'transparent',
@@ -2519,7 +2519,7 @@ function ReactBlockText({
           <div
             onClick={() => handleFocusContent(0)}
             onMouseDown={handleRectSelectionStart}
-            className="cursor-text"
+            className="rbt-flex-shrink-0 cursor-text"
             style={{ height: paddingTop || 0 }}
           />
           {value.map(renderEditor)}
@@ -2551,8 +2551,8 @@ function ReactBlockText({
           <div
             onClick={() => handleFocusContent(value.length - 1, false, true)}
             onMouseDown={handleRectSelectionStart}
-            className="rbt-cursor-text"
-            style={{ height: paddingBottom || 0 }}
+            className="rbt-grow rbt-cursor-text"
+            style={{ minHeight: paddingBottom || 0 }}
           />
           <div ref={injectionRef} />
         </div>

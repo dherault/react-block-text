@@ -171,7 +171,7 @@ function App() {
         </div>
       </div>
       {/* Editor */}
-      <div className="bg-white max-h-full overflow-y-auto flex-grow">
+      <div className="bg-white max-h-full overflow-y-auto flex-grow flex flex-col">
         {renderContainer(
           <ReactBlockText
             value={data}
@@ -183,6 +183,7 @@ function App() {
             paddingRight={128}
             primaryColor={primaryColor}
             plugins={plugins}
+            className="flex-grow"
           />
         )}
       </div>
