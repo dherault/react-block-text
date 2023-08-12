@@ -27,14 +27,14 @@ function BlockContent(props: BlockContentProps) {
         <Checkbox
           checked={item.metadata === 'true'}
           onCheck={handleCheck}
-          className="rbt-flex-shrink-0"
+          className="rbt-shrink-0"
           style={{ marginTop: 6 }}
         />
       </div>
       <div
         onClick={props.focusContentAtStart}
         onMouseDown={props.onRectSelectionMouseDown}
-        className="rbt-w-2 rbt-flex-shrink-0"
+        className="rbt-w-2 rbt-shrink-0"
       />
       <div className="rbt-grow">
         <BlockContentText

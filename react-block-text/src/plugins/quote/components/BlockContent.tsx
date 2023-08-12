@@ -8,12 +8,12 @@ function BlockContent(props: BlockContentProps) {
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-w-[3px] rbt-bg-current rbt-flex-shrink-0"
+        className="rbt-w-[3px] rbt-bg-current rbt-shrink-0"
       />
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-w-2 rbt-flex-shrink-0"
+        className="rbt-w-2 rbt-shrink-0"
       />
       <div className="rbt-grow">
         <BlockContentText {...props} />

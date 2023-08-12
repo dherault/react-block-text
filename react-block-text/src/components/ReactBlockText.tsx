@@ -40,6 +40,8 @@
 // - Rename API plugins to blockPlugins
 // x Fix multiline arrowdown bug on trimmed lines
 // x Display block menu on new block created
+// - Fix mutliple blocks drag issue (when dragging not from the first block selected)
+// - Make "- " work with the list plugin
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -2519,7 +2521,7 @@ function ReactBlockText({
           <div
             onClick={() => handleFocusContent(0)}
             onMouseDown={handleRectSelectionStart}
-            className="rbt-flex-shrink-0 cursor-text"
+            className="rbt-shrink-0 rbt-cursor-text"
             style={{ height: paddingTop || 0 }}
           />
           {value.map(renderEditor)}

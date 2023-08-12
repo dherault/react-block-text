@@ -34,7 +34,7 @@ function BlockContentList(props: BlockContentProps) {
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-flex-shrink-0 rbt-select-none"
+        className="rbt-shrink-0 rbt-select-none"
       >
         {item.metadata.length ? (
           <div
@@ -54,7 +54,7 @@ function BlockContentList(props: BlockContentProps) {
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-w-3 rbt-flex-shrink-0"
+        className="rbt-w-3 rbt-shrink-0"
       />
       <div className="rbt-grow">
         <BlockContentText

@@ -176,7 +176,7 @@ function Block(props: BlockProps) {
       id={item.id}
       data-react-block-text-id={item.id}
       data-handler-id={handlerId}
-      className="rbt-flex-shrink-0 rbt-flex"
+      className="rbt-shrink-0 rbt-flex"
       onMouseDown={() => !menuPosition && !readOnly && onMouseDown()}
       onMouseMove={() => !menuPosition && !readOnly && onMouseMove()}
       onMouseEnter={() => !menuPosition && !readOnly && onMouseMove()}
@@ -186,7 +186,7 @@ function Block(props: BlockProps) {
       <div
         onClick={focusContentAtStart}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-cursor-text rbt-flex-shrink-0"
+        className="rbt-cursor-text rbt-shrink-0"
         style={{ width: Math.max((paddingLeft ?? 0) - iconsWidth, 0) + indentWidth }}
       />
       <div className="rbt-grow rbt-flex rbt-relative">
@@ -208,16 +208,16 @@ function Block(props: BlockProps) {
         </div>
         {/* Add and drag icons */}
         {!readOnly && (
-          <div className="rbt-flex-shrink-0 rbt-flex">
-            <div className="rbt-flex-shrink-0 rbt-flex rbt-flex-col">
+          <div className="rbt-shrink-0 rbt-flex">
+            <div className="rbt-shrink-0 rbt-flex rbt-flex-col">
               <div
                 onClick={focusContentAtStart}
                 onMouseDown={onRectSelectionMouseDown}
-                className="rbt-flex-shrink-0 rbt-cursor-text"
+                className="rbt-shrink-0 rbt-cursor-text"
                 style={{ height: paddingTop + (plugin?.iconsPaddingTop ?? 0) - 1 }}
               />
               <div
-                className="rbt-flex-shrink-0 rbt-flex rbt-items-center rbt-opacity-0 rbt-transition-opacity rbt-duration-300 rbt-text-gray-400"
+                className="rbt-shrink-0 rbt-flex rbt-items-center rbt-opacity-0 rbt-transition-opacity rbt-duration-300 rbt-text-gray-400"
                 style={{ opacity: hovered ? 1 : 0 }}
               >
                 <div
@@ -249,7 +249,7 @@ function Block(props: BlockProps) {
             <div
               onClick={focusContentAtStart}
               onMouseDown={onRectSelectionMouseDown}
-              className="rbt-w-1.5 rbt-h-full rbt-flex-shrink-0 rbt-cursor-text rbt-z-10"
+              className="rbt-w-1.5 rbt-h-full rbt-shrink-0 rbt-cursor-text rbt-z-10"
             />
           </div>
         )}
@@ -305,7 +305,7 @@ function Block(props: BlockProps) {
           <div
             onClick={focusContentAtStart}
             onMouseDown={onRectSelectionMouseDown}
-            className="rbt-w-1.5 rbt-h-full rbt-flex-shrink-0 rbt-cursor-text rbt-z-10"
+            className="rbt-w-1.5 rbt-h-full rbt-shrink-0 rbt-cursor-text rbt-z-10"
           />
         )}
         {/* Block menu */}
@@ -322,7 +322,7 @@ function Block(props: BlockProps) {
       <div
         onClick={focusContentAtEnd}
         onMouseDown={onRectSelectionMouseDown}
-        className="rbt-cursor-text rbt-flex-shrink-0"
+        className="rbt-cursor-text rbt-shrink-0"
         style={{ width: paddingRight ?? 0 }}
       />
     </div>

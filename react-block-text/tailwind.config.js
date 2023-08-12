@@ -9,4 +9,7 @@ export default {
   },
   plugins: [],
   prefix: 'rbt-',
+  corePlugins: {
+    preflight: false,
+  },
 }
