@@ -150,4 +150,4 @@ MIT
 
 This project is not affiliated with Notion Labs, Inc.
 
-Notion Labs, [hire me!](https://dherault.com)
+<!-- Notion Labs, [hire me!](https://dherault.com) -->
