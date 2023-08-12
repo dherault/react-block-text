@@ -58,6 +58,17 @@ function Editor() {
 }
 ```
 
+### Note for multiple instances in SPA
+
+When implementing multiple instances of the editor on separate pages in a SPA, you might need to set the key prop in order to make in word when transitioning pages:
+
+```tsx
+<ReactBlockText
+  key={someUniqueKey}
+  // ...
+/>
+```
+
 ## Options
 
 ```ts
