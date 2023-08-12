@@ -56,7 +56,7 @@ function BlockContentList(props: BlockContentProps) {
         onMouseDown={onRectSelectionMouseDown}
         className="rbt-w-3 rbt-flex-shrink-0"
       />
-      <div className="rbt-flex-grow">
+      <div className="rbt-grow">
         <BlockContentText
           {...props}
           fallbackPlaceholder="List"

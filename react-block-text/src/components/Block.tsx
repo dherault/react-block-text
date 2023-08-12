@@ -189,7 +189,7 @@ function Block(props: BlockProps) {
         className="rbt-cursor-text rbt-flex-shrink-0"
         style={{ width: Math.max((paddingLeft ?? 0) - iconsWidth, 0) + indentWidth }}
       />
-      <div className="rbt-flex-grow rbt-flex rbt-relative">
+      <div className="rbt-grow rbt-flex rbt-relative">
         {/* Selection background element */}
         <div
           ref={registerSelectionRef}
@@ -242,7 +242,7 @@ function Block(props: BlockProps) {
               <div
                 onClick={focusContentAtStart}
                 onMouseDown={onRectSelectionMouseDown}
-                className="rbt-flex-grow rbt-cursor-text"
+                className="rbt-grow rbt-cursor-text"
               />
             </div>
             {/* Separator/margin with click handler */}
@@ -256,7 +256,7 @@ function Block(props: BlockProps) {
         {/* Content */}
         <div
           ref={contentRef}
-          className="rbt-flex-grow rbt-cursor-text"
+          className="rbt-grow rbt-cursor-text"
         >
           {!noPadding && (
             <>
