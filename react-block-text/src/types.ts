@@ -57,6 +57,8 @@ export type ReactBlockTextProps = {
   paddingRight?: number
   primaryColor?: string | null | undefined
   textColor?: string | null | undefined
+  className?: string
+  style?: CSSProperties
   onChange?: (value: string) => void
   onSave?: () => void
 }

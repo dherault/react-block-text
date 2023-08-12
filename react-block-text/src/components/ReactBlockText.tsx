@@ -24,7 +24,7 @@
 // x Add isNextItemOfSameType to plugin API
 // x Host demo
 // x Add CI for demo hosting
-// - Write documentation
+// x Write documentation
 // - Write demo default editor text
 // - Investigate Checkbox opacity transition
 // x Handle meta backspace bug
@@ -67,6 +67,7 @@ import 'draft-js/dist/Draft.css'
 import Color from 'color'
 // @ts-expect-error
 import ignoreWarnings from 'ignore-warnings'
+import _ from 'clsx'
 
 import type {
   ArrowData,
@@ -143,6 +144,8 @@ function ReactBlockText({
   onChange: rawOnChange,
   primaryColor: rawPrimaryColor,
   textColor: rawTextColor,
+  className,
+  style,
   plugins = [],
   readOnly,
   paddingTop,
@@ -2505,11 +2508,12 @@ function ReactBlockText({
           onBlur={handleRootBlur}
           onMouseMove={handleRootMouseMove}
           onMouseLeave={handleRootMouseLeave}
-          className="rbt-relative"
+          className={_('rbt-relative', className)}
           style={{
             // Prevent flickering of caret at the end of the line when switching blocks with arrow keys
             caretColor: isCaretVisible ? textColor : 'transparent',
             color: textColor,
+            ...(style ?? {}),
           }}
         >
           <div
