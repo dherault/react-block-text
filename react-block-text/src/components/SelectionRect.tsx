@@ -9,7 +9,7 @@ function SelectionRect(props: SelectionRectProps) {
 
   return (
     <div
-      className="absolute"
+      className="rbt-absolute"
       style={{
         backgroundColor: primaryColorTransparent,
         ...props,

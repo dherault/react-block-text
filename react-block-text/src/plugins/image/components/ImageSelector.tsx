@@ -25,18 +25,18 @@ function ImageSelector({ maxFileSize, onSubmitFile, onSubmitUrl }: ImageSelector
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="relative">
+    <div className="rbt-relative">
       <div
-        className="p-[12px] flex items-center gap-3 rounded select-none cursor-pointer bg-[#f2f1ee] hover:bg-[#eae9e6]"
+        className="rbt-p-[12px] rbt-flex rbt-items-center rbt-gap-3 rbt-rounded rbt-select-none rbt-cursor-pointer rbt-bg-[#f2f1ee] hover:rbt-bg-[#eae9e6]"
         style={{ color: 'rgba(55, 53, 47, 0.55)' }}
         onClick={() => setOpen(x => !x)}
       >
         <ImageIcon width={25} />
-        <div className="text-sm">
+        <div className="rbt-text-sm">
           Add an image
         </div>
       </div>
-      <div className="absolute top-100 left-0 right-0 flex justify-center">
+      <div className="rbt-absolute rbt-top-100 rbt-left-0 rbt-right-0 rbt-flex rbt-justify-center">
         <Transition
           mountOnEnter
           unmountOnExit
@@ -47,7 +47,7 @@ function ImageSelector({ maxFileSize, onSubmitFile, onSubmitUrl }: ImageSelector
           {state => (
             <div
               ref={dialogRef}
-              className="w-[540px] z-20"
+              className="rbt-w-[540px] rbt-z-20"
               style={{
                 ...defaultStyle,
                 ...transitionStyles[state as keyof typeof transitionStyles],
@@ -64,7 +64,7 @@ function ImageSelector({ maxFileSize, onSubmitFile, onSubmitUrl }: ImageSelector
       </div>
       {open && (
         <div
-          className="fixed inset-0 cursor-default z-10"
+          className="rbt-fixed rbt-inset-0 rbt-cursor-default rbt-z-10"
           onClick={() => setOpen(false)}
         />
       )}

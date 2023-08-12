@@ -1,13 +1,13 @@
 function BulletedListIcon() {
   return (
-    <div className="w-full h-full flex items-center justify-center gap-1">
-      <div className="-mt-1.5 text-4xl text-gray-600">
+    <div className="rbt-w-full rbt-h-full rbt-flex rbt-items-center rbt-justify-center rbt-gap-1">
+      <div className="-rbt-mt-1.5 rbt-text-4xl rbt-text-gray-600">
         •
       </div>
-      <div className="flex-grow flex flex-col gap-[0.2rem] -mr-1">
-        <div className="border-b border-gray-300" />
-        <div className="w-[50%] border-b border-gray-300" />
-        <div className="w-[75%] border-b border-gray-300" />
+      <div className="rbt-flex-grow rbt-flex rbt-flex-col rbt-gap-[0.2rem] -rbt-mr-1">
+        <div className="rbt-border-b rbt-border-gray-300" />
+        <div className="rbt-w-[50%] rbt-border-b rbt-border-gray-300" />
+        <div className="rbt-w-[75%] rbt-border-b rbt-border-gray-300" />
       </div>
     </div>
   )

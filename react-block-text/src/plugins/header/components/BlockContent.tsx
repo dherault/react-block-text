@@ -15,10 +15,10 @@ function BlockContent(props: BlockContentProps) {
 
   return (
     <div
-      className={_('font-semibold', {
-        'text-3xl': item.type === 'heading1',
-        'text-2xl': item.type === 'heading2',
-        'text-xl': item.type === 'heading3',
+      className={_('rbt-font-semibold', {
+        'rbt-text-3xl': item.type === 'heading1',
+        'rbt-text-2xl': item.type === 'heading2',
+        'rbt-text-xl': item.type === 'heading3',
       })}
     >
       <BlockContentText

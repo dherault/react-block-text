@@ -30,15 +30,15 @@ function BlockContentList(props: BlockContentProps) {
   }, [index, depth])
 
   return (
-    <div className="flex">
+    <div className="rbt-flex">
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="flex-shrink-0 select-none"
+        className="rbt-flex-shrink-0 rbt-select-none"
       >
         {item.metadata.length ? (
           <div
-            className="ml-2 before:content-[attr(data-before)]"
+            className="rbt-ml-2 before:rbt-content-[attr(data-before)]"
             style={{
               width: 6 * label.length,
             }}
@@ -46,7 +46,7 @@ function BlockContentList(props: BlockContentProps) {
           />
         ) : (
           <div
-            className="-my-[4px] ml-2 font-serif text-2xl before:content-[attr(data-before)]"
+            className="-rbt-my-[4px] rbt-ml-2 rbt-font-serif rbt-text-2xl before:rbt-content-[attr(data-before)]"
             data-before={depthToBullet[item.indent % depthToBullet.length]}
           />
         )}
@@ -54,9 +54,9 @@ function BlockContentList(props: BlockContentProps) {
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="w-3 flex-shrink-0"
+        className="rbt-w-3 rbt-flex-shrink-0"
       />
-      <div className="flex-grow">
+      <div className="rbt-flex-grow">
         <BlockContentText
           {...props}
           fallbackPlaceholder="List"

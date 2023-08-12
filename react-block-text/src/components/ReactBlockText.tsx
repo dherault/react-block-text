@@ -2505,7 +2505,7 @@ function ReactBlockText({
           onBlur={handleRootBlur}
           onMouseMove={handleRootMouseMove}
           onMouseLeave={handleRootMouseLeave}
-          className="relative"
+          className="rbt-relative"
           style={{
             // Prevent flickering of caret at the end of the line when switching blocks with arrow keys
             caretColor: isCaretVisible ? textColor : 'transparent',
@@ -2542,12 +2542,12 @@ function ReactBlockText({
             (selectionRect?.isSelecting && selectionRect.width && selectionRect.height)
             || isBlockMenuOpen
           ) && (
-            <div className="absolute inset-0 z-10" />
+            <div className="rbt-absolute rbt-inset-0 rbt-z-10" />
           )}
           <div
             onClick={() => handleFocusContent(value.length - 1, false, true)}
             onMouseDown={handleRectSelectionStart}
-            className="cursor-text"
+            className="rbt-cursor-text"
             style={{ height: paddingBottom || 0 }}
           />
           <div ref={injectionRef} />

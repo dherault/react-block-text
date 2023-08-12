@@ -22,21 +22,21 @@ function BlockContent(props: BlockContentProps) {
   }, [readOnly, item, editorState, onItemChange, forceBlurContent])
 
   return (
-    <div className="flex">
-      <div className="flex items-start">
+    <div className="rbt-flex">
+      <div className="rbt-flex rbt-items-start">
         <Checkbox
           checked={item.metadata === 'true'}
           onCheck={handleCheck}
-          className="flex-shrink-0"
+          className="rbt-flex-shrink-0"
           style={{ marginTop: 6 }}
         />
       </div>
       <div
         onClick={props.focusContentAtStart}
         onMouseDown={props.onRectSelectionMouseDown}
-        className="w-2 flex-shrink-0"
+        className="rbt-w-2 rbt-flex-shrink-0"
       />
-      <div className="flex-grow">
+      <div className="rbt-flex-grow">
         <BlockContentText
           {...props}
           fallbackPlaceholder="To-do"

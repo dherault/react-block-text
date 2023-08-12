@@ -18,17 +18,17 @@ function Checkbox({ checked, onCheck, ...props }: CheckboxProps) {
     <div {...props}>
       <div
         onClick={handleClick}
-        className="relative cursor-pointer flex items-center justify-center"
+        className="rbt-relative rbt-cursor-pointer rbt-flex rbt-items-center rbt-justify-center"
       >
         <div
-          className="w-[14px] h-[14px] border border-current transition-all duration-300"
+          className="rbt-w-[14px] rbt-h-[14px] rbt-border rbt-border-current rbt-transition-all rbt-duration-300"
           style={{
             borderColor: checked ? primaryColor : undefined,
           }}
         />
         <div
-          className={_('w-[14px] h-[14px] absolute inset-0 text-white flex items-center justify-center transition-opacity duration-300', {
-            'opacity-0': !checked,
+          className={_('rbt-w-[14px] rbt-h-[14px] rbt-absolute rbt-inset-0 rbt-text-white rbt-flex rbt-items-center rbt-justify-center rbt-transition-opacity rbt-duration-300', {
+            'rbt-opacity-0': !checked,
           })}
           style={{ backgroundColor: primaryColor }}
         >

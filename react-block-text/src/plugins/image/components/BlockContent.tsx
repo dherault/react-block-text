@@ -94,7 +94,7 @@ function BlockContent(props: BlockContentProps) {
 
   if (isError) {
     return (
-      <div className="p-2 w-full text-red-500 border border-red-500">
+      <div className="rbt-p-2 rbt-w-full rbt-text-red-500 rbt-border rbt-border-red-500">
         An error occurred while uploading the image.
       </div>
     )

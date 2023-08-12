@@ -52,7 +52,7 @@ function BlockMenu({ top, left, onDeleteItem, onDuplicateItem, onClose }: BlockM
   return (
     <div
       ref={rootRef}
-      className="p-1 bg-white border rounded shadow-xl absolute z-50 select-none"
+      className="rbt-p-1 rbt-bg-white rbt-border rbt-rounded rbt-shadow-xl rbt-absolute rbt-z-50 rbt-select-none"
       style={{
         top,
         left,
@@ -88,7 +88,7 @@ function BlockMenuItem({ icon, label, onClick }: BlockMenuItemProps) {
   return (
     <div
       onClick={onClick}
-      className="py-1 px-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2 rounded"
+      className="rbt-py-1 rbt-px-2 hover:rbt-bg-gray-100 rbt-cursor-pointer rbt-flex rbt-items-center rbt-gap-2 rbt-rounded"
     >
       {icon}
       {label}

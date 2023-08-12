@@ -1,8 +1,8 @@
 function Icon() {
   return (
-    <div className="w-full h-full flex items-center gap-1">
-      <div className="-ml-0.5 w-[1.5px] h-full bg-black" />
-      <div className="-mr-2 font-serif text-[0.7rem] text-gray-300 italic leading-none">
+    <div className="rbt-w-full rbt-h-full rbt-flex rbt-items-center rbt-gap-1">
+      <div className="-rbt-ml-0.5 rbt-w-[1.5px] rbt-h-full rbt-bg-black" />
+      <div className="-rbt-mr-2 rbt-font-serif rbt-text-[0.7rem] rbt-text-gray-300 rbt-italic rbt-leading-none">
         To be
         <br />
         or not

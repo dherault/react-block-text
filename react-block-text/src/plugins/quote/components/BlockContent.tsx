@@ -4,18 +4,18 @@ function BlockContent(props: BlockContentProps) {
   const { onBlockSelection, onRectSelectionMouseDown, BlockContentText } = props
 
   return (
-    <div className="flex">
+    <div className="rbt-flex">
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="w-[3px] bg-current flex-shrink-0"
+        className="rbt-w-[3px] rbt-bg-current rbt-flex-shrink-0"
       />
       <div
         onClick={onBlockSelection}
         onMouseDown={onRectSelectionMouseDown}
-        className="w-2 flex-shrink-0"
+        className="rbt-w-2 rbt-flex-shrink-0"
       />
-      <div className="flex-grow">
+      <div className="rbt-flex-grow">
         <BlockContentText {...props} />
       </div>
     </div>

@@ -8,4 +8,5 @@ export default {
     extend: {},
   },
   plugins: [],
+  prefix: 'rbt-',
 }

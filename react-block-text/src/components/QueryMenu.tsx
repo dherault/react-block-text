@@ -104,7 +104,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
     <div
       ref={rootRef}
       onMouseMove={() => setIsHovering(true)}
-      className="py-2 px-1 bg-white border shadow-xl rounded absolute z-50 overflow-y-auto"
+      className="rbt-py-2 rbt-px-1 rbt-bg-white rbt-border rbt-shadow-xl rbt-rounded rbt-absolute rbt-z-50 rbt-overflow-y-auto"
       style={{
         top,
         bottom,
@@ -114,10 +114,10 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
       }}
     >
       {results.length > 0 && (
-        <div className="mt-1 flex flex-col">
+        <div className="rbt-mt-1 rbt-flex rbt-flex-col">
           {packs.map(({ blockCategory, results }) => !!results.length && (
             <Fragment key={blockCategory}>
-              <div className="px-2 py-1 text-gray-400 text-xs">
+              <div className="rbt-px-2 rbt-py-1 rbt-text-gray-400 rbt-text-xs">
                 {BLOCK_CATEGORY_TO_LABEL[blockCategory]}
               </div>
               {results.map(result => {
@@ -144,7 +144,7 @@ function QueryMenu({ pluginsData, query, top, bottom, left, onSelect, onClose }:
         </div>
       )}
       {results.length === 0 && (
-        <div className="px-2 py-1 text-gray-400 text-xs select-none">
+        <div className="rbt-px-2 rbt-py-1 rbt-text-gray-400 rbt-text-xs rbt-select-none">
           No results
         </div>
       )}
@@ -183,8 +183,8 @@ function QueryMenuItem({
   return (
     <div
       ref={rootRef}
-      className={_('py-1 px-2 flex items-center gap-2 cursor-pointer rounded', {
-        'bg-gray-100': active,
+      className={_('rbt-py-1 rbt-px-2 rbt-flex rbt-items-center rbt-gap-2 rbt-cursor-pointer rbt-rounded', {
+        'rbt-bg-gray-100': active,
       })}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -194,8 +194,8 @@ function QueryMenuItem({
         {icon}
       </QueryMenuIcon>
       <div>
-        <div className="text-sm">{title}</div>
-        <div className="mt-0.5 text-xs text-gray-400">{label}</div>
+        <div className="rbt-text-sm">{title}</div>
+        <div className="rbt-mt-0.5 rbt-text-xs rbt-text-gray-400">{label}</div>
       </div>
     </div>
   )
@@ -206,7 +206,7 @@ function QueryMenuItem({
 --- */
 function QueryMenuIcon({ children }: QueryMenuIconProps) {
   return (
-    <div className="px-2 py-1 bg-white border rounded w-12 h-12 border-gray-300 overflow-hidden">
+    <div className="rbt-px-2 rbt-py-1 rbt-bg-white rbt-border rbt-rounded rbt-w-12 rbt-h-12 rbt-border-gray-300 rbt-overflow-hidden">
       {children}
     </div>
   )
