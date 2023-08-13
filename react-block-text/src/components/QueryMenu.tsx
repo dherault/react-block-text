@@ -206,7 +206,7 @@ function QueryMenuItem({
 --- */
 function QueryMenuIcon({ children }: QueryMenuIconProps) {
   return (
-    <div className="rbt-px-2 rbt-py-1 rbt-bg-white rbt-border rbt-rounded rbt-w-12 rbt-h-12 rbt-border-gray-300 rbt-overflow-hidden">
+    <div className="rbt-px-2 rbt-py-1 rbt-font-['Arial'] rbt-bg-white rbt-border rbt-rounded rbt-w-12 rbt-h-12 rbt-border-gray-300 rbt-overflow-hidden">
       {children}
     </div>
   )

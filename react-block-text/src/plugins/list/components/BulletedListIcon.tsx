@@ -1,7 +1,7 @@
 function BulletedListIcon() {
   return (
     <div className="rbt-w-full rbt-h-full rbt-flex rbt-items-center rbt-justify-center rbt-gap-1">
-      <div className="-rbt-mt-1.5 rbt-text-4xl rbt-text-gray-600">
+      <div className="rbt-text-4xl rbt-text-gray-600">
         •
       </div>
       <div className="rbt-grow rbt-flex rbt-flex-col rbt-gap-[0.2rem] -rbt-mr-1">

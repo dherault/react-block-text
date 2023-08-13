@@ -1,5 +1,7 @@
 import type { ReactBlockTextPlugins } from '../../types'
 
+import type { PluginOptions } from './types'
+
 import BlockContent from './components/BlockContent'
 import Icon from './components/Icon'
 
@@ -10,7 +12,7 @@ const PADDING_TOPS = [24, 18, 12]
 const PADDING_BOTTOMS = [9, 9, 9]
 const ICONS_PADDING_TOPS = [7, 5, 2]
 
-function headerPlugin(): ReactBlockTextPlugins {
+function headerPlugin(options: PluginOptions = {}): ReactBlockTextPlugins {
   return TYPES.map((type, i) => () => ({
     type,
     blockCategory: 'basic',
@@ -27,7 +29,13 @@ function headerPlugin(): ReactBlockTextPlugins {
     paddingTop: PADDING_TOPS[i],
     paddingBottom: PADDING_BOTTOMS[i],
     iconsPaddingTop: ICONS_PADDING_TOPS[i],
-    BlockContent,
+    BlockContent: props => (
+      <BlockContent
+        {...props}
+        classNames={options.classNames}
+        styles={options.styles}
+      />
+    ),
   }))
 }
 
