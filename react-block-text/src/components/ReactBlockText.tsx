@@ -124,6 +124,10 @@ import QueryMenu from './QueryMenu'
 import SelectionRect from './SelectionRect'
 import DragLayer from './DragLayer'
 
+declare const window: Window & typeof globalThis & {
+  __isReactDndBackendSetUp: boolean
+}
+
 // Remove onUpArrow and onDownArrow deprecation warnings
 ignoreWarnings([
   'Supplying an `onUpArrow`',
@@ -2303,6 +2307,16 @@ function ReactBlockText({
       window.removeEventListener('copy', handleWindowCopy)
     }
   }, [handleWindowCopy])
+
+  /* ---
+    REACT DND BACKEND CLEANUP
+    Fixes a bug where the backend is not cleaned up when the editor is unmounted
+  --- */
+  useEffect(() => {
+    if (window.__isReactDndBackendSetUp) {
+      window.__isReactDndBackendSetUp = false
+    }
+  }, [])
 
   /*
     ██████╗ ███████╗███╗   ██╗██████╗ ███████╗██████╗
