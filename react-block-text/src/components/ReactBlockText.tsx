@@ -42,6 +42,7 @@
 // x Display block menu on new block created
 // - Fix mutliple blocks drag issue (when dragging not from the first block selected)
 // - Make "- " work with the list plugin
+// - Fix single empty block placeholder
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
