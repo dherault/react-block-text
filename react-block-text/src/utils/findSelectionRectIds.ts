@@ -2,7 +2,7 @@ import type { SelectionRectData } from '../types'
 
 // Lookup the ids under the given selectionRect
 function findSelectionRectIds(selectionRefs: Record<string, HTMLElement>, selectionRect: SelectionRectData): string[] {
-  if (!selectionRect.width || !selectionRect.height) return []
+  if (!selectionRect.width || !selectionRect.height || !selectionRefs) return []
 
   const ids: string[] = []
 
