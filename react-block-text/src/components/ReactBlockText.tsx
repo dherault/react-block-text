@@ -43,6 +43,7 @@
 // - Fix mutliple blocks drag issue (when dragging not from the first block selected)
 // - Make "- " work with the list plugin
 // - Fix single empty block placeholder
+// - Fix click on MenuQueryItem bug
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
