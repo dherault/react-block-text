@@ -9,6 +9,10 @@ This is an open-source clone of the famous [Notion.so](https://notion.so) editor
 
 Project status: In-development beta. The API will be stable starting with v1.
 
+## Disclamer
+
+This project is uncompleted. Do not use in production as it holds some bugs.
+
 ## Demo
 
 [See it live in your browser!](https://react-block-text.web.app/)
